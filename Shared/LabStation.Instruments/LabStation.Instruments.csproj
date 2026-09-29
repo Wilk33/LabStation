@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+		<AssemblyName>LabStation.Instruments</AssemblyName>
+		<RootNamespace>LabStation.Instruments</RootNamespace>
+		<Product>LabStation Instrument Components</Product>
+		<Description>Wspólne transporty, SCPI i prymitywy kolejkowania LabStation</Description>
+	</PropertyGroup>
+</Project>
