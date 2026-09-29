@@ -328,10 +328,7 @@ Test("Interfejs zachowuje kompaktowy rozmiar i pełne pola klikalne",()=>
 		window.ApplyTemplate();
 
 		Equal(749d,window.Height);
-		if(!LogicalChildren<GeneratorView>(window).Any())
-		{
-			throw new Exception("Główne okno nie jest cienką powłoką panelu GeneratorView");
-		}
+		GeneratorView generatorView=LogicalChildren<GeneratorView>(window).Single();
 		AboutMenuItem about=LogicalChildren<AboutMenuItem>(window).Single();
 		Equal("O aplikacji",about.Header);
 		if(about.Presentation?.DisplayName != ProductInformation.DisplayName)
@@ -361,6 +358,36 @@ Test("Interfejs zachowuje kompaktowy rozmiar i pełne pola klikalne",()=>
 		if(toggle.ActualWidth+1<combo.ActualWidth)
 		{
 			throw new Exception("Lista otwiera się tylko po kliknięciu strzałki");
+		}
+
+		using ScriptedTransport transport=new("SIGLENT,SDG1032X,123456,1.0");
+		GeneratorSession closingSession=GeneratorSession.CreateAsync(()=>transport)
+			.GetAwaiter()
+			.GetResult();
+		System.Reflection.FieldInfo sessionField=typeof(GeneratorView).GetField(
+			"session",
+			System.Reflection.BindingFlags.Instance |
+			System.Reflection.BindingFlags.NonPublic)!;
+		System.Reflection.MethodInfo failureMethod=typeof(GeneratorView).GetMethod(
+			"SessionCommunicationFailed",
+			System.Reflection.BindingFlags.Instance |
+			System.Reflection.BindingFlags.NonPublic)!;
+		EventHandler<Exception> failureHandler=(EventHandler<Exception>)
+			Delegate.CreateDelegate(typeof(EventHandler<Exception>),generatorView,failureMethod);
+		sessionField.SetValue(generatorView,closingSession);
+		closingSession.CommunicationFailed+=failureHandler;
+		System.Reflection.MethodInfo unloadedMethod=typeof(GeneratorView).GetMethod(
+			"GeneratorViewUnloaded",
+			System.Reflection.BindingFlags.Instance |
+			System.Reflection.BindingFlags.NonPublic)!;
+		unloadedMethod.Invoke(generatorView,[null,EventArgs.Empty]);
+		System.Reflection.FieldInfo eventField=typeof(GeneratorSession).GetField(
+			"CommunicationFailed",
+			System.Reflection.BindingFlags.Instance |
+			System.Reflection.BindingFlags.NonPublic)!;
+		if(eventField.GetValue(closingSession) is not null)
+		{
+			throw new Exception("Panel pozostawia obsługę błędu podłączoną podczas zamykania");
 		}
 	});
 });

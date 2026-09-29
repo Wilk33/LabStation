@@ -10,6 +10,17 @@ permissions:
   contents: read
 
 jobs:
+  shared-instruments:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Test shared instrument communication
+        run: dotnet run --project .\Shared\LabStation.Instruments.Tests\LabStation.Instruments.Tests.csproj -c Release
+
   korad:
     runs-on: windows-latest
     timeout-minutes: 10

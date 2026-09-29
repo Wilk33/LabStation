@@ -70,7 +70,7 @@ public partial class GeneratorView : UserControl
 		{
 			if(session is not null)
 			{
-				await session.DisposeAsync();
+				await DisposeSessionAsync(session);
 				session=null;
 			}
 			ShowStatus("Błąd połączenia: "+exception.Message,true);
@@ -92,8 +92,7 @@ public partial class GeneratorView : UserControl
 		ConnectionButton.IsEnabled=false;
 		if(current is not null)
 		{
-			current.CommunicationFailed-=SessionCommunicationFailed;
-			await current.DisposeAsync();
+			await DisposeSessionAsync(current);
 		}
 		ConnectionButton.Content="Offline";
 		ConnectionButton.Background=(Brush)FindResource("LabStationInputBrush");
@@ -108,13 +107,29 @@ public partial class GeneratorView : UserControl
 		{
 			GeneratorSession current=session;
 			session=null;
-			await current.DisposeAsync();
+			await DisposeSessionAsync(current);
 		}
 	}
 
 	private void SessionCommunicationFailed(object? sender,Exception exception)
 	{
-		Dispatcher.Invoke(()=>ShowStatus("Błąd komunikacji: "+exception.Message,true));
+		if(Dispatcher.HasShutdownStarted || Dispatcher.HasShutdownFinished)
+		{
+			return;
+		}
+		if(Dispatcher.CheckAccess())
+		{
+			ShowStatus("Błąd komunikacji: "+exception.Message,true);
+			return;
+		}
+		Dispatcher.InvokeAsync(()=>
+			ShowStatus("Błąd komunikacji: "+exception.Message,true));
+	}
+
+	private async Task DisposeSessionAsync(GeneratorSession current)
+	{
+		current.CommunicationFailed-=SessionCommunicationFailed;
+		await current.DisposeAsync();
 	}
 
 	private void SetControlsEnabled(bool enabled)
