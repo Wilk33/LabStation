@@ -1,15 +1,8 @@
 using System.Text;
+using LabStation.Instruments.Scpi;
+using LabStation.Instruments.Transport;
 
 namespace Scope.Core;
-
-public interface IInstrumentTransport : IDisposable
-
-{
-
-	void Write(string command);
-	byte[] Query(string command);
-
-}
 
 
 public enum AcquisitionState
@@ -23,9 +16,15 @@ public enum AcquisitionState
 }
 
 
-public sealed class ScopeClient(IInstrumentTransport transport) : IDisposable
+public sealed class ScopeClient : IDisposable
 
 {
+	private readonly ScpiConnection connection;
+
+	public ScopeClient(IInstrumentTransport transport)
+	{
+		connection=new(transport);
+	}
 
 	public string Identity
 	{
@@ -49,7 +48,7 @@ public sealed class ScopeClient(IInstrumentTransport transport) : IDisposable
 
 	}
 
-	private string Text(string command) => Encoding.ASCII.GetString(transport.Query(command)).Trim();
+	private string Text(string command)=>connection.QueryText(command).Trim();
 	public Waveform[] Capture(int[] channels)
 
 	{
@@ -57,7 +56,7 @@ public sealed class ScopeClient(IInstrumentTransport transport) : IDisposable
 		if (channels.Length == 0 || channels.Any(c => c != 1 && c != 2))
 			throw new ArgumentException("Wybierz CH1 lub CH2.");
 		// Only transfer parameters are changed. Never alter acquisition or channel settings.
-		transport.Write("WFSU SP,1,NP,0,FP,0");
+		connection.Write("WFSU SP,1,NP,0,FP,0");
 		List<Waveform> result=[];
 		foreach (int channel in channels.Distinct())
 
@@ -68,7 +67,7 @@ public sealed class ScopeClient(IInstrumentTransport transport) : IDisposable
 				continue;
 			if (!enabled.EndsWith("ON"))
 				throw new InvalidDataException("Nieznany stan kanału: "+enabled);
-			result.Add(Waveform.Decode(channel, transport.Query($"C{channel}:WF? ALL")));
+			result.Add(Waveform.Decode(channel,connection.QueryBytes($"C{channel}:WF? ALL")));
 
 		}
 
@@ -111,7 +110,7 @@ public sealed class ScopeClient(IInstrumentTransport transport) : IDisposable
 		string mode=Text("TRMD?").Split(' ', StringSplitOptions.RemoveEmptyEntries)[^1].ToUpperInvariant();
 		if (mode is "AUTO" or "NORM" or "NORMAL" or "SINGLE")
 			TriggerMode=mode == "NORMAL" ? "NORM" : mode;
-		transport.Write("STOP");
+		connection.Write("STOP");
 
 	}
 
@@ -123,11 +122,11 @@ public sealed class ScopeClient(IInstrumentTransport transport) : IDisposable
 		string mode=Text("TRMD?").Split(' ', StringSplitOptions.RemoveEmptyEntries)[^1].ToUpperInvariant();
 		if (mode is "AUTO" or "NORM" or "NORMAL" or "SINGLE")
 			TriggerMode=mode == "NORMAL" ? "NORM" : mode;
-		transport.Write("TRMD "+(TriggerMode.Length > 0 ? TriggerMode : "AUTO"));
+		connection.Write("TRMD "+(TriggerMode.Length > 0 ? TriggerMode : "AUTO"));
 
 	}
 
-	public void Auto() => transport.Write("ASET");
-	public void Dispose() => transport.Dispose();
+	public void Auto()=>connection.Write("ASET");
+	public void Dispose()=>connection.Dispose();
 
 }

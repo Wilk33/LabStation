@@ -7,6 +7,8 @@ using System.Windows.Media;
 using System.Windows.Threading;
 using Microsoft.Win32;
 using Scope.Core;
+using LabStation.Instruments.Scheduling;
+using LabStation.Instruments.Transport;
 
 namespace Scope.App;
 
@@ -23,7 +25,7 @@ public partial class OscilloscopeView : UserControl,IAsyncDisposable
 	{
 		Interval=TimeSpan.FromMilliseconds(750)
 	};
-	private readonly InstrumentOperationQueue operations=new();
+	private readonly SerializedOperationGate operations=new();
 	private ScopeClient? scope;
 	private Waveform[]? captured;
 	private ChannelMeasurements[] lastMeasurements=[];
@@ -265,7 +267,7 @@ public partial class OscilloscopeView : UserControl,IAsyncDisposable
 		UpdateMeasurementRows(lastMeasurements,true);
 		if(old is not null)
 		{
-			await operations.RunCommandAsync(()=>Task.Run(old.Dispose));
+			await operations.RunForegroundAsync(()=>Task.Run(old.Dispose));
 		}
 		UpdateAcquisition(AcquisitionState.Unknown);
 	}
@@ -282,7 +284,7 @@ public partial class OscilloscopeView : UserControl,IAsyncDisposable
 		try
 		{
 			AcquisitionState state=AcquisitionState.Unknown;
-			await operations.RunCommandAsync(async()=>
+			await operations.RunForegroundAsync(async()=>
 			{
 				await Task.Run(()=>
 				{
@@ -332,7 +334,7 @@ public partial class OscilloscopeView : UserControl,IAsyncDisposable
 		try
 		{
 			ScopeSnapshot? snapshot=null;
-			await operations.RunCommandAsync(async()=>
+			await operations.RunForegroundAsync(async()=>
 			{
 				snapshot=await Task.Run(()=>ReadSnapshot(client,channels));
 			});
@@ -377,7 +379,7 @@ public partial class OscilloscopeView : UserControl,IAsyncDisposable
 		try
 		{
 			ScopeSnapshot? snapshot=null;
-			bool completed=await operations.TryRunPreviewAsync(async()=>
+			bool completed=await operations.TryRunBackgroundAsync(async()=>
 			{
 				snapshot=await Task.Run(()=>ReadSnapshot(client,channels));
 			});

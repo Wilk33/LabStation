@@ -31,3 +31,15 @@ jobs:
       - name: Test and build Siglent SDS1000CML Viewer
         working-directory: SDS1000CML Viewer
         run: .\build.ps1
+
+  generator:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Test and build Siglent SDG1000X Control
+        working-directory: SDG1000X Control
+        run: .\build.ps1

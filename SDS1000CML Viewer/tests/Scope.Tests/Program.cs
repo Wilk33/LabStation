@@ -2,6 +2,8 @@ using System.Buffers.Binary;
 using System.Globalization;
 using System.Text;
 using Scope.Core;
+using LabStation.Instruments.Scheduling;
+using LabStation.Instruments.Transport;
 
 int failed=0;
 void Test(string name, Action test)
@@ -233,10 +235,10 @@ Test("PAVA measurements parse both channels with units and duty percent", () =>
 
 {
 
-	using InstrumentOperationQueue queue=new();
+	using SerializedOperationGate queue=new();
 	using ManualResetEventSlim previewEntered=new(), releasePreview=new();
 	List<string> order=[];
-	Task first=queue.TryRunPreviewAsync(async () =>
+	Task first=queue.TryRunBackgroundAsync(async () =>
 	{
 		lock (order)
 			order.Add("preview-1-start");
@@ -247,13 +249,13 @@ Test("PAVA measurements parse both channels with units and duty percent", () =>
 	});
 	if (!previewEntered.Wait(TimeSpan.FromSeconds(2)))
 		throw new Exception("Preview did not start");
-	Task command=queue.RunCommandAsync(() =>
+	Task command=queue.RunForegroundAsync(() =>
 	{
 		lock (order)
 			order.Add("stop");
 		return Task.CompletedTask;
 	});
-	Task<bool> second=queue.TryRunPreviewAsync(() =>
+	Task<bool> second=queue.TryRunBackgroundAsync(() =>
 	{
 		lock (order)
 			order.Add("preview-2");
@@ -279,6 +281,14 @@ Test("Real VXI-11 TCP session handles RPC fragments and multi-part binary read",
 		throw new Exception("TCP payload changed");
 	if (server.LastCommand != "C1:WF? ALL\n")
 		throw new Exception("Write chunk assembly failed");
+
+});
+Test("VXI-11 transport is provided by the shared instrument library", () =>
+
+{
+
+	if (typeof(Vxi11Transport).Assembly.GetName().Name != "LabStation.Instruments")
+		throw new Exception("VXI-11 transport is still local to Scope.Core");
 
 });
 

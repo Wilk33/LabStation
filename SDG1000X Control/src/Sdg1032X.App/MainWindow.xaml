@@ -1,0 +1,24 @@
+<Window
+	
+x:Class="Sdg1032X.App.MainWindow"
+	
+xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	
+xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	
+xmlns:local="clr-namespace:Sdg1032X.App"
+	
+Title="Siglent SDG1000X Control"
+	
+Width="350"
+	
+Height="749"
+	
+Icon="/SDG1032X.Controller;component/Assets/sdg1062x.ico"
+	
+ResizeMode="NoResize"
+	
+WindowStartupLocation="CenterScreen">
+	
+<local:GeneratorView />
+</Window>

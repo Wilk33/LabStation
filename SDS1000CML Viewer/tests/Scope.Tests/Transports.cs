@@ -1,4 +1,5 @@
 using Scope.Core;
+using LabStation.Instruments.Transport;
 using System.Text;
 using System.Net;
 using System.Net.Sockets;
@@ -64,7 +65,7 @@ internal sealed class LoopbackInstrument : IDisposable
 
 	}
 
-	private static Xdr Read(NetworkStream stream)
+	private static TestXdr Read(NetworkStream stream)
 
 	{
 
@@ -77,11 +78,11 @@ internal sealed class LoopbackInstrument : IDisposable
 
 	}
 
-	private static void Send(NetworkStream stream, uint id, Action<Xdr> body)
+	private static void Send(NetworkStream stream,uint id,Action<TestXdr> body)
 
 	{
 
-		Xdr reply=new();
+		TestXdr reply=new();
 		foreach (uint value in new[]
 {
 id, 1u, 0u, 0u, 0u, 0u
@@ -115,7 +116,7 @@ id, 1u, 0u, 0u, 0u, 0u
 		{
 
 			NetworkStream stream=portClient.GetStream();
-			Xdr call=Read(stream);
+			TestXdr call=Read(stream);
 			uint id=call.Get();
 			Send(stream, id, x => x.Put((uint)(core.LocalEndpoint as IPEndPoint)!.Port));
 
@@ -133,7 +134,7 @@ id, 1u, 0u, 0u, 0u, 0u
 
 			{
 
-				Xdr call=Read(stream);
+				TestXdr call=Read(stream);
 				uint id=call.Get();
 				call.Get();
 				call.Get();
@@ -243,4 +244,56 @@ id, 1u, 0u, 0u, 0u, 0u
 	}
 
 
+}
+
+internal sealed class TestXdr
+{
+	private readonly MemoryStream stream;
+
+	public TestXdr()
+	{
+		stream=new();
+	}
+
+	public TestXdr(byte[] bytes)
+	{
+		stream=new(bytes,false);
+	}
+
+	public void Put(uint value)
+	{
+		Span<byte> bytes=stackalloc byte[4];
+		BinaryPrimitives.WriteUInt32BigEndian(bytes,value);
+		stream.Write(bytes);
+	}
+
+	public uint Get()
+	{
+		Span<byte> bytes=stackalloc byte[4];
+		stream.ReadExactly(bytes);
+		return BinaryPrimitives.ReadUInt32BigEndian(bytes);
+	}
+
+	public void PutBytes(byte[] bytes)
+	{
+		Put((uint)bytes.Length);
+		stream.Write(bytes);
+		for(int index=bytes.Length;index%4 != 0;index++)
+		{
+			stream.WriteByte(0);
+		}
+	}
+
+	public byte[] GetBytes()
+	{
+		uint size=Get();
+		byte[] bytes=new byte[size];
+		stream.ReadExactly(bytes);
+		int padding=(4-(int)size%4)%4;
+		Span<byte> pad=stackalloc byte[3];
+		stream.ReadExactly(pad[..padding]);
+		return bytes;
+	}
+
+	public byte[] Bytes()=>stream.ToArray();
 }

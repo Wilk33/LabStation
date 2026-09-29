@@ -7,6 +7,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Scope.App;
 using Scope.Core;
+using LabStation.Instruments.Transport;
 using LabStation.UI.Windows;
 
 internal static class Program
