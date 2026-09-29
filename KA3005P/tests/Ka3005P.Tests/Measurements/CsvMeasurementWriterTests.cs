@@ -56,7 +56,7 @@ public sealed class CsvMeasurementWriterTests
 			CancellationToken.None);
 
 		Assert.Equal(
-			"Sample;Time;Voltage -;Voltage +;\n[-];[s];[V];[V];\n0;1.000;-12.00;11.00;\n",
+			"Sample;Time;Port 1 Voltage +;Port 2 Voltage -;\n[-];[s];[V];[V];\n0;1.000;12.00;-11.00;\n",
 			output.ToString());
 	}
 

@@ -37,6 +37,10 @@ public sealed class DualSupplyViewModel : ObservableObject,ISupplyModeViewModel
 	private string measuredCurrentText="0,000 A";
 	private string firstMeasurementText="0,00 V / 0,000 A";
 	private string secondMeasurementText="0,00 V / 0,000 A";
+	private string firstSideVoltageText="+0,00 V";
+	private string firstSideCurrentText="+0,000 A";
+	private string secondSideVoltageText="-0,00 V";
+	private string secondSideCurrentText="-0,000 A";
 	private string? resistanceText;
 	private string? errorMessage;
 	private int voltageHundredths=1200;
@@ -117,6 +121,9 @@ public sealed class DualSupplyViewModel : ObservableObject,ISupplyModeViewModel
 			OnPropertyChanged(nameof(MaximumCurrentText));
 			OnPropertyChanged(nameof(MaximumVoltageDescription));
 			OnPropertyChanged(nameof(MaximumCurrentDescription));
+			OnPropertyChanged(nameof(IsSymmetric));
+			OnPropertyChanged(nameof(FirstSupplyLabel));
+			OnPropertyChanged(nameof(SecondSupplyLabel));
 			ValidateSetpoints();
 			if(SetpointsAreValid)
 			{
@@ -203,6 +210,9 @@ public sealed class DualSupplyViewModel : ObservableObject,ISupplyModeViewModel
 	public string MaximumCurrentDescription =>
 		"Max prąd zasilacza to "+
 		(Mode == DualMode.Parallel ? "10,2A" : "5,1A");
+	public bool IsSymmetric=>Mode == DualMode.Symmetric;
+	public string FirstSupplyLabel=>IsSymmetric ? "Port 1 (+)" : "Zasilacz 1";
+	public string SecondSupplyLabel=>IsSymmetric ? "Port 2 (-)" : "Zasilacz 2";
 
 	public bool SetpointsAreValid
 	{
@@ -368,6 +378,30 @@ public sealed class DualSupplyViewModel : ObservableObject,ISupplyModeViewModel
 	{
 		get => secondMeasurementText;
 		private set => SetProperty(ref secondMeasurementText,value);
+	}
+
+	public string FirstSideVoltageText
+	{
+		get => firstSideVoltageText;
+		private set => SetProperty(ref firstSideVoltageText,value);
+	}
+
+	public string FirstSideCurrentText
+	{
+		get => firstSideCurrentText;
+		private set => SetProperty(ref firstSideCurrentText,value);
+	}
+
+	public string SecondSideVoltageText
+	{
+		get => secondSideVoltageText;
+		private set => SetProperty(ref secondSideVoltageText,value);
+	}
+
+	public string SecondSideCurrentText
+	{
+		get => secondSideCurrentText;
+		private set => SetProperty(ref secondSideCurrentText,value);
 	}
 
 	public string? ResistanceText
@@ -795,6 +829,14 @@ public sealed class DualSupplyViewModel : ObservableObject,ISupplyModeViewModel
 			SecondMeasurementText=
 				FormatVoltage(value.Second.VoltageHundredths)+" / "+
 				FormatCurrent(value.Second.CurrentThousandths);
+			FirstSideVoltageText=FormatSignedVoltage(
+				value.FirstSignedVoltageHundredths);
+			FirstSideCurrentText=FormatSignedCurrent(
+				value.FirstSignedCurrentThousandths);
+			SecondSideVoltageText=FormatSignedVoltage(
+				value.SecondSignedVoltageHundredths);
+			SecondSideCurrentText=FormatSignedCurrent(
+				value.SecondSignedCurrentThousandths);
 			bool isCurrentLimited=
 				Math.Abs(value.CurrentThousandths-currentThousandths)<=10;
 			if(isCurrentLimited && ResistanceFormatter.TryFormat(
@@ -819,7 +861,12 @@ public sealed class DualSupplyViewModel : ObservableObject,ISupplyModeViewModel
 					elapsed,
 					value.VoltageHundredths,
 					value.CurrentThousandths,
-					isCurrentLimited));
+					isCurrentLimited,
+					value.Mode == DualMode.Symmetric,
+					value.FirstSignedVoltageHundredths,
+					value.SecondSignedVoltageHundredths,
+					value.FirstSignedCurrentThousandths,
+					value.SecondSignedCurrentThousandths));
 		});
 	}
 
@@ -859,6 +906,16 @@ public sealed class DualSupplyViewModel : ObservableObject,ISupplyModeViewModel
 	private static string FormatCurrent(int value)
 	{
 		return (value/1000m).ToString("0.000",PolishCulture)+" A";
+	}
+
+	private static string FormatSignedVoltage(int value)
+	{
+		return (value/100m).ToString("+0.00;-0.00;+0.00",PolishCulture)+" V";
+	}
+
+	private static string FormatSignedCurrent(int value)
+	{
+		return (value/1000m).ToString("+0.000;-0.000;+0.000",PolishCulture)+" A";
 	}
 
 	private static bool TryParseScaled(

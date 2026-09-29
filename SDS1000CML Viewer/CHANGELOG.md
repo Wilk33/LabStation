@@ -1,5 +1,11 @@
 # Zmiany
 
+## 0.6.2 - 2026-09-29
+
+- Przeniesiono transport VXI-11 i podstawowy kontrakt SCPI do `Shared/LabStation.Instruments`.
+- Zastąpiono lokalny mechanizm rysowania wspólną kontrolką `TimeSeriesPlot`, zachowując cztery kursory, powiększanie oraz kanały CH1 i CH2.
+- Parser `WAVEDESC`, pomiary i polityka podglądu pozostały lokalnymi elementami Oscyloskopu.
+
 ## 0.6.1 - 2026-09-29
 
 - Połączono adres IP, przycisk Offline/Online, wybór CH1 i CH2, Podgląd oraz cztery kursory w jednym wierszu.

@@ -34,12 +34,12 @@ public readonly record struct DualMeasurement(
 			_=>throw new ArgumentOutOfRangeException(nameof(mode))
 		};
 
-		int firstVoltage=mode == DualMode.Symmetric
-			? -first.VoltageHundredths
-			: first.VoltageHundredths;
-		int firstCurrent=mode == DualMode.Symmetric
-			? -first.CurrentThousandths
-			: first.CurrentThousandths;
+		int secondVoltage=mode == DualMode.Symmetric
+			? -second.VoltageHundredths
+			: second.VoltageHundredths;
+		int secondCurrent=mode == DualMode.Symmetric
+			? -second.CurrentThousandths
+			: second.CurrentThousandths;
 		return new DualMeasurement(
 			first.RecordedAt >= second.RecordedAt ? first.RecordedAt : second.RecordedAt,
 			Math.Max(first.Timestamp,second.Timestamp),
@@ -48,9 +48,9 @@ public readonly record struct DualMeasurement(
 			second,
 			voltage,
 			current,
-			firstVoltage,
-			second.VoltageHundredths,
-			firstCurrent,
-			second.CurrentThousandths);
+			first.VoltageHundredths,
+			secondVoltage,
+			first.CurrentThousandths,
+			secondCurrent);
 	}
 }

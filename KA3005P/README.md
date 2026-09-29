@@ -2,7 +2,7 @@
 
 Samodzielna aplikacja Windows do sterowania jednym lub dwoma zasilaczami laboratoryjnymi Korad KA3005P przez porty COM.
 
-Bieżąca wersja: `0.2.0`. Powierzchnie pojedynczego i podwójnego zasilacza pozostają niezależnymi panelami WPF. Wspólny motyw, kontrolki nastaw, listy, lampki stanu, menu oraz okna Autor/Licencja pochodzą z `Shared/LabStation.UI`. Komunikacja COM, kolejki sesji i logika trybu Dual pozostają częścią Korada.
+Bieżąca wersja: `0.2.1`. Powierzchnie pojedynczego i podwójnego zasilacza pozostają niezależnymi panelami WPF. Wspólny motyw, kontrolki nastaw, listy, lampki stanu, menu, wykres oraz okna Autor/Licencja pochodzą z `Shared/LabStation.UI`. Komunikacja COM, kolejki sesji i logika trybu Dual pozostają częścią Korada.
 
 ## Zakres
 
@@ -13,7 +13,9 @@ Bieżąca wersja: `0.2.0`. Powierzchnie pojedynczego i podwójnego zasilacza poz
 - Nastawy napięcia i ograniczenia prądu.
 - Sterowanie wyjściem ON i OFF.
 - Odczyt napięcia i prądu wyjściowego.
-- Wykres prądu i opcjonalny wykres napięcia.
+- Wykres prądu i opcjonalny wykres napięcia, lokalne powiększanie oraz dwa kursory dostępne po wyłączeniu wyjścia.
+- Do 20 480 widocznych próbek, zgodnie z limitem Oscyloskopu.
+- W trybie symetrycznym niezależne dane i serie Portu 1 (+) oraz Portu 2 (-).
 - Eksport napięcia, prądu albo obu wielkości do CSV.
 - Obliczanie rezystancji podczas ograniczenia prądowego.
 - Zapamiętywanie ostatnio wybranych portów.
@@ -48,6 +50,7 @@ Wymagany jest Windows oraz SDK .NET wskazany w `global.json`.
 dotnet restore Korad.KA3005P.sln
 dotnet test Korad.KA3005P.sln -c Release
 dotnet build Korad.KA3005P.sln -c Release
+./build.ps1 -Publish
 ```
 
 Publikacja samodzielnego pakietu Windows x64:

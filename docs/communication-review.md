@@ -1,6 +1,6 @@
 # Przegląd mechanizmów komunikacji LabStation
 
-Stan przeglądu: 2026-09-29.
+Stan wdrożenia: 2026-09-29.
 
 ## Wniosek
 
@@ -8,7 +8,7 @@ Komunikacji wszystkich przyrządów nie należy łączyć w jedną klasę. Wspó
 
 Największym rzeczywistym duplikatem jest `Vxi11Transport`. Oscyloskop i Generator mają dwie semantycznie równoważne implementacje XDR, ONC RPC, portmappera, tworzenia łącza `inst0`, dzielenia zapisu, wieloczęściowego odczytu, limitu 32 MiB i zamykania łącza. Różnią się głównie przestrzenią nazw, formatowaniem i tekstem błędów.
 
-Docelową granicą powinien być wspólny projekt `Shared/LabStation.Instruments`, niezależny od WPF i od `LabStation.UI`.
+Wspólny projekt `Shared/LabStation.Instruments` został wdrożony jako biblioteka niezależna od WPF i od `LabStation.UI`. Oscyloskop i Generator korzystają z jednej implementacji VXI-11 oraz wspólnych prymitywów komunikacyjnych. Granice poleceń, parserów i bezpieczeństwa pozostały zgodne z poniższym podziałem.
 
 ## Elementy wspólne
 
@@ -131,7 +131,7 @@ SDL1000X Control
 |- tryby, nastawy, zabezpieczenia i bezpieczny stan wejścia
 ```
 
-Pierwszy bezpieczny refaktor powinien przenieść bez zmian zachowania interfejs transportu, VXI-11 i jego istniejący test z lokalnym serwerem RPC. Dopiero po przejściu testów Oscyloskopu i Generatora warto wydzielić wspólne prymitywy kolejkowania. Próba utworzenia od razu jednej uniwersalnej sesji ukryłaby istotne różnice bezpieczeństwa i kolejności operacji.
+Refaktor przeniósł zachowanie interfejsu transportu, VXI-11 i test z lokalnym serwerem RPC. Następnie wydzielono wspólne prymitywy kolejkowania. Nie utworzono jednej uniwersalnej sesji, ponieważ ukryłaby istotne różnice bezpieczeństwa i kolejności operacji.
 
 ## Źródła
 

@@ -15,7 +15,12 @@ public readonly record struct ChartSample(
 	TimeSpan Elapsed,
 	int VoltageHundredths,
 	int CurrentThousandths,
-	bool IsCurrentLimited);
+	bool IsCurrentLimited,
+	bool IsSymmetric=false,
+	int FirstSignedVoltageHundredths=0,
+	int SecondSignedVoltageHundredths=0,
+	int FirstSignedCurrentThousandths=0,
+	int SecondSignedCurrentThousandths=0);
 
 public interface IChartSampleSource
 {

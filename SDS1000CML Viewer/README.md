@@ -1,4 +1,4 @@
-# Siglent SDS1000CML Viewer v0.6.1
+# Siglent SDS1000CML Viewer v0.6.2
 
 Prosta aplikacja Windows do podglądu CH1/CH2 i pobierania przebiegów do CSV.
 C# / WPF, szary interfejs zgodny z Koradem i czcionka Consolas. Bez EasyScopeX, NI-VISA, pakietów NI i zależności NuGet.
@@ -81,6 +81,10 @@ liczba rzeczywiście odebranych punktów jest widoczna w programie.
 Wykres stosuje min/max przy ograniczaniu punktów do szerokości ekranu.
 CSV zawiera wszystkie odebrane próbki, bez tego ograniczenia.
 Niepełny lub nierozpoznany deskryptor jest odrzucany.
+
+## Stan wersji 0.6.2
+
+W wersji 0.6.2 transport VXI-11, kontrakt SCPI i serializacja operacji pochodzą ze wspólnej biblioteki `Shared/LabStation.Instruments`. Wykres korzysta ze wspólnej kontrolki `TimeSeriesPlot`, zachowując cztery kursory, lokalne powiększenie, kanały CH1 i CH2 oraz pełną specyfikę dekodowania `WAVEDESC` w Oscyloskopie.
 
 ## Stan wersji 0.6.1
 

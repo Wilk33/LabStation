@@ -54,7 +54,12 @@ public sealed class TcpScpiTransport : IInstrumentTransport
 		lock(gate)
 		{
 			WriteCore(command);
-			int first=stream.ReadByte();
+			int first;
+			do
+			{
+				first=stream.ReadByte();
+			}
+			while(first is '\r' or '\n');
 			if(first<0)
 			{
 				throw new EndOfStreamException("Połączenie SCPI zostało zamknięte.");

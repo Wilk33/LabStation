@@ -95,24 +95,60 @@
 			</Grid.ColumnDefinitions>
 			<Border Grid.Column="0" Margin="0,0,3,0" Padding="6,4" BorderBrush="#A0A0A0" BorderThickness="1">
 				<StackPanel>
-					<TextBlock FontFamily="Consolas" FontSize="11" Text="Zasilacz 1" />
+					<TextBlock FontFamily="Consolas" FontSize="11" Text="{Binding FirstSupplyLabel}" />
 					<TextBlock FontFamily="Consolas" FontSize="10" Text="{Binding FirstPhysicalSetpointText,StringFormat=Nastawa: {0}}" />
 					<TextBlock FontFamily="Consolas" FontSize="10" Text="{Binding FirstMeasurementText,StringFormat=Pomiar: {0}}" />
 				</StackPanel>
 			</Border>
 			<Border Grid.Column="1" Margin="3,0,0,0" Padding="6,4" BorderBrush="#A0A0A0" BorderThickness="1">
 				<StackPanel>
-					<TextBlock FontFamily="Consolas" FontSize="11" Text="Zasilacz 2" />
+					<TextBlock FontFamily="Consolas" FontSize="11" Text="{Binding SecondSupplyLabel}" />
 					<TextBlock FontFamily="Consolas" FontSize="10" Text="{Binding SecondPhysicalSetpointText,StringFormat=Nastawa: {0}}" />
 					<TextBlock FontFamily="Consolas" FontSize="10" Text="{Binding SecondMeasurementText,StringFormat=Pomiar: {0}}" />
 				</StackPanel>
 			</Border>
 		</Grid>
 		<StackPanel Grid.Row="5" Margin="0,4,0,0">
+			<StackPanel.Style>
+				<Style TargetType="StackPanel">
+					<Setter Property="Visibility" Value="Visible" />
+					<Style.Triggers>
+						<DataTrigger Binding="{Binding IsSymmetric}" Value="True">
+							<Setter Property="Visibility" Value="Collapsed" />
+						</DataTrigger>
+					</Style.Triggers>
+				</Style>
+			</StackPanel.Style>
 			<TextBlock HorizontalAlignment="Right" Style="{StaticResource ValueTextStyle}" Text="{Binding MeasuredVoltageText}" />
 			<TextBlock HorizontalAlignment="Right" Style="{StaticResource ValueTextStyle}" Text="{Binding MeasuredCurrentText}" />
 			<TextBlock HorizontalAlignment="Right" FontFamily="Consolas" FontSize="17" Text="{Binding ResistanceText}" />
 		</StackPanel>
+		<Grid Grid.Row="5" Margin="0,4,0,0">
+			<Grid.Style>
+				<Style TargetType="Grid">
+					<Setter Property="Visibility" Value="Collapsed" />
+					<Style.Triggers>
+						<DataTrigger Binding="{Binding IsSymmetric}" Value="True">
+							<Setter Property="Visibility" Value="Visible" />
+						</DataTrigger>
+					</Style.Triggers>
+				</Style>
+			</Grid.Style>
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="*" />
+				<ColumnDefinition Width="*" />
+			</Grid.ColumnDefinitions>
+			<StackPanel Grid.Column="0">
+				<TextBlock HorizontalAlignment="Right" FontFamily="Consolas" FontSize="12" Text="{Binding FirstSupplyLabel}" />
+				<TextBlock HorizontalAlignment="Right" Style="{StaticResource ValueTextStyle}" Text="{Binding FirstSideVoltageText}" />
+				<TextBlock HorizontalAlignment="Right" Style="{StaticResource ValueTextStyle}" Text="{Binding FirstSideCurrentText}" />
+			</StackPanel>
+			<StackPanel Grid.Column="1" Margin="12,0,0,0">
+				<TextBlock HorizontalAlignment="Right" FontFamily="Consolas" FontSize="12" Text="{Binding SecondSupplyLabel}" />
+				<TextBlock HorizontalAlignment="Right" Style="{StaticResource ValueTextStyle}" Text="{Binding SecondSideVoltageText}" />
+				<TextBlock HorizontalAlignment="Right" Style="{StaticResource ValueTextStyle}" Text="{Binding SecondSideCurrentText}" />
+			</StackPanel>
+		</Grid>
 		<TextBlock Grid.Row="6" Foreground="#FFFFA0A0" TextWrapping="Wrap" Text="{Binding ErrorMessage}" />
 	</Grid>
 </UserControl>

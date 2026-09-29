@@ -119,11 +119,11 @@ public sealed class CsvMeasurementWriter
 				"Current total;",
 				"[-];[s];[V];[V];[A];[A];[A];"),
 			(MeasurementLayout.Symmetric,MeasurementExportKind.Voltage)=>
-				("Sample;Time;Voltage -;Voltage +;","[-];[s];[V];[V];"),
+				("Sample;Time;Port 1 Voltage +;Port 2 Voltage -;","[-];[s];[V];[V];"),
 			(MeasurementLayout.Symmetric,MeasurementExportKind.Current)=>
-				("Sample;Time;Current -;Current +;","[-];[s];[A];[A];"),
+				("Sample;Time;Port 1 Current +;Port 2 Current -;","[-];[s];[A];[A];"),
 			(MeasurementLayout.Symmetric,MeasurementExportKind.VoltageAndCurrent)=>
-				("Sample;Time;Voltage -;Voltage +;Current -;Current +;",
+				("Sample;Time;Port 1 Voltage +;Port 2 Voltage -;Port 1 Current +;Port 2 Current -;",
 				"[-];[s];[V];[V];[A];[A];"),
 			_=>throw new ArgumentOutOfRangeException(nameof(layout))
 		};

@@ -9,11 +9,16 @@ namespace Ka3005P.App.ViewModels;
 public readonly record struct ChartPoint(
 	TimeSpan Elapsed,
 	double VoltageVolts,
-	double CurrentAmperes);
+	double CurrentAmperes,
+	bool IsSymmetric=false,
+	double FirstVoltageVolts=0,
+	double SecondVoltageVolts=0,
+	double FirstCurrentAmperes=0,
+	double SecondCurrentAmperes=0);
 
 public sealed class ChartViewModel : ObservableObject,IDisposable
 {
-	private const int MaximumPoints=50;
+	private const int MaximumPoints=20480;
 	private const double CurrentAxisMargin=0.5;
 	private const double VoltageAxisMargin=1;
 	private static readonly CultureInfo PolishCulture=
@@ -95,6 +100,7 @@ public sealed class ChartViewModel : ObservableObject,IDisposable
 				OnPropertyChanged(nameof(OutputButtonText));
 				OnPropertyChanged(nameof(IsOff));
 				OnPropertyChanged(nameof(IsOn));
+				OnPropertyChanged(nameof(CanUseCursors));
 			}
 		}
 	}
@@ -109,6 +115,7 @@ public sealed class ChartViewModel : ObservableObject,IDisposable
 				OnPropertyChanged(nameof(IsOnline));
 				OnPropertyChanged(nameof(IsOff));
 				OnPropertyChanged(nameof(IsOn));
+				OnPropertyChanged(nameof(CanUseCursors));
 				ToggleOutputCommand.RaiseCanExecuteChanged();
 			}
 		}
@@ -178,6 +185,7 @@ public sealed class ChartViewModel : ObservableObject,IDisposable
 	public bool IsOnline => IsConnected;
 	public bool IsOff => IsConnected && !IsOutputOn;
 	public bool IsOn => IsConnected && IsOutputOn;
+	public bool CanUseCursors=>IsOff && Points.Count>0;
 
 	public string? ErrorMessage
 	{
@@ -212,6 +220,7 @@ public sealed class ChartViewModel : ObservableObject,IDisposable
 		{
 			Points.RemoveAt(0);
 		}
+		OnPropertyChanged(nameof(CanUseCursors));
 		RecalculateAxes();
 	}
 
@@ -289,10 +298,19 @@ public sealed class ChartViewModel : ObservableObject,IDisposable
 
 	private void OnChartSampleReceived(object? sender,ChartSample sample)
 	{
+		if(Points.Count>0 && Points[^1].IsSymmetric != sample.IsSymmetric)
+		{
+			Points.Clear();
+		}
 		AddPoint(new ChartPoint(
 			sample.Elapsed,
 			sample.VoltageHundredths/100d,
-			sample.CurrentThousandths/1000d));
+			sample.CurrentThousandths/1000d,
+			sample.IsSymmetric,
+			sample.FirstSignedVoltageHundredths/100d,
+			sample.SecondSignedVoltageHundredths/100d,
+			sample.FirstSignedCurrentThousandths/1000d,
+			sample.SecondSignedCurrentThousandths/1000d));
 		VoltageText=(sample.VoltageHundredths/100m)
 			.ToString("0.00",PolishCulture);
 		CurrentText=(sample.CurrentThousandths/1000m)

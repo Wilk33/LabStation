@@ -125,9 +125,9 @@ public sealed class DualSetpointCalculatorTests
 			first,
 			second);
 
-		Assert.Equal(-1200,result.FirstSignedVoltageHundredths);
-		Assert.Equal(1100,result.SecondSignedVoltageHundredths);
-		Assert.Equal(-400,result.FirstSignedCurrentThousandths);
-		Assert.Equal(350,result.SecondSignedCurrentThousandths);
+		Assert.Equal(1200,result.FirstSignedVoltageHundredths);
+		Assert.Equal(-1100,result.SecondSignedVoltageHundredths);
+		Assert.Equal(400,result.FirstSignedCurrentThousandths);
+		Assert.Equal(-350,result.SecondSignedCurrentThousandths);
 	}
 }

@@ -1,6 +1,6 @@
-# SIGLENT SDG1032X Controller
+# Siglent SDG1000X Control v0.2.0
 
-Wąska aplikacja Windows do podstawowego sterowania dwukanałowym generatorem SIGLENT SDG1032X przez LAN/VXI-11.
+Wąska aplikacja Windows do podstawowego sterowania dwukanałowym generatorem SIGLENT SDG1032X przez LAN/VXI-11. Główna powierzchnia `GeneratorView` jest panelem wielokrotnego użytku, a samodzielne EXE jest jego cienką powłoką.
 
 ## Najważniejsze założenia
 
@@ -53,11 +53,9 @@ Aplikacja używa VXI-11 przez LAN, tej samej metody połączenia co referencyjna
 4. Akceptowany jest model SIGLENT SDG1032X.
 5. Ustawienia obu kanałów zostaną odczytane automatycznie.
 
-## Tryb demonstracyjny
+Transport VXI-11, podstawowe operacje SCPI oraz kolejka `latest-wins` pochodzą ze wspólnej biblioteki `Shared/LabStation.Instruments`. Polecenia kanałów, parsery generatora i reguły wyjść pozostają lokalne.
 
-Tryb demonstracyjny nie wymaga generatora:
-
-    dotnet run --project src/Sdg1032X.App/Sdg1032X.App.csproj -c Release -- --demo
+Aplikacja nie zawiera trybu demonstracyjnego ani symulowanego urządzenia.
 
 ## Budowanie i testy
 
@@ -69,7 +67,7 @@ Wymagany jest .NET 10 SDK dla Windows.
 
 ## Status weryfikacji
 
-Testy automatyczne i tryb demonstracyjny nie zmieniają stanu fizycznego urządzenia. Zakres ograniczonej walidacji wersji 0.1.2 na rzeczywistym generatorze oraz pełna procedura testowa są opisane w [docs/hardware-testing.md](docs/hardware-testing.md).
+Testy automatyczne nie łączą się z fizycznym urządzeniem i nie zmieniają jego stanu. Zakres ograniczonej walidacji wcześniejszej wersji 0.1.2 na rzeczywistym generatorze oraz pełna procedura testowa są opisane w [docs/hardware-testing.md](docs/hardware-testing.md). Wersja 0.2.0 została zweryfikowana programowo po przeniesieniu do LabStation, bez ponownego testu sprzętowego.
 
 ## Autor i licencja
 

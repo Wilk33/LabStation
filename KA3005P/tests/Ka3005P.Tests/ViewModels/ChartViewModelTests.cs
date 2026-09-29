@@ -1,28 +1,93 @@
 using Ka3005P.App.ViewModels;
 using Ka3005P.Core.Measurements;
 using Ka3005P.Tests.Fakes;
+using Ka3005P.App.Views;
+using LabStation.UI.Controls;
+using System.Windows.Media;
 
 namespace Ka3005P.Tests.ViewModels;
 
 public sealed class ChartViewModelTests
 {
 	[Fact]
-	public void AddSample_KeepsLatestFiftyAndScalesAxis()
+	public void AddSample_KeepsLatest20480AndScalesAxis()
 	{
 		FakeOutputController output=new();
 		using ChartViewModel viewModel=new(output);
-		for(int index=0;index<60;index++)
+		for(int index=0;index<20490;index++)
 		{
 			viewModel.AddSample(
 				TimeSpan.FromMilliseconds(index*100),
 				index);
 		}
 
-		Assert.Equal(50,viewModel.Points.Count);
+		Assert.Equal(20480,viewModel.Points.Count);
 		Assert.Equal(10,viewModel.Points[0].CurrentAmperes);
-		Assert.Equal(59,viewModel.Points[^1].CurrentAmperes);
+		Assert.Equal(20489,viewModel.Points[^1].CurrentAmperes);
 		Assert.Equal(9.5,viewModel.MinimumY);
-		Assert.Equal(59.5,viewModel.MaximumY);
+		Assert.Equal(20489.5,viewModel.MaximumY);
+	}
+
+	[Fact]
+	public async Task Cursors_AreAvailableOnlyWhenConnectedOffAndSamplesExist()
+	{
+		FakeOutputController output=new();
+		using ChartViewModel viewModel=new(output);
+		output.SetConnected(true);
+		viewModel.AddSample(TimeSpan.Zero,1);
+		Assert.True(viewModel.CanUseCursors);
+
+		await output.SetOutputAsync(true,CancellationToken.None);
+		Assert.False(viewModel.CanUseCursors);
+		await output.SetOutputAsync(false,CancellationToken.None);
+		Assert.True(viewModel.CanUseCursors);
+		output.SetConnected(false);
+		Assert.False(viewModel.CanUseCursors);
+	}
+
+	[Fact]
+	public void SharedPlot_ZoomsAndSupportsTwoCursors()
+	{
+		RunSta(()=>
+		{
+			TimeSeriesPlot plot=new()
+			{
+				CursorCount=2,
+				CursorsEnabled=true
+			};
+			plot.SetSeries(
+			[
+				new PlotSeries(
+					"Prąd",
+					"A",
+					Colors.Red,
+					PlotAxis.Left,
+					Enumerable.Range(0,20480)
+						.Select(index=>new PlotPoint(index,index/1000d))
+						.ToArray())
+			]);
+			(double fullMin,double fullMax)=plot.VisibleRange;
+			plot.ZoomAt(0.5,120);
+			(double zoomMin,double zoomMax)=plot.VisibleRange;
+			Assert.True(zoomMax-zoomMin<fullMax-fullMin);
+			plot.ActivateOrSelectCursor(0);
+			plot.ActivateOrSelectCursor(1);
+			Assert.Equal([(1,2)],plot.ActiveCursorPairs());
+		});
+	}
+
+	[Fact]
+	public void ChartWindow_DefaultHeightMatchesSingleWindow()
+	{
+		RunSta(()=>
+		{
+			Ka3005P.App.App application=new();
+			application.InitializeComponent();
+			ChartWindow window=new();
+			Assert.Equal(360,window.Height);
+			window.Close();
+			application.Shutdown();
+		});
 	}
 
 	[Fact]
@@ -129,6 +194,29 @@ public sealed class ChartViewModelTests
 			IsOutputOn=enabled;
 			OutputStateChanged?.Invoke(this,enabled);
 			return ValueTask.CompletedTask;
+		}
+	}
+
+	private static void RunSta(Action action)
+	{
+		Exception? failure=null;
+		Thread thread=new(()=>
+		{
+			try
+			{
+				action();
+			}
+			catch(Exception exception)
+			{
+				failure=exception;
+			}
+		});
+		thread.SetApartmentState(ApartmentState.STA);
+		thread.Start();
+		thread.Join();
+		if(failure is not null)
+		{
+			throw failure;
 		}
 	}
 

@@ -115,8 +115,9 @@ Test("Socket SCPI odczytuje tekst i blok binarny",()=>
 	{
 		throw new Exception("Blok binarny socketu został zmieniony");
 	}
+	Equal("DONE\n",Encoding.ASCII.GetString(transport.Query("AFTER?")));
 	server.Wait();
-	Equal("TEXT?\nBINARY?\n",server.Commands);
+	Equal("TEXT?\nBINARY?\nAFTER?\n",server.Commands);
 });
 
 Console.WriteLine($"Wynik: {passed} zaliczonych, {failed} niezaliczonych");
@@ -363,6 +364,10 @@ sealed class LoopbackScpiServer : IDisposable
 		Commands+=second+"\n";
 		byte[] binary=[(byte)'#',(byte)'1',(byte)'4',1,10,13,255,(byte)'\n'];
 		stream.Write(binary);
+		string? third=reader.ReadLine();
+		Commands+=third+"\n";
+		byte[] after=Encoding.ASCII.GetBytes("DONE\n");
+		stream.Write(after);
 	}
 }
 

@@ -240,6 +240,32 @@ public sealed class DualSupplyViewModelTests
 	}
 
 	[Fact]
+	public void SymmetricMeasurements_ShowPositivePortOneAndNegativePortTwo()
+	{
+		(DualSupplyViewModel viewModel,FakePowerSupplySession first,FakePowerSupplySession second)=
+			CreateViewModel();
+		viewModel.Mode=DualMode.Symmetric;
+		using ChartViewModel chart=viewModel.CreateChartViewModel(new FakeFileDialogService());
+
+		first.PublishMeasurement(new MeasurementSample(TimeSpan.Zero,1200,400));
+		second.PublishMeasurement(new MeasurementSample(TimeSpan.Zero,1100,350));
+
+		Assert.True(viewModel.IsSymmetric);
+		Assert.Equal("Port 1 (+)",viewModel.FirstSupplyLabel);
+		Assert.Equal("Port 2 (-)",viewModel.SecondSupplyLabel);
+		Assert.Equal("+12,00 V",viewModel.FirstSideVoltageText);
+		Assert.Equal("+0,400 A",viewModel.FirstSideCurrentText);
+		Assert.Equal("-11,00 V",viewModel.SecondSideVoltageText);
+		Assert.Equal("-0,350 A",viewModel.SecondSideCurrentText);
+		ChartPoint point=Assert.Single(chart.Points);
+		Assert.True(point.IsSymmetric);
+		Assert.Equal(12,point.FirstVoltageVolts);
+		Assert.Equal(-11,point.SecondVoltageVolts);
+		Assert.Equal(0.4,point.FirstCurrentAmperes);
+		Assert.Equal(-0.35,point.SecondCurrentAmperes);
+	}
+
+	[Fact]
 	public void Measurements_AtCurrentLimitShowTotalShortCircuitResistance()
 	{
 		(DualSupplyViewModel viewModel,FakePowerSupplySession first,FakePowerSupplySession second)=
