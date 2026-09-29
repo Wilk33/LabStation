@@ -16,8 +16,9 @@ if($LASTEXITCODE -ne 0)
 
 if($Publish)
 {
-	$output=Join-Path $root 'artifacts/final/win-x64'
-	$archive=Join-Path $root "artifacts/final/Korad-KA3005P-v$version-win-x64.zip"
+	$releaseName="Korad-KA3005P-v$version-win-x64"
+	$output=Join-Path $root "artifacts/final/$releaseName"
+	$archive=Join-Path $root "artifacts/final/$releaseName.zip"
 	if(Test-Path -LiteralPath $output)
 	{
 		Remove-Item -LiteralPath $output -Recurse -Force

@@ -24,7 +24,7 @@ Aplikacja nie zawiera trybu demonstracyjnego ani symulowanych urządzeń. Korzys
 
 ## Uruchomienie
 
-Gotowy pakiet znajduje się w `artifacts/final/win-x64`.
+Gotowy pakiet znajduje się w wersjonowanym katalogu `artifacts/final/Korad-KA3005P-v<wersja>-win-x64`.
 
 Uruchom:
 
@@ -56,7 +56,7 @@ dotnet build Korad.KA3005P.sln -c Release
 Publikacja samodzielnego pakietu Windows x64:
 
 ```powershell
-dotnet publish src/Ka3005P.App/Ka3005P.App.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o artifacts/final/win-x64
+./build.ps1 -Publish
 ```
 
 Procedura testu z fizycznymi zasilaczami znajduje się w [docs/testing-hardware.md](docs/testing-hardware.md).
