@@ -1,0 +1,7 @@
+<Project>
+	<ItemGroup Condition="'$(MSBuildProjectName)' == 'Ka3005P.App'">
+		<Resource Include="$(MSBuildThisFileDirectory)assets\reference\KoradS150.png" Link="Assets\KoradS150.png" />
+		<Resource Include="$(MSBuildThisFileDirectory)assets\reference\KoradD150.png" Link="Assets\KoradD150.png" />
+		<Resource Include="$(MSBuildThisFileDirectory)assets\reference\KoradM150.png" Link="Assets\KoradM150.png" />
+	</ItemGroup>
+</Project>

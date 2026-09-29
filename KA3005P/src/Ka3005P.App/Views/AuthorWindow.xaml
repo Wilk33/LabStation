@@ -1,0 +1,24 @@
+<Window
+	x:Class="Ka3005P.App.Views.AuthorWindow"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:app="clr-namespace:Ka3005P.App"
+	Title="Autor"
+	Icon="/Korad.KA3005P;component/Assets/KoradS.ico"
+	Background="{StaticResource KoradBackgroundBrush}"
+	Foreground="{StaticResource KoradTextBrush}"
+	FontFamily="Consolas"
+	FontWeight="Normal"
+	Width="430"
+	Height="190"
+	ResizeMode="NoResize"
+	ShowInTaskbar="False"
+	WindowStartupLocation="CenterOwner">
+	<Grid Margin="22" Background="{StaticResource KoradBackgroundBrush}">
+		<StackPanel VerticalAlignment="Center">
+			<TextBlock HorizontalAlignment="Center" FontSize="22" Text="{x:Static app:AppInformation.AuthorName}" />
+			<TextBlock Margin="0,8,0,0" HorizontalAlignment="Center" FontSize="16" Text="{x:Static app:AppInformation.AuthorProfession}" />
+			<TextBlock Margin="0,8,0,0" HorizontalAlignment="Center" FontSize="16" Text="{x:Static app:AppInformation.AuthorEmail}" />
+		</StackPanel>
+	</Grid>
+</Window>

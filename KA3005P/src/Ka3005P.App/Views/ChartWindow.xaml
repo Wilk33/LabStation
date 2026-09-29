@@ -1,0 +1,81 @@
+<Window
+	x:Class="Ka3005P.App.Views.ChartWindow"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:controls="clr-namespace:Ka3005P.App.Controls"
+	Title="Wykres"
+	Icon="/Korad.KA3005P;component/Assets/KoradS.ico"
+	Background="{StaticResource KoradBackgroundBrush}"
+	Foreground="{StaticResource KoradTextBrush}"
+	Width="650"
+	Height="470"
+	MinWidth="480"
+	MinHeight="330"
+	WindowStartupLocation="CenterOwner">
+	<DockPanel>
+		<Menu DockPanel.Dock="Top">
+			<MenuItem Header="Widok">
+				<MenuItem Header="Prąd" IsCheckable="True" IsChecked="{Binding ShowCurrent,Mode=TwoWay}" />
+				<MenuItem Header="Napięcie" IsCheckable="True" IsChecked="{Binding ShowVoltage,Mode=TwoWay}" />
+			</MenuItem>
+			<MenuItem Header="Zapisz jako">
+				<MenuItem Header="Napięcie CSV" Command="{Binding SaveVoltageCommand}" />
+				<MenuItem Header="Prąd CSV" Command="{Binding SaveCurrentCommand}" />
+				<MenuItem Header="Napięcie i prąd CSV" Command="{Binding SaveVoltageAndCurrentCommand}" />
+			</MenuItem>
+		</Menu>
+		<Grid Margin="14">
+			<Grid.RowDefinitions>
+				<RowDefinition Height="Auto" />
+				<RowDefinition Height="*" />
+				<RowDefinition Height="Auto" />
+			</Grid.RowDefinitions>
+			<Grid>
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="Auto" />
+					<ColumnDefinition Width="*" />
+					<ColumnDefinition Width="Auto" />
+					<ColumnDefinition Width="Auto" />
+				</Grid.ColumnDefinitions>
+				<controls:StatusLamps
+					IsOnline="{Binding IsOnline}"
+					IsOff="{Binding IsOff}"
+					IsOn="{Binding IsOn}" />
+				<StackPanel Grid.Column="1" Margin="12,0" Orientation="Horizontal" VerticalAlignment="Center">
+					<TextBlock Margin="0,0,14,0" FontFamily="Consolas" FontSize="22" Foreground="{StaticResource KoradTextBrush}">
+						<Run Text="{Binding CurrentText,Mode=OneWay}" /><Run Foreground="#FFFF2020" Text=" A" />
+					</TextBlock>
+					<TextBlock FontFamily="Consolas" FontSize="22" Foreground="{StaticResource KoradTextBrush}">
+						<Run Text="{Binding VoltageText,Mode=OneWay}" /><Run Foreground="#FF00FF00" Text=" V" />
+					</TextBlock>
+				</StackPanel>
+				<TextBlock
+					Grid.Column="2"
+					Margin="8,0"
+					VerticalAlignment="Center"
+					FontFamily="Consolas"
+					FontSize="17"
+					Text="{Binding ResistanceText}" />
+				<Button
+					Grid.Column="3"
+					Width="72"
+					Command="{Binding ToggleOutputCommand}"
+					Content="{Binding OutputButtonText}" />
+			</Grid>
+			<controls:CurrentChart
+				Grid.Row="1"
+				Margin="0,12,0,8"
+				MinimumY="{Binding MinimumY}"
+				MaximumY="{Binding MaximumY}"
+				MinimumVoltageY="{Binding MinimumVoltageY}"
+				MaximumVoltageY="{Binding MaximumVoltageY}"
+				ShowCurrent="{Binding ShowCurrent}"
+				ShowVoltage="{Binding ShowVoltage}"
+				Points="{Binding Points}" />
+			<TextBlock
+				Grid.Row="2"
+				Foreground="#FFFFA0A0"
+				Text="{Binding ErrorMessage}" />
+		</Grid>
+	</DockPanel>
+</Window>

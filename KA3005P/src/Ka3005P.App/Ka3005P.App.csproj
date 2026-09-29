@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <Resource Include="Assets/KoradS.ico" />
+    <ProjectReference Include="../Ka3005P.Core/Ka3005P.Core.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+	<Content Include="../../LICENSE" Link="LICENSE" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+	<Content Include="../../THIRD-PARTY-NOTICES.md" Link="THIRD-PARTY-NOTICES.md" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+	<Content Include="../../README.md" Link="README.md" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+	<Content Include="../../docs/testing-hardware.md" Link="docs/testing-hardware.md" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+	<EmbeddedResource Include="../../LICENSE" LogicalName="Ka3005P.LICENSE" />
+	<Content Include="../../assets/reference/KoradS150.png" Link="ReferenceAssets/KoradS150.png" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+	<Content Include="../../assets/reference/KoradD150.png" Link="ReferenceAssets/KoradD150.png" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+	<Content Include="../../assets/reference/KoradM150.png" Link="ReferenceAssets/KoradM150.png" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+  </ItemGroup>
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+	<AssemblyName>Korad.KA3005P</AssemblyName>
+	<Product>Korad KA3005P</Product>
+	<Description>Sterowanie jednym lub dwoma zasilaczami Korad KA3005P</Description>
+	<PackageLicenseExpression>PolyForm-Noncommercial-1.0.0</PackageLicenseExpression>
+    <ApplicationIcon>Assets/KoradS.ico</ApplicationIcon>
+	<Version>0.1.7</Version>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <DebugType>embedded</DebugType>
+  </PropertyGroup>
+</Project>
