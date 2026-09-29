@@ -9,7 +9,6 @@
 	<Grid Margin="14,10">
 		<Grid.RowDefinitions>
 			<RowDefinition Height="44" />
-			<RowDefinition Height="40" />
 			<RowDefinition Height="48" />
 			<RowDefinition Height="*" />
 			<RowDefinition Height="46" />
@@ -20,9 +19,10 @@
 		<Grid>
 			<Grid.ColumnDefinitions>
 				<ColumnDefinition Width="Auto" />
-				<ColumnDefinition Width="175" />
+				<ColumnDefinition Width="150" />
+				<ColumnDefinition Width="98" />
+				<ColumnDefinition Width="Auto" />
 				<ColumnDefinition Width="*" />
-				<ColumnDefinition Width="110" />
 			</Grid.ColumnDefinitions>
 			<TextBlock
 				Margin="0,0,8,0"
@@ -37,40 +37,47 @@
 				ToolTip="Adres IP oscyloskopu." />
 			<Button
 				x:Name="ConnectionButton"
-				Grid.Column="3"
+				Grid.Column="2"
 				Content="Offline"
 				Click="ConnectOrDisconnectClick"
 				ToolTip="Kliknij, aby połączyć lub rozłączyć oscyloskop przez LAN." />
+			<StackPanel Grid.Column="3" Orientation="Horizontal">
+				<CheckBox
+					x:Name="Channel1CheckBox"
+					Content="CH1"
+					Foreground="#FFFFDC32"
+					IsChecked="True"
+					Checked="ChannelSelectionChanged"
+					Unchecked="ChannelSelectionChanged" />
+				<CheckBox
+					x:Name="Channel2CheckBox"
+					Content="CH2"
+					Foreground="#FF50E1E6"
+					IsChecked="True"
+					Checked="ChannelSelectionChanged"
+					Unchecked="ChannelSelectionChanged" />
+				<CheckBox
+					x:Name="LiveCheckBox"
+					Margin="8,0,4,0"
+					Content="Podgląd"
+					IsChecked="True"
+					ToolTip="Cykliczne odczyty. Odznaczenie zatrzymuje tylko odświeżanie aplikacji." />
+			</StackPanel>
+			<Grid Grid.Column="4">
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="*" />
+					<ColumnDefinition Width="*" />
+					<ColumnDefinition Width="*" />
+					<ColumnDefinition Width="*" />
+				</Grid.ColumnDefinitions>
+				<Button x:Name="Cursor1Button" Content="Kursor 1" Click="Cursor1Click" />
+				<Button x:Name="Cursor2Button" Grid.Column="1" Content="Kursor 2" Click="Cursor2Click" />
+				<Button x:Name="Cursor3Button" Grid.Column="2" Content="Kursor 3" Click="Cursor3Click" />
+				<Button x:Name="Cursor4Button" Grid.Column="3" Content="Kursor 4" Click="Cursor4Click" />
+			</Grid>
 		</Grid>
 
-		<StackPanel Grid.Row="1" Orientation="Horizontal">
-			<CheckBox
-				x:Name="Channel1CheckBox"
-				Content="CH1"
-				Foreground="#FFFFDC32"
-				IsChecked="True"
-				Checked="ChannelSelectionChanged"
-				Unchecked="ChannelSelectionChanged" />
-			<CheckBox
-				x:Name="Channel2CheckBox"
-				Content="CH2"
-				Foreground="#FF50E1E6"
-				IsChecked="True"
-				Checked="ChannelSelectionChanged"
-				Unchecked="ChannelSelectionChanged" />
-			<CheckBox
-				x:Name="LiveCheckBox"
-				Margin="12,0,8,0"
-				Content="Podgląd"
-				IsChecked="True"
-				ToolTip="Cykliczne odczyty. Odznaczenie zatrzymuje tylko odświeżanie aplikacji." />
-			<Button x:Name="Cursor1Button" Width="102" Content="Kursor 1" Click="Cursor1Click" />
-			<Button x:Name="Cursor2Button" Width="102" Content="Kursor 2" Click="Cursor2Click" />
-			<Button x:Name="Cursor3Button" Width="102" Content="Kursor 3" Click="Cursor3Click" />
-			<Button x:Name="Cursor4Button" Width="102" Content="Kursor 4" Click="Cursor4Click" />
-		</StackPanel>
-
-		<Grid Grid.Row="2">
+		<Grid Grid.Row="1">
 			<Grid.RowDefinitions>
 				<RowDefinition Height="*" />
 				<RowDefinition Height="*" />
@@ -96,11 +103,11 @@
 
 		<local:WavePlot
 			x:Name="Plot"
-			Grid.Row="3"
+			Grid.Row="2"
 			Margin="0,4,0,6"
 			ToolTip="Rolka: przybliżenie osi czasu. PPM: odblokuj wybrany kursor. LPM: ustaw kursor." />
 
-		<StackPanel Grid.Row="4" Orientation="Horizontal">
+		<StackPanel Grid.Row="3" Orientation="Horizontal">
 			<Button x:Name="StartButton" Width="92" Content="Start" Click="StartClick"
 				ToolTip="Wznawia poprzedni tryb wyzwalania. Gdy nieznany, uruchamia TRMD AUTO." />
 			<Button x:Name="StopButton" Width="92" Content="Stop" Click="StopClick" />
@@ -114,14 +121,14 @@
 
 		<TextBlock
 			x:Name="DetailText"
-			Grid.Row="5"
+			Grid.Row="4"
 			VerticalAlignment="Center"
 			FontSize="13"
 			Text="CH1 + CH2 | CSV: czas [s], napięcie [V]"
 			TextTrimming="CharacterEllipsis" />
 		<TextBlock
 			x:Name="AcquisitionText"
-			Grid.Row="6"
+			Grid.Row="5"
 			VerticalAlignment="Center"
 			FontSize="14"
 			FontWeight="Bold"

@@ -1,5 +1,11 @@
 # Zmiany
 
+## 0.6.1 - 2026-09-29
+
+- Połączono adres IP, przycisk Offline/Online, wybór CH1 i CH2, Podgląd oraz cztery kursory w jednym wierszu.
+- Kursory korzystają z czterech równych, elastycznych kolumn, dzięki czemu napisy pozostają czytelne także przy minimalnej szerokości okna.
+- Test UI mierzy rzeczywiste położenie kontrolek i odrzuca ponowne rozdzielenie ich na dwa wiersze.
+
 ## 0.6.0 - 2026-09-29
 
 - Przeniesiono motyw, kontrolki bazowe, obsługę systemowego motywu oraz okna Autor i Licencja do `Shared/LabStation.UI`.
@@ -22,7 +28,7 @@
 
 ## Integracja z LabStation - 2026-09-29
 
-- Przeniesiono aplikację do katalogu `SDS1000CML Viewer` jako niezależny program, rozwijany obecnie jako `Siglent SDS1000CML Viewer v0.6.0`.
+- Przeniesiono aplikację do katalogu `SDS1000CML Viewer` jako niezależny program, rozwijany obecnie jako `Siglent SDS1000CML Viewer v0.6.1`.
 - Usunięto transport USB i testy USBTMC. Jedyną metodą komunikacji jest LAN przez VXI-11.
 - Żądanie Offline jest dostępne podczas aktywnego podglądu i czeka w kolejce za trwającym odczytem zamiast być pomijane.
 - Ustawiono domyślny adres oscyloskopu `192.168.200.41` oraz osobny katalog ustawień aplikacji.

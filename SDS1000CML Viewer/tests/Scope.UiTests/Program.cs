@@ -32,6 +32,7 @@ internal static class Program
 		AssertApplicationIdentity(window);
 		AssertReusablePanel(window);
 		AssertConnectionControls(window);
+		AssertConnectionAndCursorControlsShareOneRow(window);
 		AssertMenuPopupHasNoFrame(window);
 		AssertSharedUiLibrary();
 		AssertSharedAboutMenuComponent(window);
@@ -54,7 +55,7 @@ internal static class Program
 
 	private static void AssertApplicationIdentity(MainWindow window)
 	{
-		if(window.Title != "Siglent SDS1000CML Viewer v0.6.0")
+		if(window.Title != "Siglent SDS1000CML Viewer v0.6.1")
 		{
 			throw new Exception("Unexpected main-window title: "+window.Title);
 		}
@@ -112,6 +113,34 @@ internal static class Program
 		if(Named<Button>(panel,"SaveButton").IsEnabled)
 		{
 			throw new Exception("CSV is enabled before a capture");
+		}
+	}
+
+	private static void AssertConnectionAndCursorControlsShareOneRow(
+		MainWindow window)
+	{
+		OscilloscopeView panel=Find<OscilloscopeView>(window);
+		FrameworkElement[] controls=
+		[
+			Named<TextBox>(panel,"AddressTextBox"),
+			Named<Button>(panel,"ConnectionButton"),
+			Named<CheckBox>(panel,"Channel1CheckBox"),
+			Named<CheckBox>(panel,"Channel2CheckBox"),
+			Named<CheckBox>(panel,"LiveCheckBox"),
+			Named<Button>(panel,"Cursor1Button"),
+			Named<Button>(panel,"Cursor2Button"),
+			Named<Button>(panel,"Cursor3Button"),
+			Named<Button>(panel,"Cursor4Button")
+		];
+		double[] centers=controls
+			.Select(control=>control.TranslatePoint(
+				new Point(0,control.ActualHeight/2),
+				panel).Y)
+			.ToArray();
+		if(centers.Max()-centers.Min()>2)
+		{
+			throw new Exception(
+				"IP, connection, channel, preview and cursor controls are not in one row");
 		}
 	}
 
@@ -265,7 +294,7 @@ internal static class Program
 			"\n",
 			Descendants<TextBlock>(author).Select(text=>text.Text));
 		if(author.Title !=
-			"Autor - Siglent SDS1000CML Viewer v0.6.0" ||
+			"Autor - Siglent SDS1000CML Viewer v0.6.1" ||
 			!authorText.Contains("Mateusz Skipor",StringComparison.Ordinal) ||
 			!authorText.Contains(
 				"Inżynier technik elektroniki",
@@ -290,7 +319,7 @@ internal static class Program
 		Pump();
 		TextBox licenseText=Descendants<TextBox>(license).Single();
 		if(license.Title !=
-			"Licencja - Siglent SDS1000CML Viewer v0.6.0" ||
+			"Licencja - Siglent SDS1000CML Viewer v0.6.1" ||
 			!licenseText.IsReadOnly ||
 			!licenseText.Text.Contains(
 				"PolyForm Noncommercial License 1.0.0",
