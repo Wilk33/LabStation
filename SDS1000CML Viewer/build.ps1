@@ -4,7 +4,7 @@ Push-Location $PSScriptRoot
 try
 {
 	[xml]$buildProperties=Get-Content -Raw Directory.Build.props
-	$version=[string]$buildProperties.Project.PropertyGroup.Version
+	$version=([string]$buildProperties.Project.PropertyGroup.Version).Trim()
 	$releaseName="Siglent-SDS1000CML-Viewer-v$version-win-x64"
 	dotnet run --project tests/Scope.Tests -c Release
 	if ($LASTEXITCODE -ne 0) { throw 'Testy nie powiodły się.' }

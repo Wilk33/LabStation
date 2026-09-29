@@ -6,9 +6,9 @@ $ErrorActionPreference='Stop'
 $root=Split-Path -Parent $MyInvocation.MyCommand.Path
 $project=Join-Path $root 'src/Ka3005P.App/Ka3005P.App.csproj'
 [xml]$projectFile=Get-Content -Raw $project
-$version=[string]$projectFile.Project.PropertyGroup.Version
+$version=([string]$projectFile.Project.PropertyGroup.Version).Trim()
 
-dotnet test (Join-Path $root 'Korad.KA3005P.sln') -c Release --nologo -p:SelfContained=false -p:PublishSingleFile=false -p:RuntimeIdentifier=
+dotnet test (Join-Path $root 'tests/Ka3005P.Tests/Ka3005P.Tests.csproj') -c Release --nologo -p:SelfContained=false -p:PublishSingleFile=false -p:RuntimeIdentifier=
 if($LASTEXITCODE -ne 0)
 {
 	exit $LASTEXITCODE

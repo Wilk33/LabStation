@@ -21,7 +21,7 @@ if($Publish)
 {
 	$output=Join-Path $root 'artifacts/final/win-x64'
 	[xml]$buildProperties=Get-Content -Raw (Join-Path $root 'Directory.Build.props')
-	$version=[string]$buildProperties.Project.PropertyGroup.Version
+	$version=([string]$buildProperties.Project.PropertyGroup.Version).Trim()
 	$archive=Join-Path $root "artifacts/final/Siglent-SDG1000X-Control-v$version-win-x64.zip"
 	if(Test-Path -LiteralPath $output)
 	{
