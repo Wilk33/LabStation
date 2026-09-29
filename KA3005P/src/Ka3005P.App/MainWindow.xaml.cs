@@ -5,6 +5,7 @@ using Ka3005P.App.Services;
 using Ka3005P.App.ViewModels;
 using Ka3005P.App.Views;
 using Ka3005P.Core.Measurements;
+using LabStation.UI;
 
 namespace Ka3005P.App;
 
@@ -80,24 +81,6 @@ public partial class MainWindow : Window
 		RoutedEventArgs eventArgs)
 	{
 		await SaveAsync(MeasurementExportKind.VoltageAndCurrent);
-	}
-
-	private void OpenAuthorClick(object sender,RoutedEventArgs eventArgs)
-	{
-		AuthorWindow window=new()
-		{
-			Owner=this
-		};
-		window.ShowDialog();
-	}
-
-	private void OpenLicenseClick(object sender,RoutedEventArgs eventArgs)
-	{
-		LicenseWindow window=new()
-		{
-			Owner=this
-		};
-		window.ShowDialog();
 	}
 
 	private async Task SaveAsync(MeasurementExportKind kind)

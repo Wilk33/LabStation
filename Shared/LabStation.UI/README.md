@@ -1,0 +1,26 @@
+# LabStation.UI
+
+`LabStation.UI` jest wspólną biblioteką prezentacji dla samodzielnych aplikacji przyrządów i przyszłego pełnoekranowego LabStation.
+
+## Zakres
+
+- Paleta tła, pól i tekstu.
+- Style okien, przycisków i przycisków powtarzalnych.
+- Pola tekstowe.
+- Listy rozwijane i ich elementy.
+- Menu, podmenu, separatory i paski narzędzi.
+- Karty.
+- `NumericEditor` z polem tekstowym, jednostką oraz strzałkami zwiększania i zmniejszania.
+- `StatusLamps` zachowujący dokładny układ, kształt i kolory trzech lampek Korada dla stanu połączenia i wyjścia.
+- `AboutMenuItem` z pozycjami Autor i Licencja.
+- Uniwersalne okna `AuthorWindow` i `LicenseWindow`.
+- `SystemTheme` dla kolorów menu i ciemnego paska tytułu Windows.
+- `ApplicationPresentation` przekazujący nazwę, autora, licencję i ikonę konkretnej aplikacji.
+
+## Granice
+
+Biblioteka nie zna protokołów urządzeń, adresów IP, portów COM, SCPI, VXI-11, kolejek poleceń, modeli pomiarowych ani logiki bezpieczeństwa. Każda aplikacja zachowuje własny panel przyrządu oraz własną sesję i transport.
+
+Korad wykorzystuje wspólny `NumericEditor`, `StatusLamps`, motyw, menu i okna informacyjne. Oscyloskop wykorzystuje wspólny motyw, menu i okna informacyjne, ale zachowuje własny `WavePlot`, kursory i obsługę dużych bloków przebiegu.
+
+Kształt i kolor kontrolki są częścią jej kontraktu wizualnego. Gdy inna aplikacja potrzebuje odmiennej kontrolki, biblioteka otrzymuje dodatkowy, nazwany komponent albo styl. Nie zmienia to wyglądu istniejącego `StatusLamps` ani kontrolek swoistych dla przyrządu.

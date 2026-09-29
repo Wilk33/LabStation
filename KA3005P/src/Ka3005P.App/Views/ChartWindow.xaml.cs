@@ -1,4 +1,5 @@
 using System.Windows;
+using LabStation.UI;
 using Ka3005P.App.ViewModels;
 
 namespace Ka3005P.App.Views;

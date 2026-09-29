@@ -3,6 +3,7 @@ using System.Windows;
 using Ka3005P.App.Services;
 using Ka3005P.App.ViewModels;
 using Ka3005P.Core.Configuration;
+using LabStation.UI;
 
 namespace Ka3005P.App;
 

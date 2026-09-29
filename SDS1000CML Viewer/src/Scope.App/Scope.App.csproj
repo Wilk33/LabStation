@@ -10,7 +10,10 @@
 		<Description>Podgląd przebiegów SIGLENT SDS1102CML+ przez LAN</Description>
 		<PackageLicenseExpression>PolyForm-Noncommercial-1.0.0</PackageLicenseExpression>
 	</PropertyGroup>
-	<ItemGroup><ProjectReference Include="../Scope.Core/Scope.Core.csproj" /></ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="../Scope.Core/Scope.Core.csproj" />
+		<ProjectReference Include="../../../Shared/LabStation.UI/LabStation.UI.csproj" />
+	</ItemGroup>
 	<ItemGroup>
 		<Resource Include="..\..\siglent_sds1102cml+.ico" Link="Assets\siglent_sds1102cml+.ico" />
 		<EmbeddedResource Include="..\..\LICENSE" LogicalName="Scope.App.LICENSE" />

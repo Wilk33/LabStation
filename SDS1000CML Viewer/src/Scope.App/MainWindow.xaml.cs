@@ -1,6 +1,6 @@
 using System.ComponentModel;
 using System.Windows;
-using Scope.App.Views;
+using LabStation.UI;
 
 namespace Scope.App;
 
@@ -13,24 +13,6 @@ public partial class MainWindow : Window
 		InitializeComponent();
 		Title=AppInformation.DisplayName;
 		SystemTheme.ApplyTo(this);
-	}
-
-	private void OpenAuthorClick(object sender,RoutedEventArgs eventArgs)
-	{
-		AuthorWindow window=new()
-		{
-			Owner=this
-		};
-		window.ShowDialog();
-	}
-
-	private void OpenLicenseClick(object sender,RoutedEventArgs eventArgs)
-	{
-		LicenseWindow window=new()
-		{
-			Owner=this
-		};
-		window.ShowDialog();
 	}
 
 	protected override async void OnClosing(CancelEventArgs eventArgs)

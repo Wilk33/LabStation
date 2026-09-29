@@ -7,7 +7,7 @@ public sealed class AppInformationTests
 	[Fact]
 	public void WindowTitle_UsesProjectNameAndVersion()
 	{
-		Assert.Equal("Korad KA3005P v0.1.7",AppInformation.GetWindowTitle());
+		Assert.Equal("Korad KA3005P v0.2.0",AppInformation.GetWindowTitle());
 		Assert.Equal("Korad KA3005P",AppInformation.DataDirectoryName);
 	}
 
@@ -27,6 +27,14 @@ public sealed class AppInformationTests
 			type=>type.Namespace?.StartsWith(
 				"Ka3005P.App.Demo",
 				StringComparison.Ordinal) == true);
+	}
+
+	[Fact]
+	public void ApplicationAssembly_UsesSharedLabStationUiModule()
+	{
+		Assert.Contains(
+			typeof(AppInformation).Assembly.GetReferencedAssemblies(),
+			reference=>reference.Name == "LabStation.UI");
 	}
 
 	[Fact]

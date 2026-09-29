@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Threading;
+using LabStation.UI;
 
 namespace Scope.App;
 

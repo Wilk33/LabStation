@@ -1,5 +1,7 @@
 using System.IO;
 using System.Reflection;
+using System.Windows.Media.Imaging;
+using LabStation.UI;
 
 namespace Scope.App;
 
@@ -26,6 +28,17 @@ public static class AppInformation
 	}
 
 	public static string DisplayName=>ProductName+" v"+Version;
+
+	public static ApplicationPresentation Presentation=>new(
+		DisplayName,
+		AuthorName,
+		AuthorProfession,
+		AuthorEmail,
+		LoadLicenseText(),
+		new BitmapImage(
+			new Uri(
+				"pack://application:,,,/Siglent.SDS1000CML.Viewer;component/Assets/siglent_sds1102cml+.ico",
+				UriKind.Absolute)));
 
 	public static string LoadLicenseText()
 	{

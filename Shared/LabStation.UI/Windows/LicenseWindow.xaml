@@ -1,26 +1,23 @@
 <Window
-	x:Class="Ka3005P.App.Views.LicenseWindow"
+	x:Class="LabStation.UI.Windows.LicenseWindow"
 	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
 	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-	Title="Licencja"
-	Icon="/Korad.KA3005P;component/Assets/KoradS.ico"
-	Background="{StaticResource KoradBackgroundBrush}"
-	Foreground="{StaticResource KoradTextBrush}"
+	Background="{StaticResource LabStationBackgroundBrush}"
+	Foreground="{StaticResource LabStationTextBrush}"
 	FontFamily="Consolas"
-	FontWeight="Normal"
 	Width="720"
 	Height="560"
 	MinWidth="520"
 	MinHeight="360"
 	ShowInTaskbar="False"
 	WindowStartupLocation="CenterOwner">
-	<Grid Background="{StaticResource KoradBackgroundBrush}">
+	<Grid Background="{StaticResource LabStationBackgroundBrush}">
 		<TextBox
 			x:Name="LicenseText"
 			Margin="14"
 			Padding="10"
-			Background="{StaticResource KoradInputBrush}"
-			Foreground="{StaticResource KoradTextBrush}"
+			Background="{StaticResource LabStationInputBrush}"
+			Foreground="{StaticResource LabStationTextBrush}"
 			FontFamily="Consolas"
 			FontSize="13"
 			HorizontalScrollBarVisibility="Auto"

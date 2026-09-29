@@ -6,7 +6,7 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="/Korad.KA3005P;component/Themes/KoradTheme.xaml" />
+				<ResourceDictionary Source="/LabStation.UI;component/Themes/LabStationTheme.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>

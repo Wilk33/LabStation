@@ -1,16 +1,15 @@
 <UserControl
-	x:Class="Ka3005P.App.Controls.StatusLamps"
+	x:Class="LabStation.UI.Controls.StatusLamps"
 	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
 	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-	xmlns:controls="clr-namespace:Ka3005P.App.Controls"
-	x:Name="Root">
+	xmlns:controls="clr-namespace:LabStation.UI.Controls">
 	<StackPanel Orientation="Horizontal">
 		<Ellipse Width="20" Height="20" Margin="3" Stroke="#202020" StrokeThickness="1" ToolTip="Połączono">
 			<Ellipse.Style>
 				<Style TargetType="Ellipse">
 					<Setter Property="Fill" Value="#505000" />
 					<Style.Triggers>
-					<DataTrigger Binding="{Binding IsOnline,RelativeSource={RelativeSource AncestorType={x:Type controls:StatusLamps}}}" Value="True">
+						<DataTrigger Binding="{Binding IsOnline,RelativeSource={RelativeSource AncestorType={x:Type controls:StatusLamps}}}" Value="True">
 							<Setter Property="Fill" Value="#FFFF00" />
 						</DataTrigger>
 					</Style.Triggers>
@@ -35,7 +34,7 @@
 					<Setter Property="Fill" Value="#005000" />
 					<Style.Triggers>
 						<DataTrigger Binding="{Binding IsOn,RelativeSource={RelativeSource AncestorType={x:Type controls:StatusLamps}}}" Value="True">
-							<Setter Property="Fill" Value="#00FF00" />
+							<Setter Property="Fill" Value="{StaticResource LabStationOnActiveBrush}" />
 						</DataTrigger>
 					</Style.Triggers>
 				</Style>

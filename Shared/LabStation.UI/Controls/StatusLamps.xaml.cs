@@ -1,7 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 
-namespace Ka3005P.App.Controls;
+namespace LabStation.UI.Controls;
 
 public partial class StatusLamps : UserControl
 {
@@ -28,19 +28,19 @@ public partial class StatusLamps : UserControl
 
 	public bool IsOnline
 	{
-		get => (bool)GetValue(IsOnlineProperty);
-		set => SetValue(IsOnlineProperty,value);
+		get=>(bool)GetValue(IsOnlineProperty);
+		set=>SetValue(IsOnlineProperty,value);
 	}
 
 	public bool IsOff
 	{
-		get => (bool)GetValue(IsOffProperty);
-		set => SetValue(IsOffProperty,value);
+		get=>(bool)GetValue(IsOffProperty);
+		set=>SetValue(IsOffProperty,value);
 	}
 
 	public bool IsOn
 	{
-		get => (bool)GetValue(IsOnProperty);
-		set => SetValue(IsOnProperty,value);
+		get=>(bool)GetValue(IsOnProperty);
+		set=>SetValue(IsOnProperty,value);
 	}
 }

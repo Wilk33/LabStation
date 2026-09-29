@@ -1,4 +1,4 @@
-# Siglent SDS1000CML Viewer v0.5.0
+# Siglent SDS1000CML Viewer v0.6.0
 
 Prosta aplikacja Windows do podglądu CH1/CH2 i pobierania przebiegów do CSV.
 C# / WPF, szary interfejs zgodny z Koradem i czcionka Consolas. Bez EasyScopeX, NI-VISA, pakietów NI i zależności NuGet.
@@ -82,11 +82,13 @@ Wykres stosuje min/max przy ograniczaniu punktów do szerokości ekranu.
 CSV zawiera wszystkie odebrane próbki, bez tego ograniczenia.
 Niepełny lub nierozpoznany deskryptor jest odrzucany.
 
-## Stan wersji 0.5.0
+## Stan wersji 0.6.0
+
+W wersji 0.6.0 motyw, kontrolki bazowe, menu `O aplikacji`, okna Autor/Licencja oraz obsługa systemowego motywu zostały przeniesione do wspólnej biblioteki `Shared/LabStation.UI`. Rozwijane menu używa własnego szablonu bez zewnętrznej ramki. Logika sesji, transport VXI-11, obsługa dużych bloków przebiegu, pomiary, wykres i kursory pozostają częścią Oscyloskopu.
 
 W wersji 0.5.0 interfejs został przeniesiony z WinForms do WPF. Usunięto listę metody połączenia, ponieważ aplikacja obsługuje wyłącznie LAN. Powłoka, paleta, kontrolki, menu `O aplikacji` oraz osobne okna Autor i Licencja zostały ujednolicone z Koradem. Wykres, pomiary, lokalne powiększenie i mechanika czterech kursorów pozostały funkcjonalnością właściwą oscyloskopowi.
 
-Zmiana UI została zweryfikowana testami programowymi i zrzutami w dwóch rozmiarach okna. Nie wykonano ponownego testu na fizycznym oscyloskopie, dlatego poniższe wyniki sprzętowe dotyczą wcześniejszej wersji 0.4.1 korzystającej z tego samego `Scope.Core` i transportu VXI-11.
+Zmiany UI zostały zweryfikowane testami programowymi i zrzutami w dwóch rozmiarach okna. Nie wykonano ponownego testu na fizycznym oscyloskopie, dlatego poniższe wyniki sprzętowe dotyczą wcześniejszej wersji 0.4.1 korzystającej z tego samego `Scope.Core` i transportu VXI-11.
 
 Połączenie LAN zostało sprawdzone na fizycznym SIGLENT SDS1102CML+ z firmware
 6.01.01.25. W bieżącej wersji test odczytowy pobrał po 20 480 punktów z CH1 i CH2,

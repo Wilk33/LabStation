@@ -4,9 +4,9 @@ using System.Windows.Interop;
 using System.Windows.Media;
 using Microsoft.Win32;
 
-namespace Scope.App;
+namespace LabStation.UI;
 
-internal static class SystemTheme
+public static class SystemTheme
 {
 	private const int UseImmersiveDarkMode=20;
 	private const int UseImmersiveDarkModeBefore20H1=19;
@@ -16,6 +16,7 @@ internal static class SystemTheme
 
 	public static void Initialize(ResourceDictionary resources)
 	{
+		ArgumentNullException.ThrowIfNull(resources);
 		useDarkMode=ReadUseDarkMode();
 		resources["SystemChromeBackgroundBrush"]=new SolidColorBrush(
 			useDarkMode

@@ -1,5 +1,7 @@
 using System.IO;
 using System.Reflection;
+using System.Windows.Media.Imaging;
+using LabStation.UI;
 
 namespace Ka3005P.App;
 
@@ -28,6 +30,17 @@ public static class AppInformation
 	}
 
 	public static string DisplayName => ProductName+" v"+Version;
+
+	public static ApplicationPresentation Presentation=>new(
+		DisplayName,
+		AuthorName,
+		AuthorProfession,
+		AuthorEmail,
+		LoadLicenseText(),
+		new BitmapImage(
+			new Uri(
+				"pack://application:,,,/Korad.KA3005P;component/Assets/KoradS.ico",
+				UriKind.Absolute)));
 
 	public static string GetWindowTitle()
 	{

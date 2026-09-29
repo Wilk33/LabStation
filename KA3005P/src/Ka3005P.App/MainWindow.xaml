@@ -4,6 +4,8 @@
 	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
 	xmlns:viewModels="clr-namespace:Ka3005P.App.ViewModels"
 	xmlns:views="clr-namespace:Ka3005P.App.Views"
+	xmlns:app="clr-namespace:Ka3005P.App"
+	xmlns:sharedControls="clr-namespace:LabStation.UI.Controls;assembly=LabStation.UI"
 	Title="Korad"
 	Icon="/Korad.KA3005P;component/Assets/KoradS.ico"
 	Background="{StaticResource KoradBackgroundBrush}"
@@ -46,10 +48,7 @@
 				<MenuItem Header="Prąd CSV" Click="SaveCurrentClick" />
 				<MenuItem Header="Napięcie i prąd CSV" Click="SaveVoltageAndCurrentClick" />
 			</MenuItem>
-			<MenuItem Header="O aplikacji">
-				<MenuItem Header="Autor" Click="OpenAuthorClick" />
-				<MenuItem Header="Licencja" Click="OpenLicenseClick" />
-			</MenuItem>
+			<sharedControls:AboutMenuItem Presentation="{x:Static app:AppInformation.Presentation}" />
 		</Menu>
 		<ContentControl Content="{Binding CurrentMode}" />
 	</DockPanel>

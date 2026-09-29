@@ -6,7 +6,7 @@
 	<Application.Resources>
 		<ResourceDictionary>
 			<ResourceDictionary.MergedDictionaries>
-				<ResourceDictionary Source="/Siglent.SDS1000CML.Viewer;component/Themes/LabStationTheme.xaml" />
+				<ResourceDictionary Source="/LabStation.UI;component/Themes/LabStationTheme.xaml" />
 			</ResourceDictionary.MergedDictionaries>
 		</ResourceDictionary>
 	</Application.Resources>

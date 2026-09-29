@@ -2,11 +2,12 @@ using System.Reflection;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Scope.App;
-using Scope.App.Views;
 using Scope.Core;
+using LabStation.UI.Windows;
 
 internal static class Program
 {
@@ -31,6 +32,10 @@ internal static class Program
 		AssertApplicationIdentity(window);
 		AssertReusablePanel(window);
 		AssertConnectionControls(window);
+		AssertMenuPopupHasNoFrame(window);
+		AssertSharedUiLibrary();
+		AssertSharedAboutMenuComponent(window);
+		AssertSharedControlDefaults();
 		AssertCommonStyle(window);
 		AssertAboutWindows(window);
 		AssertPlotAndChannels(window);
@@ -43,13 +48,13 @@ internal static class Program
 		Pump();
 		application.Shutdown();
 		Console.WriteLine(
-			"PASS: reusable WPF panel, Korad style, LAN-only controls, about windows, queue disconnect, plot and cursors");
+			"PASS: reusable WPF panel, shared LabStation style, LAN-only controls, shared controls, about windows, queue disconnect, plot and cursors");
 		return 0;
 	}
 
 	private static void AssertApplicationIdentity(MainWindow window)
 	{
-		if(window.Title != "Siglent SDS1000CML Viewer v0.5.0")
+		if(window.Title != "Siglent SDS1000CML Viewer v0.6.0")
 		{
 			throw new Exception("Unexpected main-window title: "+window.Title);
 		}
@@ -133,6 +138,105 @@ internal static class Program
 		}
 	}
 
+	private static void AssertSharedUiLibrary()
+	{
+		if(!typeof(MainWindow).Assembly.GetReferencedAssemblies()
+			.Any(reference=>reference.Name == "LabStation.UI"))
+		{
+			throw new Exception(
+				"The oscilloscope does not use the shared LabStation.UI module");
+		}
+	}
+
+	private static void AssertSharedAboutMenuComponent(MainWindow window)
+	{
+		MenuItem about=Find<Menu>(window).Items.OfType<MenuItem>()
+			.Single(item=>(string?)item.Header == "O aplikacji");
+		if(about is not LabStation.UI.Controls.AboutMenuItem)
+		{
+			throw new Exception(
+				"The main window does not use the reusable O aplikacji menu component");
+		}
+	}
+
+	private static void AssertSharedControlDefaults()
+	{
+		LabStation.UI.Controls.NumericEditor editor=new();
+		LabStation.UI.Controls.StatusLamps lamps=new()
+		{
+			IsOnline=true,
+			IsOff=true,
+			IsOn=true
+		};
+		StackPanel panel=new();
+		panel.Children.Add(editor);
+		panel.Children.Add(lamps);
+		Window host=new()
+		{
+			Content=panel,
+			ShowInTaskbar=false,
+			WindowStyle=WindowStyle.None,
+			Left=-10000,
+			Top=-10000
+		};
+		host.Show();
+		Pump();
+
+		RepeatButton[] buttons=Descendants<RepeatButton>(editor).ToArray();
+		if(buttons.Length != 2 ||
+			(string?)buttons[0].Content != "▲" ||
+			(string?)buttons[1].Content != "▼" ||
+			buttons.Any(button=>button.Delay != 350 || button.Interval != 60))
+		{
+			throw new Exception(
+				"The shared numeric editor no longer matches the accepted Korad control");
+		}
+
+		Color[] expected=
+		[
+			Color.FromRgb(255,255,0),
+			Color.FromRgb(224,0,0),
+			Color.FromRgb(0,255,0)
+		];
+		System.Windows.Shapes.Ellipse[] ellipses=
+			Descendants<System.Windows.Shapes.Ellipse>(lamps).ToArray();
+		if(ellipses.Length != 3 ||
+			ellipses.Where((ellipse,index)=>
+				ellipse.Width != 20 ||
+				ellipse.Height != 20 ||
+				(ellipse.Fill as SolidColorBrush)?.Color != expected[index])
+			.Any())
+		{
+			throw new Exception(
+				"The shared status lamps no longer match the accepted Korad control");
+		}
+
+		host.Close();
+		Pump();
+	}
+
+	private static void AssertMenuPopupHasNoFrame(MainWindow window)
+	{
+		Menu menu=Find<Menu>(window);
+		MenuItem about=menu.Items.OfType<MenuItem>()
+			.Single(item=>(string?)item.Header == "O aplikacji");
+		about.ApplyTemplate();
+		about.IsSubmenuOpen=true;
+		Pump();
+		Popup popup=about.Template.FindName("PART_Popup",about) as Popup ??
+			throw new Exception("The application menu has no popup template");
+		Border frame=popup.Child as Border ??
+			Descendants<Border>(popup.Child).FirstOrDefault() ??
+			throw new Exception("The application menu popup has no chrome");
+		if(frame.BorderThickness != new Thickness(0))
+		{
+			throw new Exception(
+				"The expanded application menu still shows an outer frame");
+		}
+		about.IsSubmenuOpen=false;
+		Pump();
+	}
+
 	private static void AssertAboutWindows(MainWindow window)
 	{
 		Menu menu=Find<Menu>(window);
@@ -147,7 +251,7 @@ internal static class Program
 			throw new Exception("Unexpected O aplikacji menu entries");
 		}
 
-		AuthorWindow author=new()
+		AuthorWindow author=new(AppInformation.Presentation)
 		{
 			Owner=window,
 			ShowInTaskbar=false,
@@ -161,7 +265,7 @@ internal static class Program
 			"\n",
 			Descendants<TextBlock>(author).Select(text=>text.Text));
 		if(author.Title !=
-			"Autor - Siglent SDS1000CML Viewer v0.5.0" ||
+			"Autor - Siglent SDS1000CML Viewer v0.6.0" ||
 			!authorText.Contains("Mateusz Skipor",StringComparison.Ordinal) ||
 			!authorText.Contains(
 				"Inżynier technik elektroniki",
@@ -174,7 +278,7 @@ internal static class Program
 		}
 		author.Close();
 
-		LicenseWindow license=new()
+		LicenseWindow license=new(AppInformation.Presentation)
 		{
 			Owner=window,
 			ShowInTaskbar=false,
@@ -186,7 +290,7 @@ internal static class Program
 		Pump();
 		TextBox licenseText=Descendants<TextBox>(license).Single();
 		if(license.Title !=
-			"Licencja - Siglent SDS1000CML Viewer v0.5.0" ||
+			"Licencja - Siglent SDS1000CML Viewer v0.6.0" ||
 			!licenseText.IsReadOnly ||
 			!licenseText.Text.Contains(
 				"PolyForm Noncommercial License 1.0.0",

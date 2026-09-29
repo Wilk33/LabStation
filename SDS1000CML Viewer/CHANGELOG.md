@@ -1,5 +1,13 @@
 # Zmiany
 
+## 0.6.0 - 2026-09-29
+
+- Przeniesiono motyw, kontrolki bazowe, obsługę systemowego motywu oraz okna Autor i Licencja do `Shared/LabStation.UI`.
+- Zastąpiono lokalną definicję menu wspólnym komponentem `AboutMenuItem`.
+- Usunięto zewnętrzną ramkę widoczną po rozwinięciu menu.
+- Zachowano niezależny panel `OscilloscopeView` oraz całą specyficzną obsługę VXI-11, dużych bloków danych, wykresu i kursorów.
+- Test UI sprawdza rzeczywiste użycie biblioteki wspólnej, komponentu menu i brak ramki rozwiniętego menu.
+
 ## 0.5.0 - 2026-09-29
 
 - Przeniesiono całą warstwę interfejsu z WinForms do WPF, zgodnie z architekturą Korada.
@@ -14,7 +22,7 @@
 
 ## Integracja z LabStation - 2026-09-29
 
-- Przeniesiono aplikację do katalogu `SDS1000CML Viewer` jako niezależny program, rozwijany obecnie jako `Siglent SDS1000CML Viewer v0.5.0`.
+- Przeniesiono aplikację do katalogu `SDS1000CML Viewer` jako niezależny program, rozwijany obecnie jako `Siglent SDS1000CML Viewer v0.6.0`.
 - Usunięto transport USB i testy USBTMC. Jedyną metodą komunikacji jest LAN przez VXI-11.
 - Żądanie Offline jest dostępne podczas aktywnego podglądu i czeka w kolejce za trwającym odczytem zamiast być pomijane.
 - Ustawiono domyślny adres oscyloskopu `192.168.200.41` oraz osobny katalog ustawień aplikacji.

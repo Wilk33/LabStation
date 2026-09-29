@@ -2,7 +2,8 @@
 	x:Class="Ka3005P.App.Views.ChartWindow"
 	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
 	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-	xmlns:controls="clr-namespace:Ka3005P.App.Controls"
+	xmlns:appControls="clr-namespace:Ka3005P.App.Controls"
+	xmlns:sharedControls="clr-namespace:LabStation.UI.Controls;assembly=LabStation.UI"
 	Title="Wykres"
 	Icon="/Korad.KA3005P;component/Assets/KoradS.ico"
 	Background="{StaticResource KoradBackgroundBrush}"
@@ -37,7 +38,7 @@
 					<ColumnDefinition Width="Auto" />
 					<ColumnDefinition Width="Auto" />
 				</Grid.ColumnDefinitions>
-				<controls:StatusLamps
+				<sharedControls:StatusLamps
 					IsOnline="{Binding IsOnline}"
 					IsOff="{Binding IsOff}"
 					IsOn="{Binding IsOn}" />
@@ -62,7 +63,7 @@
 					Command="{Binding ToggleOutputCommand}"
 					Content="{Binding OutputButtonText}" />
 			</Grid>
-			<controls:CurrentChart
+			<appControls:CurrentChart
 				Grid.Row="1"
 				Margin="0,12,0,8"
 				MinimumY="{Binding MinimumY}"
