@@ -1,0 +1,132 @@
+<UserControl
+	x:Class="Scope.App.OscilloscopeView"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:local="clr-namespace:Scope.App"
+	Background="{StaticResource KoradBackgroundBrush}"
+	Foreground="{StaticResource KoradTextBrush}"
+	FontFamily="Consolas">
+	<Grid Margin="14,10">
+		<Grid.RowDefinitions>
+			<RowDefinition Height="44" />
+			<RowDefinition Height="40" />
+			<RowDefinition Height="48" />
+			<RowDefinition Height="*" />
+			<RowDefinition Height="46" />
+			<RowDefinition Height="28" />
+			<RowDefinition Height="28" />
+		</Grid.RowDefinitions>
+
+		<Grid>
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="Auto" />
+				<ColumnDefinition Width="175" />
+				<ColumnDefinition Width="*" />
+				<ColumnDefinition Width="110" />
+			</Grid.ColumnDefinitions>
+			<TextBlock
+				Margin="0,0,8,0"
+				VerticalAlignment="Center"
+				FontSize="17"
+				Text="IP:" />
+			<TextBox
+				x:Name="AddressTextBox"
+				Grid.Column="1"
+				Height="30"
+				Text="192.168.200.41"
+				ToolTip="Adres IP oscyloskopu." />
+			<Button
+				x:Name="ConnectionButton"
+				Grid.Column="3"
+				Content="Offline"
+				Click="ConnectOrDisconnectClick"
+				ToolTip="Kliknij, aby połączyć lub rozłączyć oscyloskop przez LAN." />
+		</Grid>
+
+		<StackPanel Grid.Row="1" Orientation="Horizontal">
+			<CheckBox
+				x:Name="Channel1CheckBox"
+				Content="CH1"
+				Foreground="#FFFFDC32"
+				IsChecked="True"
+				Checked="ChannelSelectionChanged"
+				Unchecked="ChannelSelectionChanged" />
+			<CheckBox
+				x:Name="Channel2CheckBox"
+				Content="CH2"
+				Foreground="#FF50E1E6"
+				IsChecked="True"
+				Checked="ChannelSelectionChanged"
+				Unchecked="ChannelSelectionChanged" />
+			<CheckBox
+				x:Name="LiveCheckBox"
+				Margin="12,0,8,0"
+				Content="Podgląd"
+				IsChecked="True"
+				ToolTip="Cykliczne odczyty. Odznaczenie zatrzymuje tylko odświeżanie aplikacji." />
+			<Button x:Name="Cursor1Button" Width="102" Content="Kursor 1" Click="Cursor1Click" />
+			<Button x:Name="Cursor2Button" Width="102" Content="Kursor 2" Click="Cursor2Click" />
+			<Button x:Name="Cursor3Button" Width="102" Content="Kursor 3" Click="Cursor3Click" />
+			<Button x:Name="Cursor4Button" Width="102" Content="Kursor 4" Click="Cursor4Click" />
+		</StackPanel>
+
+		<Grid Grid.Row="2">
+			<Grid.RowDefinitions>
+				<RowDefinition Height="*" />
+				<RowDefinition Height="*" />
+			</Grid.RowDefinitions>
+			<TextBlock
+				x:Name="Channel1Measurements"
+				VerticalAlignment="Center"
+				FontSize="14"
+				FontWeight="Bold"
+				Foreground="#FFFFDC32"
+				Text="CH1: Vpp -- | Vrms -- | Hz -- | Vmin -- | Vmax -- | Duty --"
+				TextTrimming="CharacterEllipsis" />
+			<TextBlock
+				x:Name="Channel2Measurements"
+				Grid.Row="1"
+				VerticalAlignment="Center"
+				FontSize="14"
+				FontWeight="Bold"
+				Foreground="#FF50E1E6"
+				Text="CH2: Vpp -- | Vrms -- | Hz -- | Vmin -- | Vmax -- | Duty --"
+				TextTrimming="CharacterEllipsis" />
+		</Grid>
+
+		<local:WavePlot
+			x:Name="Plot"
+			Grid.Row="3"
+			Margin="0,4,0,6"
+			ToolTip="Rolka: przybliżenie osi czasu. PPM: odblokuj wybrany kursor. LPM: ustaw kursor." />
+
+		<StackPanel Grid.Row="4" Orientation="Horizontal">
+			<Button x:Name="StartButton" Width="92" Content="Start" Click="StartClick"
+				ToolTip="Wznawia poprzedni tryb wyzwalania. Gdy nieznany, uruchamia TRMD AUTO." />
+			<Button x:Name="StopButton" Width="92" Content="Stop" Click="StopClick" />
+			<Button x:Name="AutoButton" Width="92" Content="Auto" Click="AutoClick"
+				ToolTip="Auto Setup oscyloskopu. Zmienia ustawienia pomiaru." />
+			<Button x:Name="CaptureButton" Width="190" Content="Pobierz przebieg" Click="CaptureClick"
+				ToolTip="Pobiera pełny dostępny blok próbek. Dla wspólnej akwizycji CH1/CH2 najpierw wybierz Stop." />
+			<Button x:Name="SaveButton" Width="150" Content="Zapisz CSV" Click="SaveClick"
+				ToolTip="Zapisuje ostatni ręcznie pobrany przebieg, niezależnie od kolejnych odświeżeń podglądu." />
+		</StackPanel>
+
+		<TextBlock
+			x:Name="DetailText"
+			Grid.Row="5"
+			VerticalAlignment="Center"
+			FontSize="13"
+			Text="CH1 + CH2 | CSV: czas [s], napięcie [V]"
+			TextTrimming="CharacterEllipsis" />
+		<TextBlock
+			x:Name="AcquisitionText"
+			Grid.Row="6"
+			VerticalAlignment="Center"
+			FontSize="14"
+			FontWeight="Bold"
+			Foreground="#FFC0C0C0"
+			Text="Stan oscyloskopu: OFFLINE"
+			TextTrimming="CharacterEllipsis" />
+	</Grid>
+</UserControl>

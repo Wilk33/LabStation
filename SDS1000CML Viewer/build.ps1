@@ -14,8 +14,16 @@ try
 	if ($LASTEXITCODE -ne 0) { throw 'Kompilacja nie powiodła się.' }
 	if ($Publish)
 	{
-		$publishDirectory="artifacts/final/win-x64"
-		$archivePath="artifacts/final/$releaseName.zip"
+		$publishDirectory=Join-Path $PSScriptRoot "artifacts/final/win-x64"
+		$archivePath=Join-Path $PSScriptRoot "artifacts/final/$releaseName.zip"
+		if (Test-Path -LiteralPath $publishDirectory)
+		{
+			Remove-Item -LiteralPath $publishDirectory -Recurse -Force
+		}
+		if (Test-Path -LiteralPath $archivePath)
+		{
+			Remove-Item -LiteralPath $archivePath -Force
+		}
 		dotnet publish src/Scope.App -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=None -o $publishDirectory
 		if ($LASTEXITCODE -ne 0) { throw 'Publikowanie nie powiodło się.' }
 		Copy-Item -LiteralPath LICENSE,README.md -Destination $publishDirectory

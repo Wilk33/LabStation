@@ -1,330 +1,436 @@
-using Scope.App;
-using Scope.Core;
-using System.Drawing.Imaging;
-using System.Security.Cryptography;
-using System.Runtime.InteropServices;
 using System.Reflection;
-using Microsoft.Win32;
+using System.IO;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using Scope.App;
+using Scope.App.Views;
+using Scope.Core;
 
 internal static class Program
-
 {
-
 	[STAThread]
 	private static int Main(string[] args)
-
 	{
-
-		if(OperatingSystem.IsWindowsVersionAtLeast(10,0,22000))
+		App application=new();
+		application.InitializeComponent();
+		SynchronizationContext.SetSynchronizationContext(
+			new System.Windows.Threading.DispatcherSynchronizationContext(
+				application.Dispatcher));
+		MainWindow window=new()
 		{
-			Application.SetColorMode(SystemColorMode.System);
-		}
-		ApplicationConfiguration.Initialize();
-		Application.SetDefaultFont(new Font("Consolas", 10));
-		using MainForm form=new();
-		form.ShowInTaskbar=false;
-		form.Opacity=0;
-		form.Show();
-		Application.DoEvents();
-		Control[] controls=Walk(form).ToArray();
-		AssertApplicationIdentity(form);
-		AssertDarkTitleBar(form);
-		AssertConnectionControls(controls);
-		AssertOnlineDisconnectAvailableDuringPreview(form,controls);
-		if(OperatingSystem.IsWindowsVersionAtLeast(10,0,22000) && Application.ColorMode != SystemColorMode.System)
-		{
-			throw new Exception("Application does not inherit the Windows color mode");
-		}
-		AssertAboutMenu(form);
-		if (controls.OfType<Button>().First(b => b.Text == "Zapisz CSV").Enabled)
-			throw new Exception("CSV enabled before capture");
-		if (controls.OfType<Button>().First(b => b.Text == "Start").Enabled)
-			throw new Exception("Start enabled offline");
-		WavePlot plot=controls.OfType<WavePlot>().Single();
-		for(int j=0;j < 2;j++)
+			ShowInTaskbar=false,
+			WindowStyle=WindowStyle.None,
+			Left=-10000,
+			Top=-10000
+		};
+		window.Show();
+		Pump();
 
-		{
+		AssertApplicationIdentity(window);
+		AssertReusablePanel(window);
+		AssertConnectionControls(window);
+		AssertCommonStyle(window);
+		AssertAboutWindows(window);
+		AssertPlotAndChannels(window);
+		AssertOnlineDisconnectAvailableDuringPreview(window);
+		AssertLayoutAndCapture(window);
 
-			form.ClientSize=j == 0 ? new(1000,718) : new(870,606);
-			Application.DoEvents();
-			int n=20000;
-			double[] a=Enumerable.Range(0, n).Select(i => 2*Math.Sin(i*2*Math.PI/5000)).ToArray();
-			double[] b=Enumerable.Range(0, n).Select(i => Math.Sin(i*2*Math.PI/5000+0.6) > 0 ? 0.7 : -0.7).ToArray();
-			plot.SetWaveforms([new(1, a, 1e-6, -0.01, DateTimeOffset.UnixEpoch), new(2, b, 1e-6, -0.01, DateTimeOffset.UnixEpoch)]);
-			if(j == 0)
-			{
-				AssertPlotInteraction(plot);
-				AssertChannelVisibility(plot,controls);
-			}
-			foreach (Label label in controls.OfType<Label>())
-				if (label.Text.StartsWith("CH1 +"))
-					label.Text="PRZYKŁAD WYGLĄDU - dane syntetyczne, bez połączenia z oscyloskopem";
-			Application.DoEvents();
-			foreach (Button button in controls.OfType<Button>().Where(c => c.Visible))
-
-			{
-
-				if (button.Right > button.Parent!.ClientSize.Width || button.Bottom > button.Parent.ClientSize.Height)
-					throw new Exception($"Clipped button: {button.Text}; bounds={button.Bounds}; parent={button.Parent!.ClientRectangle}");
-
-			}
-
-			Directory.CreateDirectory("artifacts/qa");
-			using Bitmap bitmap=new(form.Width, form.Height);
-			form.DrawToBitmap(bitmap, new(0, 0, form.Width, form.Height));
-			bitmap.Save($"artifacts/qa/viewer-{j}.png", ImageFormat.Png);
-
-		}
-
-		form.Close();
-		Application.DoEvents();
-		Console.WriteLine("PASS: application identity, offline controls, about windows, two window sizes, render with full sample buffers");
+		OscilloscopeView panel=Find<OscilloscopeView>(window);
+		panel.DisposeAsync().AsTask().GetAwaiter().GetResult();
+		window.Close();
+		Pump();
+		application.Shutdown();
+		Console.WriteLine(
+			"PASS: reusable WPF panel, Korad style, LAN-only controls, about windows, queue disconnect, plot and cursors");
 		return 0;
-
 	}
 
-	private static void AssertChannelVisibility(WavePlot plot,Control[] controls)
+	private static void AssertApplicationIdentity(MainWindow window)
 	{
-		CheckBox ch1=controls.OfType<CheckBox>().Single(control=>control.Text == "CH1");
-		CheckBox ch2=controls.OfType<CheckBox>().Single(control=>control.Text == "CH2");
-		Label ch1Measurements=controls.OfType<Label>().Single(label=>label.Text.StartsWith("CH1: Vpp",StringComparison.Ordinal));
-		Label ch2Measurements=controls.OfType<Label>().Single(label=>label.Text.StartsWith("CH2: Vpp",StringComparison.Ordinal));
-		Button[] cursorButtons=controls.OfType<Button>().Where(button=>button.Text.StartsWith("Kursor ",StringComparison.Ordinal)).ToArray();
-
-		ch2.Checked=false;
-		Application.DoEvents();
-		if(!plot.VisibleWaveChannels.SequenceEqual([1]) || !ch1Measurements.Visible || ch2Measurements.Visible)
+		if(window.Title != "Siglent SDS1000CML Viewer v0.5.0")
 		{
-			throw new Exception("An inactive CH2 remains visible in the plot or measurement rows");
+			throw new Exception("Unexpected main-window title: "+window.Title);
 		}
-
-		ch1.Checked=false;
-		Application.DoEvents();
-		if(plot.HasWaveforms || plot.VisibleWaveChannels.Length != 0 || ch1Measurements.Visible || ch2Measurements.Visible || cursorButtons.Any(button=>button.Enabled))
+		if(typeof(MainWindow).Assembly.GetName().Name !=
+			"Siglent.SDS1000CML.Viewer")
 		{
-			throw new Exception("The waveform, measurements or cursor buttons remain active with both channels disabled");
+			throw new Exception(
+				"Unexpected executable assembly name: "+
+				typeof(MainWindow).Assembly.GetName().Name);
 		}
-
-		ch1.Checked=true;
-		ch2.Checked=true;
-		Application.DoEvents();
-		if(!plot.VisibleWaveChannels.SequenceEqual(new[] { 1,2 }))
+		if(window.Icon is null)
 		{
-			throw new Exception("Enabled channels were not restored");
+			throw new Exception("Main window does not use the supplied icon");
 		}
 	}
-	private static void AssertPlotInteraction(WavePlot plot)
 
+	private static void AssertReusablePanel(MainWindow window)
 	{
+		OscilloscopeView panel=Find<OscilloscopeView>(window);
+		if(panel.Parent is not DockPanel)
+		{
+			throw new Exception(
+				"The oscilloscope surface is not an embeddable panel in the standalone shell");
+		}
+		if(typeof(OscilloscopeView).BaseType != typeof(UserControl))
+		{
+			throw new Exception(
+				"The oscilloscope surface is not a reusable WPF UserControl");
+		}
+	}
 
-		(double fullMin, double fullMax)=plot.VisibleTimeRange;
-		plot.ZoomAt(0.5, 120);
-		(double zoomMin, double zoomMax)=plot.VisibleTimeRange;
-		if (zoomMax-zoomMin >= fullMax-fullMin)
-			throw new Exception("Mouse-wheel zoom did not narrow the time axis");
+	private static void AssertConnectionControls(MainWindow window)
+	{
+		OscilloscopeView panel=Find<OscilloscopeView>(window);
+		if(Descendants<ComboBox>(panel).Any())
+		{
+			throw new Exception(
+				"A connection-method selector is still visible even though the oscilloscope supports only LAN");
+		}
+		TextBox address=Named<TextBox>(panel,"AddressTextBox");
+		if(address.Text != "192.168.200.41")
+		{
+			throw new Exception("Unexpected default oscilloscope address");
+		}
+		Button connection=Named<Button>(panel,"ConnectionButton");
+		if((string?)connection.Content != "Offline" || !connection.IsEnabled)
+		{
+			throw new Exception(
+				"The offline connection control is missing or disabled");
+		}
+		if(Named<Button>(panel,"StartButton").IsEnabled)
+		{
+			throw new Exception("Start is enabled while offline");
+		}
+		if(Named<Button>(panel,"SaveButton").IsEnabled)
+		{
+			throw new Exception("CSV is enabled before a capture");
+		}
+	}
+
+	private static void AssertCommonStyle(MainWindow window)
+	{
+		SolidColorBrush background=
+			(SolidColorBrush)window.FindResource("KoradBackgroundBrush");
+		SolidColorBrush input=
+			(SolidColorBrush)window.FindResource("KoradInputBrush");
+		if(background.Color != Color.FromRgb(104,104,104) ||
+			input.Color != Color.FromRgb(133,133,133))
+		{
+			throw new Exception(
+				"The shared Korad palette is not active in the oscilloscope");
+		}
+		OscilloscopeView panel=Find<OscilloscopeView>(window);
+		Button connection=Named<Button>(panel,"ConnectionButton");
+		if(connection.FontFamily.Source != "Consolas" ||
+			connection.Background is not SolidColorBrush buttonBackground ||
+			buttonBackground.Color != input.Color)
+		{
+			throw new Exception(
+				"The oscilloscope controls do not use the Korad control style");
+		}
+	}
+
+	private static void AssertAboutWindows(MainWindow window)
+	{
+		Menu menu=Find<Menu>(window);
+		MenuItem about=menu.Items.OfType<MenuItem>()
+			.SingleOrDefault(item=>(string?)item.Header == "O aplikacji")
+			?? throw new Exception("Missing O aplikacji menu");
+		string[] entries=about.Items.OfType<MenuItem>()
+			.Select(item=>(string)item.Header)
+			.ToArray();
+		if(!entries.SequenceEqual(["Autor","Licencja"]))
+		{
+			throw new Exception("Unexpected O aplikacji menu entries");
+		}
+
+		AuthorWindow author=new()
+		{
+			Owner=window,
+			ShowInTaskbar=false,
+			WindowStyle=WindowStyle.None,
+			Left=-10000,
+			Top=-10000
+		};
+		author.Show();
+		Pump();
+		string authorText=string.Join(
+			"\n",
+			Descendants<TextBlock>(author).Select(text=>text.Text));
+		if(author.Title !=
+			"Autor - Siglent SDS1000CML Viewer v0.5.0" ||
+			!authorText.Contains("Mateusz Skipor",StringComparison.Ordinal) ||
+			!authorText.Contains(
+				"Inżynier technik elektroniki",
+				StringComparison.Ordinal) ||
+			!authorText.Contains(
+				"mskiporsklep@op.pl",
+				StringComparison.Ordinal))
+		{
+			throw new Exception("The Autor window does not match Korad");
+		}
+		author.Close();
+
+		LicenseWindow license=new()
+		{
+			Owner=window,
+			ShowInTaskbar=false,
+			WindowStyle=WindowStyle.None,
+			Left=-10000,
+			Top=-10000
+		};
+		license.Show();
+		Pump();
+		TextBox licenseText=Descendants<TextBox>(license).Single();
+		if(license.Title !=
+			"Licencja - Siglent SDS1000CML Viewer v0.5.0" ||
+			!licenseText.IsReadOnly ||
+			!licenseText.Text.Contains(
+				"PolyForm Noncommercial License 1.0.0",
+				StringComparison.Ordinal))
+		{
+			throw new Exception("The Licencja window does not match Korad");
+		}
+		license.Close();
+	}
+
+	private static void AssertPlotAndChannels(MainWindow window)
+	{
+		OscilloscopeView panel=Find<OscilloscopeView>(window);
+		WavePlot plot=Find<WavePlot>(panel);
+		int count=20000;
+		double[] channel1=Enumerable.Range(0,count)
+			.Select(index=>
+				2*Math.Sin(index*2*Math.PI/5000))
+			.ToArray();
+		double[] channel2=Enumerable.Range(0,count)
+			.Select(index=>
+				Math.Sin(index*2*Math.PI/5000+0.6) > 0
+					? 0.7
+					: -0.7)
+			.ToArray();
+		plot.SetWaveforms(
+		[
+			new(1,channel1,1e-6,-0.01,DateTimeOffset.UnixEpoch),
+			new(2,channel2,1e-6,-0.01,DateTimeOffset.UnixEpoch)
+		]);
+		(double fullMin,double fullMax)=plot.VisibleTimeRange;
+		plot.ZoomAt(0.5,120);
+		(double zoomMin,double zoomMax)=plot.VisibleTimeRange;
+		if(zoomMax-zoomMin >= fullMax-fullMin)
+		{
+			throw new Exception(
+				"Mouse-wheel zoom did not narrow the time axis");
+		}
 		plot.ClearCursors();
 		plot.ActivateOrSelectCursor(0);
 		plot.ActivateOrSelectCursor(1);
 		plot.ActivateOrSelectCursor(2);
-		if (!plot.ActiveCursorPairs().SequenceEqual(new[] { (1, 2) }))
+		if(!plot.ActiveCursorPairs().SequenceEqual([(1,2)]))
+		{
 			throw new Exception("Cursors 1,2,3 were not paired as 1-2");
+		}
 		plot.ClearCursors();
 		plot.ActivateOrSelectCursor(1);
 		plot.ActivateOrSelectCursor(2);
-		if (!plot.ActiveCursorPairs().SequenceEqual(new[] { (2, 3) }))
+		if(!plot.ActiveCursorPairs().SequenceEqual([(2,3)]))
+		{
 			throw new Exception("Cursors 2,3 were not paired as 2-3");
+		}
 		plot.UnlockSelectedCursor(0.25);
 		plot.MoveUnlockedCursor(0.75);
 		plot.PlaceUnlockedCursor(0.60);
-		if (plot.MovingCursor != -1 || plot.CursorTime(2) is not double time || time <= zoomMin || time >= zoomMax)
-			throw new Exception("Cursor unlock, follow and placement failed");
-
-	}
-	private static void AssertApplicationIdentity(MainForm form)
-	{
-		if(form.Text != "Siglent SDS1000CML Viewer v0.4.1")
+		if(plot.MovingCursor != -1 ||
+			plot.CursorTime(2) is not double time ||
+			time <= zoomMin ||
+			time >= zoomMax)
 		{
-			throw new Exception("Unexpected main-window title: "+form.Text);
+			throw new Exception(
+				"Cursor unlock, follow and placement failed");
 		}
-		if(typeof(MainForm).Assembly.GetName().Name != "Siglent.SDS1000CML.Viewer")
+
+		CheckBox channel1CheckBox=
+			Named<CheckBox>(panel,"Channel1CheckBox");
+		CheckBox channel2CheckBox=
+			Named<CheckBox>(panel,"Channel2CheckBox");
+		channel2CheckBox.IsChecked=false;
+		Pump();
+		if(!plot.VisibleWaveChannels.SequenceEqual([1]))
 		{
-			throw new Exception("Unexpected executable assembly name: "+typeof(MainForm).Assembly.GetName().Name);
+			throw new Exception("Inactive CH2 remains visible in the plot");
 		}
-		using Icon expected=new("siglent_sds1102cml+.ico");
-		using Bitmap expectedBitmap=expected.ToBitmap();
-		using Bitmap actualBitmap=form.Icon!.ToBitmap();
-		if (!SHA256.HashData(BitmapBytes(expectedBitmap)).SequenceEqual(SHA256.HashData(BitmapBytes(actualBitmap))))
-			throw new Exception("Main window does not use the supplied ICO icon");
+		channel1CheckBox.IsChecked=false;
+		Pump();
+		if(plot.HasWaveforms ||
+			Descendants<Button>(panel)
+				.Where(button=>
+					((string?)button.Content)?.StartsWith(
+						"Kursor ",
+						StringComparison.Ordinal) == true)
+				.Any(button=>button.IsEnabled))
+		{
+			throw new Exception(
+				"Waveforms or cursors remain active with both channels disabled");
+		}
+		channel1CheckBox.IsChecked=true;
+		channel2CheckBox.IsChecked=true;
+		Pump();
 	}
 
-	private static void AssertOnlineDisconnectAvailableDuringPreview(MainForm form,Control[] controls)
+	private static void AssertOnlineDisconnectAvailableDuringPreview(
+		MainWindow window)
 	{
-		FieldInfo scopeField=typeof(MainForm).GetField("scope",BindingFlags.Instance|BindingFlags.NonPublic)
+		OscilloscopeView panel=Find<OscilloscopeView>(window);
+		FieldInfo scopeField=typeof(OscilloscopeView).GetField(
+			"scope",
+			BindingFlags.Instance|BindingFlags.NonPublic)
 			?? throw new Exception("Missing scope session field");
-		FieldInfo busyField=typeof(MainForm).GetField("busy",BindingFlags.Instance|BindingFlags.NonPublic)
+		FieldInfo busyField=typeof(OscilloscopeView).GetField(
+			"busy",
+			BindingFlags.Instance|BindingFlags.NonPublic)
 			?? throw new Exception("Missing preview busy field");
-		MethodInfo updateEnabled=typeof(MainForm).GetMethod("UpdateEnabled",BindingFlags.Instance|BindingFlags.NonPublic)
+		MethodInfo updateEnabled=typeof(OscilloscopeView).GetMethod(
+			"UpdateEnabled",
+			BindingFlags.Instance|BindingFlags.NonPublic)
 			?? throw new Exception("Missing control-state update method");
 		NoOpTransport transport=new();
-		using ScopeClient client=new(transport);
-		scopeField.SetValue(form,client);
-		busyField.SetValue(form,true);
-		updateEnabled.Invoke(form,null);
-		Button connection=controls.OfType<Button>().Single(button=>button.Text == "Online");
-		if(!connection.Enabled)
+		ScopeClient client=new(transport);
+		scopeField.SetValue(panel,client);
+		busyField.SetValue(panel,true);
+		updateEnabled.Invoke(panel,null);
+		Button connection=Named<Button>(panel,"ConnectionButton");
+		if((string?)connection.Content != "Online" ||
+			!connection.IsEnabled)
 		{
-			throw new Exception("Online button is disabled while a preview read is active");
+			throw new Exception(
+				"Online button is disabled while a preview read is active");
 		}
-		MethodInfo connectOrDisconnect=typeof(MainForm).GetMethod("ConnectOrDisconnect",BindingFlags.Instance|BindingFlags.NonPublic)
+		MethodInfo connectOrDisconnect=
+			typeof(OscilloscopeView).GetMethod(
+				"ConnectOrDisconnect",
+				BindingFlags.Instance|BindingFlags.NonPublic)
 			?? throw new Exception("Missing connection lifecycle method");
-		Task disconnect=(Task)(connectOrDisconnect.Invoke(form,null)
+		Task disconnect=(Task)(connectOrDisconnect.Invoke(panel,null)
 			?? throw new Exception("Disconnect did not return a task"));
-		DateTime deadline=DateTime.UtcNow.AddSeconds(2);
-		while(!disconnect.IsCompleted && DateTime.UtcNow < deadline)
+		Wait(disconnect,TimeSpan.FromSeconds(2));
+		if(!disconnect.IsCompletedSuccessfully ||
+			scopeField.GetValue(panel) is not null ||
+			!transport.Disposed)
 		{
-			Application.DoEvents();
+			throw new Exception(
+				"Offline request was not completed during a preview read: "+
+				$"status={disconnect.Status}, "+
+				$"scopeNull={scopeField.GetValue(panel) is null}, "+
+				$"disposed={transport.Disposed}, "+
+				$"error={disconnect.Exception}");
+		}
+		busyField.SetValue(panel,false);
+		updateEnabled.Invoke(panel,null);
+	}
+
+	private static void AssertLayoutAndCapture(MainWindow window)
+	{
+		foreach((double width,double height,string name) in
+			new (double Width,double Height,string Name)[]
+		{
+			(1016,780,"viewer-large.png"),
+			(886,668,"viewer-minimum.png")
+		})
+		{
+			window.Width=width;
+			window.Height=height;
+			window.UpdateLayout();
+			Pump();
+			OscilloscopeView panel=Find<OscilloscopeView>(window);
+			foreach(Button button in
+				Descendants<Button>(panel).Where(button=>button.IsVisible))
+			{
+				Point bottomRight=button.TranslatePoint(
+					new Point(button.ActualWidth,button.ActualHeight),
+					panel);
+				if(bottomRight.X > panel.ActualWidth+0.5 ||
+					bottomRight.Y > panel.ActualHeight+0.5)
+				{
+					throw new Exception(
+						"Clipped button: "+button.Content);
+				}
+			}
+			Directory.CreateDirectory("artifacts/qa");
+			RenderTargetBitmap bitmap=new(
+				(int)Math.Ceiling(window.ActualWidth),
+				(int)Math.Ceiling(window.ActualHeight),
+				96,
+				96,
+				PixelFormats.Pbgra32);
+			bitmap.Render(window);
+			PngBitmapEncoder encoder=new();
+			encoder.Frames.Add(BitmapFrame.Create(bitmap));
+			using FileStream stream=File.Create(
+				Path.Combine("artifacts/qa",name));
+			encoder.Save(stream);
+		}
+	}
+
+	private static T Named<T>(FrameworkElement root,string name)
+		where T : FrameworkElement
+	{
+		return root.FindName(name) as T ??
+			throw new Exception("Missing control: "+name);
+	}
+
+	private static T Find<T>(DependencyObject root)
+		where T : DependencyObject
+	{
+		return Descendants<T>(root).FirstOrDefault() ??
+			throw new Exception("Missing visual element: "+typeof(T).Name);
+	}
+
+	private static IEnumerable<T> Descendants<T>(DependencyObject root)
+		where T : DependencyObject
+	{
+		int count=VisualTreeHelper.GetChildrenCount(root);
+		for(int index=0;index < count;index++)
+		{
+			DependencyObject child=VisualTreeHelper.GetChild(root,index);
+			if(child is T match)
+			{
+				yield return match;
+			}
+			foreach(T descendant in Descendants<T>(child))
+			{
+				yield return descendant;
+			}
+		}
+	}
+
+	private static void Wait(Task task,TimeSpan timeout)
+	{
+		DateTime deadline=DateTime.UtcNow+timeout;
+		while(!task.IsCompleted && DateTime.UtcNow < deadline)
+		{
+			Pump();
 			Thread.Sleep(10);
 		}
-		if(!disconnect.IsCompletedSuccessfully || scopeField.GetValue(form) != null || !transport.Disposed)
-		{
-			throw new Exception("Offline request was not completed while a preview read was active");
-		}
-		scopeField.SetValue(form,null);
-		busyField.SetValue(form,false);
-		updateEnabled.Invoke(form,null);
 	}
 
-	private static void AssertDarkTitleBar(Form form)
-
+	private static void Pump()
 	{
-
-		if (!OperatingSystem.IsWindowsVersionAtLeast(10, 0, 17763) || OperatingSystem.IsWindowsVersionAtLeast(10, 0, 22000))
-			return;
-		using RegistryKey? key=Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize");
-		if (key?.GetValue("AppsUseLightTheme") is not int light || light != 0)
-			return;
-		int dark=0;
-		int result=DwmGetWindowAttribute(form.Handle, 20, out dark, sizeof(int));
-		if (result != 0)
-			result=DwmGetWindowAttribute(form.Handle, 19, out dark, sizeof(int));
-		if (result != 0 || dark != 1)
-			throw new Exception($"The Windows 10 title bar did not receive dark mode: result={result}, value={dark}");
-
+		System.Windows.Threading.DispatcherFrame frame=new();
+		Application.Current.Dispatcher.BeginInvoke(
+			System.Windows.Threading.DispatcherPriority.ApplicationIdle,
+			new Action(()=>frame.Continue=false));
+		System.Windows.Threading.Dispatcher.PushFrame(frame);
 	}
-
-	[DllImport("dwmapi.dll")]
-	private static extern int DwmGetWindowAttribute(IntPtr window, int attribute, out int value, int size);
-	private static void AssertConnectionControls(Control[] controls)
-	{
-		Button connection=controls.OfType<Button>().SingleOrDefault(button => button.Text == "Offline")
-			?? throw new Exception("The connection button does not show only Offline");
-		if (controls.OfType<Label>().Any(label => label.Text == "Offline"))
-			throw new Exception("Offline is still displayed as a separate label");
-		if (controls.OfType<Label>().Any(label => label.Text == "Podgląd nie zmienia ustawień oscyloskopu"))
-			throw new Exception("The removed preview note is still visible");
-		if (controls.OfType<Label>().Any(label => label.Text.Contains("PPM odblokuj", StringComparison.Ordinal)))
-			throw new Exception("The unrequested visible cursor instruction is still present");
-		if (controls.OfType<TableLayoutPanel>().Any(panel => panel.RowCount == 8))
-			throw new Exception("The bottom message row is still present");
-		if (!controls.OfType<Label>().Any(label => label.Text == "Stan oscyloskopu: OFFLINE"))
-			throw new Exception("Missing acquisition status at the bottom of the main window");
-		if (!controls.OfType<Label>().Any(label => label.Text.StartsWith("CH1: Vpp")) || !controls.OfType<Label>().Any(label => label.Text.StartsWith("CH2: Vpp")))
-			throw new Exception("Missing CH1/CH2 measurement rows");
-		if (controls.OfType<Button>().Count(button => button.Text.StartsWith("Kursor ")) != 4)
-			throw new Exception("Missing four cursor buttons");
-		if (controls.OfType<Label>().Any(label => label.Text.Contains("USB", StringComparison.OrdinalIgnoreCase)))
-			throw new Exception("USB implementation status is still visible in the main window");
-		ComboBox mode=controls.OfType<ComboBox>().Single(combo => combo.Items.Cast<object>().Any(item => item?.ToString() == "LAN"));
-		if (mode.Items.Count != 1 || mode.Items[0]?.ToString() != "LAN")
-			throw new Exception("USB can still be selected as a connection method");
-	}
-
-	private static void AssertAboutMenu(MainForm form)
-	{
-		MenuStrip menu=form.MainMenuStrip ?? throw new Exception("Missing application toolbar");
-		if (menu.RenderMode != ToolStripRenderMode.System && menu.Renderer.GetType().Name != "DarkMenuRenderer")
-			throw new Exception("The application toolbar does not use the Windows renderer or its Windows 10 dark fallback");
-		ToolStripMenuItem about=menu.Items.OfType<ToolStripMenuItem>().SingleOrDefault(item => item.Text == "O Aplikacji")
-			?? throw new Exception("Missing O Aplikacji menu");
-		ToolStripMenuItem author=about.DropDownItems.OfType<ToolStripMenuItem>().SingleOrDefault(item => item.Text == "Autor")
-			?? throw new Exception("Missing Autor menu item");
-		ToolStripMenuItem license=about.DropDownItems.OfType<ToolStripMenuItem>().SingleOrDefault(item => item.Text == "Licencja")
-			?? throw new Exception("Missing Licencja menu item");
-
-		author.PerformClick();
-		Application.DoEvents();
-		Form authorWindow=Application.OpenForms.Cast<Form>().Single(window => window.Text == "Autor");
-		AssertDarkTitleBar(authorWindow);
-		AssertInformationWindow(authorWindow, form, "Mateusz Skipor", "Inżynier Technik Elektroniki", "mskiporsklep@op.pl");
-		CaptureWindow(authorWindow, "artifacts/qa/author.png");
-		authorWindow.Close();
-
-		license.PerformClick();
-		Application.DoEvents();
-		Form licenseWindow=Application.OpenForms.Cast<Form>().Single(window => window.Text == "Licencja");
-		AssertDarkTitleBar(licenseWindow);
-		AssertInformationWindow(licenseWindow, form, "PolyForm Noncommercial License 1.0.0");
-		CaptureWindow(licenseWindow, "artifacts/qa/license.png");
-		licenseWindow.Close();
-	}
-
-	private static void AssertInformationWindow(Form window, MainForm main, params string[] expectedText)
-	{
-		Control[] controls=Walk(window).ToArray();
-		string text=string.Join("\n", controls.Select(control => control.Text));
-		if (window.BackColor != main.BackColor || window.Font.Name != "Consolas")
-			throw new Exception(window.Text+" window does not match the application style");
-		if (window.ShowIcon)
-			throw new Exception(window.Text+" window still shows a title-bar graphic");
-		if (controls.OfType<PictureBox>().Any())
-			throw new Exception(window.Text+" window still contains artwork");
-		if (controls.OfType<Button>().Any())
-			throw new Exception(window.Text+" window still contains a close button");
-		foreach (string expected in expectedText)
-			if (!text.Contains(expected, StringComparison.Ordinal))
-				throw new Exception(window.Text+" window is missing: "+expected);
-	}
-
-	private static void CaptureWindow(Form window, string path)
-	{
-		Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-		using Bitmap bitmap=new(window.Width, window.Height);
-		window.DrawToBitmap(bitmap, new(0, 0, window.Width, window.Height));
-		bitmap.Save(path, ImageFormat.Png);
-	}
-
-	private static byte[] BitmapBytes(Bitmap bitmap)
-	{
-		using MemoryStream stream=new();
-		bitmap.Save(stream, ImageFormat.Png);
-		return stream.ToArray();
-	}
-
-	private static IEnumerable<Control> Walk(Control root)
-
-	{
-
-		foreach (Control control in root.Controls)
-
-		{
-
-			yield return control;
-			foreach (Control child in Walk(control))
-				yield return child;
-
-		}
-
-
-	}
-
-
 }
 
 internal sealed class NoOpTransport : IInstrumentTransport
 {
 	public bool Disposed
 	{
-		get; private set;
+		get;private set;
 	}
 
 	public void Write(string command)

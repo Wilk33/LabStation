@@ -1,8 +1,20 @@
 # Zmiany
 
+## 0.5.0 - 2026-09-29
+
+- Przeniesiono całą warstwę interfejsu z WinForms do WPF, zgodnie z architekturą Korada.
+- Główna powierzchnia oscyloskopu jest niezależnym panelem `OscilloscopeView`, a samodzielne okno EXE pełni rolę cienkiej powłoki.
+- Zastosowano paletę, krój pisma, styl przycisków, pól tekstowych i menu zgodne z Koradem.
+- Ujednolicono menu `O aplikacji` oraz osobne okna Autor i Licencja, łącznie z nazwą i wersją aplikacji w paskach tytułu.
+- Usunięto listę wyboru `LAN`. Adres IP i przycisk Offline/Online są jedynymi elementami połączenia.
+- Przeniesiono wykres, lokalne powiększenie i pełną mechanikę czterech kursorów do natywnej kontrolki WPF.
+- Zachowano transport VXI-11, kolejkę operacji, pomiary, podgląd, ręczne pobieranie i zapis CSV.
+- Dodano test uruchomieniowy rzeczywistego panelu WPF w dwóch rozmiarach okna.
+- Nie dodano nowych stale widocznych opisów ani instrukcji w interfejsie.
+
 ## Integracja z LabStation - 2026-09-29
 
-- Przeniesiono aplikację do katalogu `SDS1000CML Viewer` jako niezależny program `Siglent SDS1000CML Viewer v0.4.1`.
+- Przeniesiono aplikację do katalogu `SDS1000CML Viewer` jako niezależny program, rozwijany obecnie jako `Siglent SDS1000CML Viewer v0.5.0`.
 - Usunięto transport USB i testy USBTMC. Jedyną metodą komunikacji jest LAN przez VXI-11.
 - Żądanie Offline jest dostępne podczas aktywnego podglądu i czeka w kolejce za trwającym odczytem zamiast być pomijane.
 - Ustawiono domyślny adres oscyloskopu `192.168.200.41` oraz osobny katalog ustawień aplikacji.

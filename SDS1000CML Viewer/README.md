@@ -1,7 +1,9 @@
-# Siglent SDS1000CML Viewer v0.4.1
+# Siglent SDS1000CML Viewer v0.5.0
 
 Prosta aplikacja Windows do podglądu CH1/CH2 i pobierania przebiegów do CSV.
-C# / WinForms, szary interfejs i czcionka Consolas. Bez EasyScopeX, NI-VISA, pakietów NI i zależności NuGet.
+C# / WPF, szary interfejs zgodny z Koradem i czcionka Consolas. Bez EasyScopeX, NI-VISA, pakietów NI i zależności NuGet.
+
+Główna powierzchnia przyrządu jest niezależnym panelem `OscilloscopeView`. Samodzielne okno EXE jest jego cienką powłoką, dzięki czemu ten sam panel może zostać osadzony bez uruchamiania drugiego programu w docelowym LabStation.
 
 ## Uruchamianie
 
@@ -26,7 +28,7 @@ Aplikacja nie wymaga uprawnień administratora.
 
 1. Podłącz oscyloskop i komputer do tej samej sieci.
 2. Ustaw adres IP oscyloskopu lub DHCP.
-3. Wybierz LAN, wpisz IP i kliknij Offline.
+3. Wpisz IP i kliknij Offline.
 
 Program używa VXI-11 (portmapper TCP 111 i port przydzielony przez urządzenie).
 SDS1000CML+ nie obsługuje zwykłego SCPI socket na porcie 5025.
@@ -80,7 +82,11 @@ Wykres stosuje min/max przy ograniczaniu punktów do szerokości ekranu.
 CSV zawiera wszystkie odebrane próbki, bez tego ograniczenia.
 Niepełny lub nierozpoznany deskryptor jest odrzucany.
 
-## Stan wersji 0.4.1
+## Stan wersji 0.5.0
+
+W wersji 0.5.0 interfejs został przeniesiony z WinForms do WPF. Usunięto listę metody połączenia, ponieważ aplikacja obsługuje wyłącznie LAN. Powłoka, paleta, kontrolki, menu `O aplikacji` oraz osobne okna Autor i Licencja zostały ujednolicone z Koradem. Wykres, pomiary, lokalne powiększenie i mechanika czterech kursorów pozostały funkcjonalnością właściwą oscyloskopowi.
+
+Zmiana UI została zweryfikowana testami programowymi i zrzutami w dwóch rozmiarach okna. Nie wykonano ponownego testu na fizycznym oscyloskopie, dlatego poniższe wyniki sprzętowe dotyczą wcześniejszej wersji 0.4.1 korzystającej z tego samego `Scope.Core` i transportu VXI-11.
 
 Połączenie LAN zostało sprawdzone na fizycznym SIGLENT SDS1102CML+ z firmware
 6.01.01.25. W bieżącej wersji test odczytowy pobrał po 20 480 punktów z CH1 i CH2,
@@ -97,10 +103,7 @@ stan Stop.
 
 Testy programowe obejmują bloki binarne, podpisane próbki, skalowanie deskryptora,
 CSV, odczyt bez zmiany ustawień, odpowiedzi `SAST`,
-kolejność podgląd-polecenie, parser parametrów PAVA oraz sesję VXI-11 przez lokalny TCP. Test UI weryfikuje
-ikonę, nazwę aplikacji, układ w dwóch rozmiarach okna, brak USB w głównym oknie, dostępność rozłączenia podczas aktywnego podglądu, dolny stan
-akwizycji, lokalne powiększanie osi czasu, parowanie kursorów, systemowy tryb kolorów, widoczność danych po wyłączeniu CH1 i CH2, brak dodatkowego dolnego wiersza komunikatów, ciemne paski tytułu Windows 10 oraz menu i okna
-O Aplikacji.
+kolejność podgląd-polecenie, parser parametrów PAVA oraz sesję VXI-11 przez lokalny TCP. Test UI uruchamia rzeczywistą powierzchnię WPF i weryfikuje panel wielokrotnego użytku, brak listy LAN, wspólny styl Korada, ikonę i nazwę aplikacji, układ w dwóch rozmiarach okna, dostępność rozłączenia podczas aktywnego podglądu, lokalne powiększanie osi czasu, parowanie kursorów, widoczność danych po wyłączeniu CH1 i CH2 oraz menu i okna `O aplikacji`.
 
 ## Budowanie
 
