@@ -1,0 +1,10 @@
+<Project>
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<Version>0.4.1</Version>
+		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+		<Deterministic>true</Deterministic>
+	</PropertyGroup>
+</Project>

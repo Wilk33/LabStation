@@ -1,0 +1,32 @@
+name: Build applications
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  korad:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Test Korad KA3005P
+        run: dotnet test .\KA3005P\Korad.KA3005P.sln -c Release --nologo
+
+  oscilloscope:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Test and build Siglent SDS1000CML Viewer
+        working-directory: SDS1000CML Viewer
+        run: .\build.ps1
