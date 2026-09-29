@@ -12,13 +12,14 @@ permissions:
 jobs:
   korad:
     runs-on: windows-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
       - name: Test Korad KA3005P
-        run: dotnet test .\KA3005P\Korad.KA3005P.sln -c Release --nologo
+        run: dotnet test .\KA3005P\tests\Ka3005P.Tests\Ka3005P.Tests.csproj -c Release --nologo -p:SelfContained=false -p:PublishSingleFile=false -p:RuntimeIdentifier=
 
   oscilloscope:
     runs-on: windows-latest
