@@ -62,7 +62,7 @@ internal static class Program
 
 	private static void AssertApplicationIdentity(MainWindow window)
 	{
-		if(window.Title != "Siglent SDS1000CML Viewer v0.6.2")
+		if(window.Title != "Siglent SDS1000CML Viewer v0.7.0")
 		{
 			throw new Exception("Unexpected main-window title: "+window.Title);
 		}
@@ -314,6 +314,28 @@ internal static class Program
 			throw new Exception("Auto-connected panel did not close cleanly");
 		}
 		startupHost.Close();
+
+		FailingStatusTransport failingTransport=new();
+		OscilloscopeView failingPanel=new(
+			new FixedScanner(null),
+			_=>failingTransport,
+			new MemorySettingsStore(new("192.168.200.41",true)));
+		Named<CheckBox>(failingPanel,"LiveCheckBox").IsChecked=false;
+		Window failingHost=HiddenHost(failingPanel);
+		failingHost.Show();
+		WaitUntil(
+			()=>Named<Button>(failingPanel,"ConnectionButton").IsEnabled,
+			TimeSpan.FromSeconds(2));
+		if((string?)Named<Button>(failingPanel,"ConnectionButton").Content !=
+				"Offline" ||
+			!failingTransport.Disposed)
+		{
+			throw new Exception(
+				"Failed automatic initialization left a live online session");
+		}
+		Task failingDispose=failingPanel.DisposeAsync().AsTask();
+		Wait(failingDispose,TimeSpan.FromSeconds(2));
+		failingHost.Close();
 		Pump();
 	}
 
@@ -507,7 +529,7 @@ internal static class Program
 			"\n",
 			Descendants<TextBlock>(author).Select(text=>text.Text));
 		if(author.Title !=
-			"Autor - Siglent SDS1000CML Viewer v0.6.2" ||
+			"Autor - Siglent SDS1000CML Viewer v0.7.0" ||
 			!authorText.Contains("Mateusz Skipor",StringComparison.Ordinal) ||
 			!authorText.Contains(
 				"Inżynier technik elektroniki",
@@ -532,7 +554,7 @@ internal static class Program
 		Pump();
 		TextBox licenseText=Descendants<TextBox>(license).Single();
 		if(license.Title !=
-			"Licencja - Siglent SDS1000CML Viewer v0.6.2" ||
+			"Licencja - Siglent SDS1000CML Viewer v0.7.0" ||
 			!licenseText.IsReadOnly ||
 			!licenseText.Text.Contains(
 				"PolyForm Noncommercial License 1.0.0",
@@ -870,5 +892,33 @@ internal sealed class AutoConnectTransport : IInstrumentTransport
 
 	public void Dispose()
 	{
+	}
+}
+
+internal sealed class FailingStatusTransport : IInstrumentTransport
+{
+	public bool Disposed
+	{
+		get;private set;
+	}
+
+	public void Write(string command)
+	{
+		throw new InvalidOperationException("Unexpected write: "+command);
+	}
+
+	public byte[] Query(string command)
+	{
+		if(command == "*IDN?")
+		{
+			return System.Text.Encoding.ASCII.GetBytes(
+				"SIGLENT,SDS1102CML+,TEST,6.01\n");
+		}
+		throw new IOException("Simulated acquisition-status failure");
+	}
+
+	public void Dispose()
+	{
+		Disposed=true;
 	}
 }

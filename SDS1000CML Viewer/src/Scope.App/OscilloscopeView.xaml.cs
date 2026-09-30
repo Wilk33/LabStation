@@ -302,23 +302,25 @@ public partial class OscilloscopeView : UserControl,IAsyncDisposable
 			{
 				throw new InvalidOperationException("Wpisz adres IP oscyloskopu.");
 			}
-			scope=await Task.Run(()=>
+			(ScopeClient Client,AcquisitionState State) connected=
+				await Task.Run(()=>
 			{
 				IInstrumentTransport transport=transportFactory(host);
 				ScopeClient client=new(transport);
 				try
 				{
 					client.Initialize();
-					return client;
+					AcquisitionState state=client.AcquisitionStatus();
+					return (client,state);
 				}
 				catch
 				{
 					client.Dispose();
 					throw;
 				}
-			});
-			AcquisitionState state=await Task.Run(scope.AcquisitionStatus);
-			UpdateAcquisition(state);
+				});
+			scope=connected.Client;
+			UpdateAcquisition(connected.State);
 			SaveSettings();
 		}
 		catch(Exception exception)

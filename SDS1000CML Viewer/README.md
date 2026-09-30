@@ -1,4 +1,4 @@
-# Siglent SDS1000CML Viewer v0.6.2
+# Siglent SDS1000CML Viewer v0.7.0
 
 Prosta aplikacja Windows do podglądu CH1/CH2 i pobierania przebiegów do CSV.
 C# / WPF, szary interfejs zgodny z Koradem i czcionka Consolas. Bez EasyScopeX, NI-VISA, pakietów NI i zależności NuGet.
@@ -16,10 +16,11 @@ Aplikacja nie wymaga uprawnień administratora.
 - Połączenie LAN przez VXI-11.
 - Cykliczny podgląd przebiegów CH1 i CH2. Odznaczenie „Podgląd” zatrzymuje wyłącznie odświeżanie programu.
 - Vpp, Vrms, częstotliwość, Vmin, Vmax i Duty są odczytywane dla wybranych i dostępnych kanałów.
-- Cztery lokalne kursory pokazują czas i napięcie zaznaczonych kanałów oraz różnice dla kolejnych aktywnych par.
+- Cztery lokalne kursory pokazują czas i napięcie zaznaczonych kanałów oraz różnice dla kolejnych aktywnych par. Ich przyciski korzystają ze wspólnego standardu Korada i mają czarny tekst.
 - Rolka myszy nad wykresem zmienia wyłącznie lokalny zakres osi czasu.
 - „Pobierz przebieg” zachowuje pełny odebrany blok próbek w pamięci aplikacji.
-- „Zapisz CSV” zapisuje ostatni ręcznie pobrany przebieg. Późniejsze odświeżenia podglądu go nie zastępują.
+- Menu `Zapisz jako` zapisuje ostatni ręcznie pobrany przebieg jako `CH1 CSV`, `CH2 CSV` albo `CH1 i CH2 CSV`. Pozycje wymagające nieobecnego kanału są nieaktywne. Późniejsze odświeżenia podglądu nie zastępują ręcznie pobranego przebiegu.
+- Menu `Narzędzia` zawiera odczytowy skan sieci lokalnej oraz opcję `Auto connect`.
 - Start, Stop i Auto Setup wysyłane tylko po kliknięciu.
 - Program nie zmienia skali, wyzwalania, tłumienia sond ani stanu kanałów podczas łączenia i odczytu.
 - Zaznaczenie CH1/CH2 wybiera kanały odczytywane. Kanał musi być włączony na oscyloskopie.
@@ -28,11 +29,12 @@ Aplikacja nie wymaga uprawnień administratora.
 
 1. Podłącz oscyloskop i komputer do tej samej sieci.
 2. Ustaw adres IP oscyloskopu lub DHCP.
-3. Wpisz IP i kliknij Offline.
+3. Wpisz IP i kliknij Offline albo użyj `Narzędzia > Skanuj sieć`.
+
+Skan odpytuje urządzenia przez VXI-11 poleceniem `*IDN?`. Adres zostaje wpisany tylko wtedy, gdy odpowiedź identyfikuje obsługiwany model SDS1102CML+. Skan nie zmienia ustawień oscyloskopu. Opcja `Auto connect` łączy z niepustym zapisanym adresem po uruchomieniu programu oraz z adresem znalezionym przez skan. Przy pustym polu IP nie wykonuje połączenia.
 
 Program używa VXI-11 (portmapper TCP 111 i port przydzielony przez urządzenie).
 SDS1000CML+ nie obsługuje zwykłego SCPI socket na porcie 5025.
-Program nie skanuje sieci ani nie zmienia zapory.
 Domyślny adres urządzenia to `192.168.200.41`. Adres jest zapisywany lokalnie w `%LOCALAPPDATA%/Siglent SDS1000CML Viewer/settings.json`.
 
 ## Komunikacja
@@ -82,6 +84,12 @@ Wykres stosuje min/max przy ograniczaniu punktów do szerokości ekranu.
 CSV zawiera wszystkie odebrane próbki, bez tego ograniczenia.
 Niepełny lub nierozpoznany deskryptor jest odrzucany.
 
+## Stan wersji 0.7.0
+
+W wersji 0.7.0 przyciski ogólne i przyciski czterech kursorów zostały ujednolicone ze standardem Korada. Menu `Narzędzia` udostępnia skan lokalnej sieci i zapamiętywaną opcję `Auto connect`. Menu `Zapisz jako` zastępuje dolny przycisk CSV i niezależnie udostępnia eksport CH1, CH2 albo obu kanałów zgodnie z zawartością ostatniego ręcznego pobrania. Separator menu korzysta ze wspólnego, dopasowanego kolorystycznie stylu `LabStation.UI`.
+
+Skanowanie korzysta ze wspólnej biblioteki `Shared/LabStation.Instruments`, ogranicza duże podsieci do lokalnego segmentu `/24`, izoluje błędy poszczególnych adresów i przyjmuje wyłącznie model zatwierdzony przez `Scope.Core`. Rzeczywisty test odczytowy wykrył SDS1102CML+ pod `192.168.200.41` za pomocą samego `*IDN?`. Test skanowania nie zmieniał ustawień ani stanu akwizycji urządzenia.
+
 ## Stan wersji 0.6.2
 
 W wersji 0.6.2 transport VXI-11, kontrakt SCPI i serializacja operacji pochodzą ze wspólnej biblioteki `Shared/LabStation.Instruments`. Wykres korzysta ze wspólnej kontrolki `TimeSeriesPlot`, zachowując cztery kursory, lokalne powiększenie, kanały CH1 i CH2 oraz pełną specyfikę dekodowania `WAVEDESC` w Oscyloskopie.
@@ -96,7 +104,7 @@ W wersji 0.6.0 motyw, kontrolki bazowe, menu `O aplikacji`, okna Autor/Licencja 
 
 W wersji 0.5.0 interfejs został przeniesiony z WinForms do WPF. Usunięto listę metody połączenia, ponieważ aplikacja obsługuje wyłącznie LAN. Powłoka, paleta, kontrolki, menu `O aplikacji` oraz osobne okna Autor i Licencja zostały ujednolicone z Koradem. Wykres, pomiary, lokalne powiększenie i mechanika czterech kursorów pozostały funkcjonalnością właściwą oscyloskopowi.
 
-Zmiany UI zostały zweryfikowane testami programowymi i zrzutami w dwóch rozmiarach okna. Nie wykonano ponownego testu na fizycznym oscyloskopie, dlatego poniższe wyniki sprzętowe dotyczą wcześniejszej wersji 0.4.1 korzystającej z tego samego `Scope.Core` i transportu VXI-11.
+Zmiany UI zostały zweryfikowane testami programowymi i zrzutami w dwóch rozmiarach okna. Dla wersji 0.7.0 wykonano wyłącznie rzeczywisty test skanowania `*IDN?`. Poniższe testy przebiegów i poleceń dotyczą wcześniejszej wersji 0.4.1 korzystającej z tego samego `Scope.Core` i transportu VXI-11.
 
 Połączenie LAN zostało sprawdzone na fizycznym SIGLENT SDS1102CML+ z firmware
 6.01.01.25. W bieżącej wersji test odczytowy pobrał po 20 480 punktów z CH1 i CH2,
@@ -113,7 +121,7 @@ stan Stop.
 
 Testy programowe obejmują bloki binarne, podpisane próbki, skalowanie deskryptora,
 CSV, odczyt bez zmiany ustawień, odpowiedzi `SAST`,
-kolejność podgląd-polecenie, parser parametrów PAVA oraz sesję VXI-11 przez lokalny TCP. Test UI uruchamia rzeczywistą powierzchnię WPF i weryfikuje panel wielokrotnego użytku, brak listy LAN, wspólny styl Korada, ikonę i nazwę aplikacji, układ w dwóch rozmiarach okna, dostępność rozłączenia podczas aktywnego podglądu, lokalne powiększanie osi czasu, parowanie kursorów, widoczność danych po wyłączeniu CH1 i CH2 oraz menu i okna `O aplikacji`.
+kolejność podgląd-polecenie, parser parametrów PAVA, predykat obsługi modelu oraz sesję VXI-11 przez lokalny TCP. Test UI uruchamia rzeczywistą powierzchnię WPF i weryfikuje panel wielokrotnego użytku, brak listy LAN, wspólny styl Korada, ikonę i nazwę aplikacji, układ w dwóch rozmiarach okna, dostępność rozłączenia podczas aktywnego podglądu, lokalne powiększanie osi czasu, parowanie kursorów, widoczność danych po wyłączeniu CH1 i CH2, selektywną dostępność CSV, skanowanie i Auto connect na atrapach oraz menu i okna `O aplikacji`.
 
 ## Budowanie
 

@@ -1,5 +1,15 @@
 # Zmiany
 
+## 0.7.0 - 2026-09-30
+
+- Ujednolicono wymiary głównych przycisków i czterech przycisków kursorów ze standardem Korada. Tekst przycisków kursorów jest zawsze czarny.
+- Dodano menu `Narzędzia` z odczytowym skanem sieci lokalnej i zapamiętywaną opcją `Auto connect`.
+- Przeniesiono ogólny mechanizm wykrywania urządzeń VXI-11 do `Shared/LabStation.Instruments`; obsługiwany model nadal wybiera `Scope.Core`.
+- Zastąpiono dolny przycisk CSV menu `Zapisz jako` z osobnymi pozycjami dla CH1, CH2 oraz obu kanałów.
+- Pozycje eksportu są aktywne wyłącznie wtedy, gdy ostatni ręcznie pobrany przebieg zawiera wymagane kanały.
+- Ujednolicono wygląd separatorów menu w `Shared/LabStation.UI`.
+- Test odczytowy rzeczywistej sieci wykrył obsługiwany SDS1102CML+ pod `192.168.200.41` poleceniem `*IDN?`.
+
 ## 0.6.2 - 2026-09-29
 
 - Przeniesiono transport VXI-11 i podstawowy kontrakt SCPI do `Shared/LabStation.Instruments`.

@@ -14,8 +14,19 @@ try
 	if ($LASTEXITCODE -ne 0) { throw 'Kompilacja nie powiodła się.' }
 	if ($Publish)
 	{
+		$finalDirectory=Join-Path $PSScriptRoot 'artifacts/final'
 		$publishDirectory=Join-Path $PSScriptRoot "artifacts/final/win-x64"
 		$archivePath=Join-Path $PSScriptRoot "artifacts/final/$releaseName.zip"
+		$finalPath=[System.IO.Path]::GetFullPath($finalDirectory)
+		Get-ChildItem -LiteralPath $finalDirectory -Directory -Filter 'Siglent-SDS1000CML-Viewer-v*-win-x64' |
+			ForEach-Object {
+				$candidate=[System.IO.Path]::GetFullPath($_.FullName)
+				if([System.IO.Path]::GetDirectoryName($candidate) -ne $finalPath)
+				{
+					throw "Katalog wydania znajduje się poza artifacts/final: $candidate"
+				}
+				Remove-Item -LiteralPath $candidate -Recurse -Force
+			}
 		if (Test-Path -LiteralPath $publishDirectory)
 		{
 			Remove-Item -LiteralPath $publishDirectory -Recurse -Force

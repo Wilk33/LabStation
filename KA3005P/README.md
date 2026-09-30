@@ -2,7 +2,7 @@
 
 Samodzielna aplikacja Windows do sterowania jednym lub dwoma zasilaczami laboratoryjnymi Korad KA3005P przez porty COM.
 
-Bieżąca wersja: `0.2.4`. Powierzchnie pojedynczego i podwójnego zasilacza pozostają niezależnymi panelami WPF. Wspólny motyw, kontrolki nastaw, listy, tekstowe paski stanu, menu, wykres oraz okna Autor/Licencja pochodzą z `Shared/LabStation.UI`. Komunikacja COM, kolejki sesji i logika trybu Dual pozostają częścią Korada.
+Bieżąca wersja: `0.2.5`. Powierzchnie pojedynczego i podwójnego zasilacza pozostają niezależnymi panelami WPF. Wspólny motyw, kontrolki nastaw, listy, tekstowe paski stanu, menu, wykres oraz okna Autor/Licencja pochodzą z `Shared/LabStation.UI`. Komunikacja COM, kolejki sesji i logika trybu Dual pozostają częścią Korada.
 
 ## Zakres
 
@@ -13,13 +13,13 @@ Bieżąca wersja: `0.2.4`. Powierzchnie pojedynczego i podwójnego zasilacza poz
 - Nastawy napięcia i ograniczenia prądu.
 - Sterowanie wyjściem ON i OFF.
 - Odczyt napięcia i prądu wyjściowego.
-- Wykres prądu i opcjonalny wykres napięcia, lokalne powiększanie oraz dwa kursory dostępne w stanie OFF i Offline, jeśli wykres zawiera dane.
+- Wykres prądu i opcjonalny wykres napięcia, lokalne powiększanie oraz dwa kursory dostępne w stanie OFF i Offline, jeśli wykres zawiera dane. Przyciski kursorów korzystają ze wspólnego standardu LabStation i mają zawsze czarny tekst.
 - Maksymalnie 600 widocznych próbek i najwyżej 1 minuta aktywnego pomiaru. Po osiągnięciu któregokolwiek limitu najstarsze próbki są usuwane.
 - Oś czasu wykresu zlicza wyłącznie czas aktywnego pomiaru w stanie ON. Przejście do OFF zachowuje historię i nie dopisuje przerwy do osi czasu.
 - Polecenie `Widok > Wyczyść` usuwa całą historię wykresu i rozpoczyna jego oś aktywnego czasu od zera przy następnej próbce.
 - W trybie symetrycznym niezależne dane i serie Portu 1 (+) oraz Portu 2 (-).
 - Nagłówek wykresu trybu symetrycznego pokazuje zwarte, oddzielne wartości Portu 1 i Portu 2, a kolory jednostek odpowiadają kolorom przebiegów.
-- Okno wykresu ma wysokość równą głównemu oknu trybu pojedynczego oraz poszerzony obszar roboczy 720 px.
+- Okno wykresu ma wysokość równą głównemu oknu trybu pojedynczego oraz poszerzony obszar roboczy 720 px. Dolny margines wykresu zachowuje pełne opisy osi czasu bez nakładania tekstu na przebieg.
 - Główne okno zachowuje stałe wymiary, ale ma aktywny przycisk minimalizacji.
 - Test interfejsu rzeczywiście pokazuje okno wykresu z podłączonym modelem danych, aby wykrywać błędy aktywacji powiązań WPF.
 - Eksport napięcia, prądu albo obu wielkości do CSV.
