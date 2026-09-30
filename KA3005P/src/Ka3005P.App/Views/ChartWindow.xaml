@@ -88,39 +88,17 @@
 				<Button
 					x:Name="Cursor1Button"
 					Grid.Column="1"
-					Width="76"
-					Margin="4,0,0,0"
 					Click="Cursor1Click"
-					Content="Kursor 1">
-					<Button.Style>
-						<Style TargetType="Button" BasedOn="{StaticResource LabStationButtonBaseStyle}">
-							<Setter Property="Visibility" Value="Collapsed" />
-							<Style.Triggers>
-								<DataTrigger Binding="{Binding CanUseCursors}" Value="True">
-									<Setter Property="Visibility" Value="Visible" />
-								</DataTrigger>
-							</Style.Triggers>
-						</Style>
-					</Button.Style>
-				</Button>
+					Content="Kursor 1"
+					Style="{StaticResource LabStationCursorButtonStyle}"
+					Visibility="{Binding CanUseCursors,Converter={StaticResource LabStationBooleanToVisibilityConverter}}" />
 				<Button
 					x:Name="Cursor2Button"
 					Grid.Column="2"
-					Width="76"
-					Margin="4,0,0,0"
 					Click="Cursor2Click"
-					Content="Kursor 2">
-					<Button.Style>
-						<Style TargetType="Button" BasedOn="{StaticResource LabStationButtonBaseStyle}">
-							<Setter Property="Visibility" Value="Collapsed" />
-							<Style.Triggers>
-								<DataTrigger Binding="{Binding CanUseCursors}" Value="True">
-									<Setter Property="Visibility" Value="Visible" />
-								</DataTrigger>
-							</Style.Triggers>
-						</Style>
-					</Button.Style>
-				</Button>
+					Content="Kursor 2"
+					Style="{StaticResource LabStationCursorButtonStyle}"
+					Visibility="{Binding CanUseCursors,Converter={StaticResource LabStationBooleanToVisibilityConverter}}" />
 				<Button
 					x:Name="OutputButton"
 					Grid.Column="3"

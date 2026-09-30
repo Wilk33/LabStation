@@ -29,6 +29,8 @@
 	<SolidColorBrush x:Key="SystemChromeHoverBrush" Color="#DADADA" />
 	<SolidColorBrush x:Key="SystemChromeDisabledBrush" Color="#707070" />
 	<SolidColorBrush x:Key="SystemChromeBorderBrush" Color="#808080" />
+	<SolidColorBrush x:Key="SystemChromeSeparatorBrush" Color="#BEBEBE" />
+	<BooleanToVisibilityConverter x:Key="LabStationBooleanToVisibilityConverter" />
 
 	<Style TargetType="Window">
 		<Setter Property="Background" Value="{StaticResource LabStationBackgroundBrush}" />
@@ -90,6 +92,12 @@
 		</Setter>
 	</Style>
 	<Style x:Key="KoradButtonBaseStyle" TargetType="primitives:ButtonBase" BasedOn="{StaticResource LabStationButtonBaseStyle}" />
+	<Style x:Key="LabStationCursorButtonStyle" TargetType="Button" BasedOn="{StaticResource LabStationButtonBaseStyle}">
+		<Setter Property="Width" Value="76" />
+		<Setter Property="Margin" Value="4,3,0,3" />
+		<Setter Property="Padding" Value="5,2" />
+		<Setter Property="Foreground" Value="Black" />
+	</Style>
 	<Style TargetType="Button" BasedOn="{StaticResource LabStationButtonBaseStyle}" />
 	<Style TargetType="RepeatButton" BasedOn="{StaticResource LabStationButtonBaseStyle}">
 		<Setter Property="Margin" Value="0" />
@@ -357,11 +365,22 @@
 		</Style.Triggers>
 	</Style>
 	<Style TargetType="Separator">
-		<Setter Property="Margin" Value="4,3" />
+		<Setter Property="Margin" Value="0,3" />
 		<Setter Property="Template">
 			<Setter.Value>
 				<ControlTemplate TargetType="Separator">
-					<Border Height="1" Background="{DynamicResource SystemChromeBorderBrush}" />
+					<Grid Height="3" SnapsToDevicePixels="True">
+						<Grid.ColumnDefinitions>
+							<ColumnDefinition Width="22" />
+							<ColumnDefinition Width="*" />
+							<ColumnDefinition Width="4" />
+						</Grid.ColumnDefinitions>
+						<Border
+							Grid.Column="1"
+							Height="1"
+							VerticalAlignment="Center"
+							Background="{DynamicResource SystemChromeSeparatorBrush}" />
+					</Grid>
 				</ControlTemplate>
 			</Setter.Value>
 		</Setter>

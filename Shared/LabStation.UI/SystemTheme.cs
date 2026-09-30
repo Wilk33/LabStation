@@ -38,6 +38,10 @@ public static class SystemTheme
 			useDarkMode
 				? Color.FromRgb(112,112,112)
 				: Color.FromRgb(128,128,128));
+		resources["SystemChromeSeparatorBrush"]=new SolidColorBrush(
+			useDarkMode
+				? Color.FromRgb(89,89,89)
+				: Color.FromRgb(190,190,190));
 		resources[SystemColors.MenuBrushKey]=
 			resources["SystemChromeBackgroundBrush"];
 		resources[SystemColors.MenuTextBrushKey]=

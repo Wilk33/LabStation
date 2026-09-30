@@ -4,6 +4,7 @@ using Ka3005P.Tests.Fakes;
 using Ka3005P.App.Views;
 using Ka3005P.App.Controls;
 using LabStation.UI.Controls;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 
@@ -109,10 +110,20 @@ public sealed class ChartViewModelTests
 			Button first=(Button)window.FindName("Cursor1Button");
 			Button second=(Button)window.FindName("Cursor2Button");
 			Button output=(Button)window.FindName("OutputButton");
+			CurrentChart chart=(CurrentChart)window.FindName("Chart");
+			Style cursorStyle=(Style)window.FindResource(
+				"LabStationCursorButtonStyle");
 
 			Assert.True(Grid.GetColumn(first)<Grid.GetColumn(output));
 			Assert.True(Grid.GetColumn(second)<Grid.GetColumn(output));
 			Assert.Equal(3,Grid.GetColumn(output));
+			Assert.Same(cursorStyle,first.Style);
+			Assert.Same(cursorStyle,second.Style);
+			Assert.Equal(76,first.Width);
+			Assert.Equal(76,second.Width);
+			Assert.Equal(Colors.Black,((SolidColorBrush)first.Foreground).Color);
+			Assert.Equal(Colors.Black,((SolidColorBrush)second.Foreground).Color);
+			Assert.True(chart.ActualHeight-chart.PlotBounds.Bottom>=58);
 			window.Close();
 			Ka3005P.App.MainWindow main=new();
 			Assert.Equal(System.Windows.ResizeMode.CanMinimize,main.ResizeMode);
