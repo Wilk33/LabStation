@@ -7,6 +7,8 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Scope.App;
 using Scope.Core;
+using LabStation.Instruments.Discovery;
+using LabStation.Instruments.Scpi;
 using LabStation.Instruments.Transport;
 using LabStation.UI.Windows;
 
@@ -34,6 +36,9 @@ internal static class Program
 		AssertReusablePanel(window);
 		AssertConnectionControls(window);
 		AssertConnectionAndCursorControlsShareOneRow(window);
+		AssertToolMenus(window);
+		AssertButtonGeometry(window);
+		AssertCsvAvailability(window);
 		AssertMenuPopupHasNoFrame(window);
 		AssertSharedUiLibrary();
 		AssertSharedAboutMenuComponent(window);
@@ -43,6 +48,7 @@ internal static class Program
 		AssertPlotAndChannels(window);
 		AssertOnlineDisconnectAvailableDuringPreview(window);
 		AssertLayoutAndCapture(window);
+		AssertDiscoveryAndAutoConnect();
 
 		OscilloscopeView panel=Find<OscilloscopeView>(window);
 		panel.DisposeAsync().AsTask().GetAwaiter().GetResult();
@@ -111,10 +117,216 @@ internal static class Program
 		{
 			throw new Exception("Start is enabled while offline");
 		}
-		if(Named<Button>(panel,"SaveButton").IsEnabled)
+	}
+
+	private static void AssertToolMenus(MainWindow window)
+	{
+		OscilloscopeView panel=Find<OscilloscopeView>(window);
+		if(panel.FindName("SaveButton") is not null)
 		{
-			throw new Exception("CSV is enabled before a capture");
+			throw new Exception("The obsolete bottom CSV button still exists");
 		}
+		Menu menu=Find<Menu>(window);
+		MenuItem tools=menu.Items.OfType<MenuItem>()
+			.Single(item=>(string?)item.Header == "Narzędzia");
+		object[] toolEntries=tools.Items.Cast<object>().ToArray();
+		if(toolEntries.Length != 3 ||
+			toolEntries[0] is not MenuItem scan ||
+			(string?)scan.Header != "Skanuj sieć" ||
+			toolEntries[1] is not Separator separator ||
+			toolEntries[2] is not MenuItem autoConnect ||
+			(string?)autoConnect.Header != "Auto connect" ||
+			!autoConnect.IsCheckable)
+		{
+			throw new Exception("Unexpected Narzędzia menu structure");
+		}
+		separator.ApplyTemplate();
+		Grid separatorGrid=Find<Grid>(separator);
+		Border separatorLine=Descendants<Border>(separatorGrid).Single();
+		if(Grid.GetColumn(separatorLine) != 1 ||
+			separatorLine.Background is not SolidColorBrush separatorBrush ||
+			separatorBrush.Color !=
+				((SolidColorBrush)window.FindResource(
+					"SystemChromeSeparatorBrush")).Color)
+		{
+			throw new Exception("Menu separator does not use the aligned theme style");
+		}
+		MenuItem save=menu.Items.OfType<MenuItem>()
+			.Single(item=>(string?)item.Header == "Zapisz jako");
+		string[] saveEntries=save.Items.OfType<MenuItem>()
+			.Select(item=>(string)item.Header)
+			.ToArray();
+		if(!saveEntries.SequenceEqual(
+			["CH1 CSV","CH2 CSV","CH1 i CH2 CSV"]))
+		{
+			throw new Exception("Unexpected Zapisz jako menu entries");
+		}
+	}
+
+	private static void AssertButtonGeometry(MainWindow window)
+	{
+		OscilloscopeView panel=Find<OscilloscopeView>(window);
+		Style cursorStyle=(Style)window.FindResource(
+			"LabStationCursorButtonStyle");
+		foreach(Button cursor in new[]
+		{
+			Named<Button>(panel,"Cursor1Button"),
+			Named<Button>(panel,"Cursor2Button"),
+			Named<Button>(panel,"Cursor3Button"),
+			Named<Button>(panel,"Cursor4Button")
+		})
+		{
+			if(!ReferenceEquals(cursor.Style,cursorStyle) ||
+				cursor.Width != 76 ||
+				(cursor.Foreground as SolidColorBrush)?.Color != Colors.Black)
+			{
+				throw new Exception("Cursor button does not use the Korad standard");
+			}
+		}
+		if(Named<Button>(panel,"ConnectionButton").Width != 86 ||
+			Named<Button>(panel,"StartButton").Width != 86 ||
+			Named<Button>(panel,"StopButton").Width != 86 ||
+			Named<Button>(panel,"AutoButton").Width != 86 ||
+			Named<Button>(panel,"CaptureButton").Width != 172)
+		{
+			throw new Exception("General action buttons do not use Korad dimensions");
+		}
+	}
+
+	private static void AssertCsvAvailability(MainWindow window)
+	{
+		OscilloscopeView panel=Find<OscilloscopeView>(window);
+		MenuItem ch1=Named<MenuItem>(window,"SaveChannel1MenuItem");
+		MenuItem ch2=Named<MenuItem>(window,"SaveChannel2MenuItem");
+		MenuItem both=Named<MenuItem>(window,"SaveBothChannelsMenuItem");
+		if(ch1.IsEnabled || ch2.IsEnabled || both.IsEnabled)
+		{
+			throw new Exception("CSV menu is enabled before a manual capture");
+		}
+		FieldInfo captured=typeof(OscilloscopeView).GetField(
+			"captured",
+			BindingFlags.Instance|BindingFlags.NonPublic)
+			?? throw new Exception("Missing captured waveform state");
+		MethodInfo update=typeof(OscilloscopeView).GetMethod(
+			"UpdateEnabled",
+			BindingFlags.Instance|BindingFlags.NonPublic)
+			?? throw new Exception("Missing control-state update method");
+		Waveform first=new(1,[1],1,0,DateTimeOffset.UnixEpoch);
+		Waveform second=new(2,[2],1,0,DateTimeOffset.UnixEpoch);
+		captured.SetValue(panel,new[]{first});
+		update.Invoke(panel,null);
+		Pump();
+		if(!ch1.IsEnabled || ch2.IsEnabled || both.IsEnabled)
+		{
+			throw new Exception("CH1-only CSV availability is incorrect");
+		}
+		captured.SetValue(panel,new[]{second});
+		update.Invoke(panel,null);
+		Pump();
+		if(ch1.IsEnabled || !ch2.IsEnabled || both.IsEnabled)
+		{
+			throw new Exception("CH2-only CSV availability is incorrect");
+		}
+		captured.SetValue(panel,new[]{first,second});
+		update.Invoke(panel,null);
+		Pump();
+		if(!ch1.IsEnabled || !ch2.IsEnabled || !both.IsEnabled)
+		{
+			throw new Exception("Two-channel CSV availability is incorrect");
+		}
+	}
+
+	private static void AssertDiscoveryAndAutoConnect()
+	{
+		ScpiIdentity identity=new(
+			"SIGLENT",
+			"SDS1102CML+",
+			"TEST",
+			"6.01");
+		MemorySettingsStore emptySettings=new(new("",true));
+		FixedScanner scanner=new(new("192.168.200.41",identity));
+		List<string> connectedHosts=[];
+		OscilloscopeView panel=new(
+			scanner,
+			host=>
+			{
+				connectedHosts.Add(host);
+				return new AutoConnectTransport();
+			},
+			emptySettings);
+		Named<CheckBox>(panel,"LiveCheckBox").IsChecked=false;
+		Window host=HiddenHost(panel);
+		host.Show();
+		Pump();
+		if(connectedHosts.Count != 0)
+		{
+			throw new Exception("Auto connect attempted a connection with an empty address");
+		}
+		Task scan=panel.ScanNetworkAsync();
+		Wait(scan,TimeSpan.FromSeconds(2));
+		WaitUntil(
+			()=>connectedHosts.Count == 1 &&
+				(string?)Named<Button>(panel,"ConnectionButton").Content == "Online",
+			TimeSpan.FromSeconds(2));
+		if(!scan.IsCompletedSuccessfully ||
+			Named<TextBox>(panel,"AddressTextBox").Text != "192.168.200.41" ||
+			!connectedHosts.SequenceEqual(["192.168.200.41"]) ||
+			emptySettings.Current != new OscilloscopeSettings(
+				"192.168.200.41",
+				true))
+		{
+			throw new Exception("Scan did not save and auto-connect the supported oscilloscope");
+		}
+		Task panelDispose=panel.DisposeAsync().AsTask();
+		Wait(panelDispose,TimeSpan.FromSeconds(2));
+		if(!panelDispose.IsCompletedSuccessfully)
+		{
+			throw new Exception("Scanned panel did not close cleanly");
+		}
+		host.Close();
+
+		MemorySettingsStore savedSettings=new(
+			new("192.168.200.41",true));
+		List<string> startupHosts=[];
+		OscilloscopeView startupPanel=new(
+			new FixedScanner(null),
+			address=>
+			{
+				startupHosts.Add(address);
+				return new AutoConnectTransport();
+			},
+			savedSettings);
+		Named<CheckBox>(startupPanel,"LiveCheckBox").IsChecked=false;
+		Window startupHost=HiddenHost(startupPanel);
+		startupHost.Show();
+		WaitUntil(
+			()=>startupHosts.Count == 1 &&
+				(string?)Named<Button>(startupPanel,"ConnectionButton").Content == "Online",
+			TimeSpan.FromSeconds(2));
+		if(!startupHosts.SequenceEqual(["192.168.200.41"]))
+		{
+			throw new Exception("Auto connect did not use the saved non-empty address");
+		}
+		Task startupDispose=startupPanel.DisposeAsync().AsTask();
+		Wait(startupDispose,TimeSpan.FromSeconds(2));
+		if(!startupDispose.IsCompletedSuccessfully)
+		{
+			throw new Exception("Auto-connected panel did not close cleanly");
+		}
+		startupHost.Close();
+		Pump();
+	}
+
+	private static Window HiddenHost(FrameworkElement content)
+	{
+		return new Window
+		{
+			Content=content,
+			ShowInTaskbar=false,
+			WindowStyle=WindowStyle.None,
+			Left=-10000,
+			Top=-10000
+		};
 	}
 
 	private static void AssertConnectionAndCursorControlsShareOneRow(
@@ -550,6 +762,20 @@ internal static class Program
 		}
 	}
 
+	private static void WaitUntil(Func<bool> condition,TimeSpan timeout)
+	{
+		DateTime deadline=DateTime.UtcNow+timeout;
+		while(!condition() && DateTime.UtcNow < deadline)
+		{
+			Pump();
+			Thread.Sleep(10);
+		}
+		if(!condition())
+		{
+			throw new TimeoutException("Timed out waiting for the expected UI state");
+		}
+	}
+
 	private static void Pump()
 	{
 		System.Windows.Threading.DispatcherFrame frame=new();
@@ -580,5 +806,69 @@ internal sealed class NoOpTransport : IInstrumentTransport
 	public void Dispose()
 	{
 		Disposed=true;
+	}
+}
+
+internal sealed class MemorySettingsStore : IOscilloscopeSettingsStore
+{
+	public MemorySettingsStore(OscilloscopeSettings settings)
+	{
+		Current=settings;
+	}
+
+	public OscilloscopeSettings Current
+	{
+		get;private set;
+	}
+
+	public OscilloscopeSettings Load()=>Current;
+
+	public void Save(OscilloscopeSettings settings)
+	{
+		Current=settings;
+	}
+}
+
+internal sealed class FixedScanner : IInstrumentNetworkScanner
+{
+	private readonly DiscoveredInstrument? instrument;
+
+	public FixedScanner(DiscoveredInstrument? instrument)
+	{
+		this.instrument=instrument;
+	}
+
+	public Task<DiscoveredInstrument?> FindFirstAsync(
+		Func<ScpiIdentity,bool> isSupported,
+		CancellationToken cancellationToken)
+	{
+		cancellationToken.ThrowIfCancellationRequested();
+		return Task.FromResult(
+			instrument is not null && isSupported(instrument.Identity)
+				? instrument
+				: null);
+	}
+}
+
+internal sealed class AutoConnectTransport : IInstrumentTransport
+{
+	public void Write(string command)
+	{
+		throw new InvalidOperationException("Unexpected write: "+command);
+	}
+
+	public byte[] Query(string command)
+	{
+		return command switch
+		{
+			"*IDN?"=>System.Text.Encoding.ASCII.GetBytes(
+				"SIGLENT,SDS1102CML+,TEST,6.01\n"),
+			"SAST?"=>System.Text.Encoding.ASCII.GetBytes("SAST STOP\n"),
+			_=>throw new InvalidOperationException("Unexpected query: "+command)
+		};
+	}
+
+	public void Dispose()
+	{
 	}
 }

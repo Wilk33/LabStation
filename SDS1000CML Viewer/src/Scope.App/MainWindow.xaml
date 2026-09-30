@@ -15,6 +15,32 @@
 	WindowStartupLocation="CenterScreen">
 	<DockPanel>
 		<Menu DockPanel.Dock="Top">
+			<MenuItem x:Name="NetworkToolsMenu" Header="Narzędzia">
+				<MenuItem
+					x:Name="ScanNetworkMenuItem"
+					Header="Skanuj sieć"
+					Click="ScanNetworkClick" />
+				<Separator />
+				<MenuItem
+					x:Name="AutoConnectMenuItem"
+					Header="Auto connect"
+					IsCheckable="True"
+					Click="AutoConnectClick" />
+			</MenuItem>
+			<MenuItem x:Name="SaveAsMenu" Header="Zapisz jako">
+				<MenuItem
+					x:Name="SaveChannel1MenuItem"
+					Header="CH1 CSV"
+					Click="SaveChannel1Click" />
+				<MenuItem
+					x:Name="SaveChannel2MenuItem"
+					Header="CH2 CSV"
+					Click="SaveChannel2Click" />
+				<MenuItem
+					x:Name="SaveBothChannelsMenuItem"
+					Header="CH1 i CH2 CSV"
+					Click="SaveBothChannelsClick" />
+			</MenuItem>
 			<sharedControls:AboutMenuItem Presentation="{x:Static app:AppInformation.Presentation}" />
 		</Menu>
 		<local:OscilloscopeView

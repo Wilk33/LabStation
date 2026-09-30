@@ -1,12 +1,12 @@
 using System.IO;
 using System.Text;
-using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
 using Microsoft.Win32;
 using Scope.Core;
+using LabStation.Instruments.Discovery;
 using LabStation.Instruments.Scheduling;
 using LabStation.Instruments.Transport;
 
@@ -26,13 +26,19 @@ public partial class OscilloscopeView : UserControl,IAsyncDisposable
 		Interval=TimeSpan.FromMilliseconds(750)
 	};
 	private readonly SerializedOperationGate operations=new();
+	private readonly IInstrumentNetworkScanner networkScanner;
+	private readonly Func<string,IInstrumentTransport> transportFactory;
+	private readonly IOscilloscopeSettingsStore settingsStore;
 	private ScopeClient? scope;
 	private Waveform[]? captured;
 	private ChannelMeasurements[] lastMeasurements=[];
+	private CancellationTokenSource? scanCancellation;
 	private bool busy;
 	private bool commandPending;
 	private bool closing;
 	private bool disposed;
+	private bool autoConnect;
+	private bool loadedHandled;
 
 	private int[] Channels=>
 	[
@@ -49,15 +55,64 @@ public partial class OscilloscopeView : UserControl,IAsyncDisposable
 		"settings.json");
 
 	public OscilloscopeView()
+		:this(
+			new InstrumentNetworkScanner(),
+			host=>new Vxi11Transport(host),
+			new JsonOscilloscopeSettingsStore(
+				SettingsPath,
+				new("192.168.200.41",false)))
 	{
+	}
+
+	public OscilloscopeView(
+		IInstrumentNetworkScanner networkScanner,
+		Func<string,IInstrumentTransport> transportFactory,
+		IOscilloscopeSettingsStore settingsStore)
+	{
+		this.networkScanner=networkScanner ??
+			throw new ArgumentNullException(nameof(networkScanner));
+		this.transportFactory=transportFactory ??
+			throw new ArgumentNullException(nameof(transportFactory));
+		this.settingsStore=settingsStore ??
+			throw new ArgumentNullException(nameof(settingsStore));
 		InitializeComponent();
 		Plot.CursorStateChanged+=OnCursorStateChanged;
 		timer.Tick+=OnTimerTick;
 		SetCursorToolTips();
-		LoadSettings();
+		OscilloscopeSettings settings=settingsStore.Load();
+		AddressTextBox.Text=settings.Address;
+		autoConnect=settings.AutoConnect;
 		ChannelSelectionChanged(this,new RoutedEventArgs());
+		Loaded+=OnLoaded;
 		timer.Start();
 	}
+
+	public event EventHandler? CommandStateChanged;
+
+	public bool AutoConnect
+	{
+		get=>autoConnect;
+		set
+		{
+			if(autoConnect == value)
+			{
+				return;
+			}
+			autoConnect=value;
+			SaveSettings();
+			CommandStateChanged?.Invoke(this,EventArgs.Empty);
+		}
+	}
+
+	public bool CanScanNetwork=>
+		scope is null && !busy && !commandPending && !closing;
+
+	public bool CanSaveChannel1=>CanSaveChannel(1);
+
+	public bool CanSaveChannel2=>CanSaveChannel(2);
+
+	public bool CanSaveBothChannels=>
+		CanSaveChannel1 && CanSaveChannel2;
 
 	private Button[] CursorButtons=>
 	[
@@ -74,6 +129,19 @@ public partial class OscilloscopeView : UserControl,IAsyncDisposable
 		{
 			buttons[index].ToolTip=
 				$"Kursor {index+1}: kliknij, aby włączyć lub wybrać. Ponowne kliknięcie wybranego kursora wyłącza go.";
+		}
+	}
+
+	private async void OnLoaded(object sender,RoutedEventArgs eventArgs)
+	{
+		if(loadedHandled)
+		{
+			return;
+		}
+		loadedHandled=true;
+		if(AutoConnect && AddressTextBox.Text.Trim().Length > 0)
+		{
+			await ConnectAutomatically();
 		}
 	}
 
@@ -114,11 +182,6 @@ public partial class OscilloscopeView : UserControl,IAsyncDisposable
 	private async void CaptureClick(object sender,RoutedEventArgs eventArgs)
 	{
 		await CaptureManualWaveform();
-	}
-
-	private async void SaveClick(object sender,RoutedEventArgs eventArgs)
-	{
-		await SaveCsv();
 	}
 
 	private void Cursor1Click(object sender,RoutedEventArgs eventArgs)
@@ -182,12 +245,11 @@ public partial class OscilloscopeView : UserControl,IAsyncDisposable
 		AutoButton.IsEnabled=connected && !commandPending && !closing;
 		CaptureButton.IsEnabled=
 			connected && !commandPending && Channels.Length > 0 && !closing;
-		SaveButton.IsEnabled=
-			captured is not null && !busy && !commandPending && !closing;
 		foreach(Button cursorButton in CursorButtons)
 		{
 			cursorButton.IsEnabled=Plot.HasWaveforms && !closing;
 		}
+		CommandStateChanged?.Invoke(this,EventArgs.Empty);
 	}
 
 	private async Task ConnectOrDisconnect()
@@ -215,6 +277,18 @@ public partial class OscilloscopeView : UserControl,IAsyncDisposable
 			}
 			return;
 		}
+		await Connect(true);
+	}
+
+	private Task ConnectAutomatically()
+	{
+		return scope is null && AddressTextBox.Text.Trim().Length > 0
+			? Connect(false)
+			: Task.CompletedTask;
+	}
+
+	private async Task Connect(bool showDialog)
+	{
 		if(busy || commandPending || closing)
 		{
 			return;
@@ -230,7 +304,7 @@ public partial class OscilloscopeView : UserControl,IAsyncDisposable
 			}
 			scope=await Task.Run(()=>
 			{
-				IInstrumentTransport transport=new Vxi11Transport(host);
+				IInstrumentTransport transport=transportFactory(host);
 				ScopeClient client=new(transport);
 				try
 				{
@@ -249,12 +323,48 @@ public partial class OscilloscopeView : UserControl,IAsyncDisposable
 		}
 		catch(Exception exception)
 		{
-			ShowError(exception,true);
+			ShowError(exception,showDialog);
 		}
 		finally
 		{
 			busy=false;
 			UpdateEnabled();
+		}
+	}
+
+	public async Task ScanNetworkAsync()
+	{
+		if(!CanScanNetwork)
+		{
+			return;
+		}
+		scanCancellation?.Dispose();
+		scanCancellation=new CancellationTokenSource();
+		DiscoveredInstrument? discovered=null;
+		busy=true;
+		UpdateEnabled();
+		try
+		{
+			discovered=await networkScanner.FindFirstAsync(
+				ScopeClient.IsSupported,
+				scanCancellation.Token);
+			if(discovered is not null && !closing)
+			{
+				AddressTextBox.Text=discovered.Address;
+				SaveSettings();
+			}
+		}
+		catch(OperationCanceledException)
+		{
+		}
+		finally
+		{
+			busy=false;
+			UpdateEnabled();
+		}
+		if(discovered is not null && AutoConnect && !closing)
+		{
+			await ConnectAutomatically();
 		}
 	}
 
@@ -456,7 +566,7 @@ public partial class OscilloscopeView : UserControl,IAsyncDisposable
 			button.Background=active
 				? CursorBrushes[index]
 				: (Brush)FindResource("KoradInputBrush");
-			button.Foreground=active ? Brushes.Black : Brushes.White;
+			button.Foreground=Brushes.Black;
 		}
 	}
 
@@ -539,21 +649,38 @@ public partial class OscilloscopeView : UserControl,IAsyncDisposable
 		};
 	}
 
-	private async Task SaveCsv()
+	public async Task SaveCsvAsync(int[] channels)
 	{
-		if(busy || commandPending || captured is null)
+		ArgumentNullException.ThrowIfNull(channels);
+		int[] requested=channels.Distinct().ToArray();
+		if(requested.Length == 0 ||
+			requested.Any(channel=>channel is not (1 or 2)) ||
+			busy ||
+			commandPending ||
+			captured is null)
 		{
 			return;
 		}
+		Waveform[] data=captured
+			.Where(wave=>requested.Contains(wave.Channel))
+			.ToArray();
+		if(requested.Any(
+			channel=>!data.Any(wave=>wave.Channel == channel)))
+		{
+			return;
+		}
+		string channelName=requested.Length == 2
+			? "CH1_CH2"
+			: "CH"+requested[0];
 		SaveFileDialog dialog=new()
 		{
 			Filter="Przebieg CSV (*.csv)|*.csv",
 			FileName=
-				"SDS1102CML_"+DateTime.Now.ToString("yyyyMMdd_HHmmss")+".csv"
+				"SDS1102CML_"+channelName+"_"+
+				DateTime.Now.ToString("yyyyMMdd_HHmmss")+".csv"
 		};
 		busy=true;
 		UpdateEnabled();
-		Waveform[] data=captured;
 		try
 		{
 			if(dialog.ShowDialog(Window.GetWindow(this)) != true)
@@ -593,6 +720,14 @@ public partial class OscilloscopeView : UserControl,IAsyncDisposable
 		}
 	}
 
+	private bool CanSaveChannel(int channel)
+	{
+		return captured?.Any(wave=>wave.Channel == channel) == true &&
+			!busy &&
+			!commandPending &&
+			!closing;
+	}
+
 	private void ShowError(Exception exception,bool showDialog)
 	{
 		if(showDialog)
@@ -606,40 +741,9 @@ public partial class OscilloscopeView : UserControl,IAsyncDisposable
 		}
 	}
 
-	private void LoadSettings()
-	{
-		try
-		{
-			if(File.Exists(SettingsPath))
-			{
-				Dictionary<string,string>? settings=
-					JsonSerializer.Deserialize<Dictionary<string,string>>(
-						File.ReadAllText(SettingsPath));
-				AddressTextBox.Text=
-					settings?.GetValueOrDefault("address") ?? "";
-			}
-		}
-		catch(Exception)
-		{
-		}
-	}
-
 	private void SaveSettings()
 	{
-		try
-		{
-			Directory.CreateDirectory(Path.GetDirectoryName(SettingsPath)!);
-			File.WriteAllText(
-				SettingsPath,
-				JsonSerializer.Serialize(
-					new Dictionary<string,string>
-					{
-						{"address",AddressTextBox.Text.Trim()}
-					}));
-		}
-		catch(Exception)
-		{
-		}
+		settingsStore.Save(new(AddressTextBox.Text.Trim(),AutoConnect));
 	}
 
 	public async ValueTask DisposeAsync()
@@ -650,6 +754,8 @@ public partial class OscilloscopeView : UserControl,IAsyncDisposable
 		}
 		disposed=true;
 		closing=true;
+		Loaded-=OnLoaded;
+		scanCancellation?.Cancel();
 		timer.Stop();
 		UpdateEnabled();
 		while(busy || commandPending)
@@ -657,6 +763,7 @@ public partial class OscilloscopeView : UserControl,IAsyncDisposable
 			await Task.Delay(100);
 		}
 		await Disconnect();
+		scanCancellation?.Dispose();
 		operations.Dispose();
 	}
 }

@@ -2,6 +2,7 @@ using System.Buffers.Binary;
 using System.Globalization;
 using System.Text;
 using Scope.Core;
+using LabStation.Instruments.Scpi;
 using LabStation.Instruments.Scheduling;
 using LabStation.Instruments.Transport;
 
@@ -290,6 +291,30 @@ Test("VXI-11 transport is provided by the shared instrument library", () =>
 	if (typeof(Vxi11Transport).Assembly.GetName().Name != "LabStation.Instruments")
 		throw new Exception("VXI-11 transport is still local to Scope.Core");
 
+});
+Test("Supported model predicate belongs to the oscilloscope",() =>
+{
+	if(!ScopeClient.IsSupported(new ScpiIdentity(
+		"SIGLENT",
+		"SDS1102CML+",
+		"TEST",
+		"6.01")))
+	{
+		throw new Exception("Supported SDS1102CML+ was rejected");
+	}
+	if(ScopeClient.IsSupported(new ScpiIdentity(
+		"SIGLENT",
+		"SDG1032X",
+		"TEST",
+		"1")) ||
+		ScopeClient.IsSupported(new ScpiIdentity(
+			"OTHER",
+			"SDS1102CML+",
+			"TEST",
+			"1")))
+	{
+		throw new Exception("Unsupported identity was accepted");
+	}
 });
 
 Console.WriteLine($"Failures: {failed}");

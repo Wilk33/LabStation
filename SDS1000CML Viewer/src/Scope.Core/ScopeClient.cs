@@ -41,11 +41,21 @@ public sealed class ScopeClient : IDisposable
 	{
 
 		Identity=Text("*IDN?");
-		string[] parts=Identity.Split(',');
-		if (parts.Length < 2 || !parts[0].Contains("SIGLENT", StringComparison.OrdinalIgnoreCase) || !parts[1].Trim().Equals("SDS1102CML+", StringComparison.OrdinalIgnoreCase))
+		ScpiIdentity parsed=ScpiIdentity.Parse(Identity);
+		if(!IsSupported(parsed))
 			throw new InvalidDataException("Ta wersja aplikacji obsługuje SDS1102CML+. Odpowiedź: "+Identity);
 		return Identity;
 
+	}
+
+	public static bool IsSupported(ScpiIdentity identity)
+	{
+		return identity.Manufacturer.Contains(
+			"SIGLENT",
+			StringComparison.OrdinalIgnoreCase) &&
+			identity.Model.Equals(
+				"SDS1102CML+",
+				StringComparison.OrdinalIgnoreCase);
 	}
 
 	private string Text(string command)=>connection.QueryText(command).Trim();

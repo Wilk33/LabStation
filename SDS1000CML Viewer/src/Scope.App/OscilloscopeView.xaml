@@ -20,7 +20,7 @@
 			<Grid.ColumnDefinitions>
 				<ColumnDefinition Width="Auto" />
 				<ColumnDefinition Width="150" />
-				<ColumnDefinition Width="98" />
+				<ColumnDefinition Width="94" />
 				<ColumnDefinition Width="Auto" />
 				<ColumnDefinition Width="*" />
 			</Grid.ColumnDefinitions>
@@ -38,6 +38,7 @@
 			<Button
 				x:Name="ConnectionButton"
 				Grid.Column="2"
+				Width="86"
 				Content="Offline"
 				Click="ConnectOrDisconnectClick"
 				ToolTip="Kliknij, aby połączyć lub rozłączyć oscyloskop przez LAN." />
@@ -63,17 +64,17 @@
 					IsChecked="True"
 					ToolTip="Cykliczne odczyty. Odznaczenie zatrzymuje tylko odświeżanie aplikacji." />
 			</StackPanel>
-			<Grid Grid.Column="4">
+			<Grid Grid.Column="4" HorizontalAlignment="Right">
 				<Grid.ColumnDefinitions>
-					<ColumnDefinition Width="*" />
-					<ColumnDefinition Width="*" />
-					<ColumnDefinition Width="*" />
-					<ColumnDefinition Width="*" />
+					<ColumnDefinition Width="Auto" />
+					<ColumnDefinition Width="Auto" />
+					<ColumnDefinition Width="Auto" />
+					<ColumnDefinition Width="Auto" />
 				</Grid.ColumnDefinitions>
-				<Button x:Name="Cursor1Button" Content="Kursor 1" Click="Cursor1Click" />
-				<Button x:Name="Cursor2Button" Grid.Column="1" Content="Kursor 2" Click="Cursor2Click" />
-				<Button x:Name="Cursor3Button" Grid.Column="2" Content="Kursor 3" Click="Cursor3Click" />
-				<Button x:Name="Cursor4Button" Grid.Column="3" Content="Kursor 4" Click="Cursor4Click" />
+				<Button x:Name="Cursor1Button" Style="{StaticResource LabStationCursorButtonStyle}" Content="Kursor 1" Click="Cursor1Click" />
+				<Button x:Name="Cursor2Button" Grid.Column="1" Style="{StaticResource LabStationCursorButtonStyle}" Content="Kursor 2" Click="Cursor2Click" />
+				<Button x:Name="Cursor3Button" Grid.Column="2" Style="{StaticResource LabStationCursorButtonStyle}" Content="Kursor 3" Click="Cursor3Click" />
+				<Button x:Name="Cursor4Button" Grid.Column="3" Style="{StaticResource LabStationCursorButtonStyle}" Content="Kursor 4" Click="Cursor4Click" />
 			</Grid>
 		</Grid>
 
@@ -108,15 +109,13 @@
 			ToolTip="Rolka: przybliżenie osi czasu. PPM: odblokuj wybrany kursor. LPM: ustaw kursor." />
 
 		<StackPanel Grid.Row="3" Orientation="Horizontal">
-			<Button x:Name="StartButton" Width="92" Content="Start" Click="StartClick"
+			<Button x:Name="StartButton" Width="86" Content="Start" Click="StartClick"
 				ToolTip="Wznawia poprzedni tryb wyzwalania. Gdy nieznany, uruchamia TRMD AUTO." />
-			<Button x:Name="StopButton" Width="92" Content="Stop" Click="StopClick" />
-			<Button x:Name="AutoButton" Width="92" Content="Auto" Click="AutoClick"
+			<Button x:Name="StopButton" Width="86" Content="Stop" Click="StopClick" />
+			<Button x:Name="AutoButton" Width="86" Content="Auto" Click="AutoClick"
 				ToolTip="Auto Setup oscyloskopu. Zmienia ustawienia pomiaru." />
-			<Button x:Name="CaptureButton" Width="190" Content="Pobierz przebieg" Click="CaptureClick"
+			<Button x:Name="CaptureButton" Width="172" Content="Pobierz przebieg" Click="CaptureClick"
 				ToolTip="Pobiera pełny dostępny blok próbek. Dla wspólnej akwizycji CH1/CH2 najpierw wybierz Stop." />
-			<Button x:Name="SaveButton" Width="150" Content="Zapisz CSV" Click="SaveClick"
-				ToolTip="Zapisuje ostatni ręcznie pobrany przebieg, niezależnie od kolejnych odświeżeń podglądu." />
 		</StackPanel>
 
 		<TextBlock
