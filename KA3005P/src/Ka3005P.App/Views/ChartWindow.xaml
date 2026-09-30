@@ -74,15 +74,15 @@
 					</StackPanel.Style>
 					<TextBlock Margin="0,0,12,0" FontFamily="Consolas" FontSize="17" Foreground="{StaticResource KoradTextBrush}">
 						<Run Text="P1  " />
-						<Run Text="{Binding FirstCurrentText}" /><Run Foreground="#FFFF0000" Text=" A" />
+						<Run Text="{Binding FirstCurrentText,Mode=OneWay}" /><Run Foreground="#FFFF0000" Text=" A" />
 						<Run Text="  " />
-						<Run Text="{Binding FirstVoltageText}" /><Run Foreground="#FF00FF00" Text=" V" />
+						<Run Text="{Binding FirstVoltageText,Mode=OneWay}" /><Run Foreground="#FF00FF00" Text=" V" />
 					</TextBlock>
 					<TextBlock FontFamily="Consolas" FontSize="17" Foreground="{StaticResource KoradTextBrush}">
 						<Run Text="P2  " />
-						<Run Text="{Binding SecondCurrentText}" /><Run Foreground="#FFFFA500" Text=" A" />
+						<Run Text="{Binding SecondCurrentText,Mode=OneWay}" /><Run Foreground="#FFFFA500" Text=" A" />
 						<Run Text="  " />
-						<Run Text="{Binding SecondVoltageText}" /><Run Foreground="#FF00FFFF" Text=" V" />
+						<Run Text="{Binding SecondVoltageText,Mode=OneWay}" /><Run Foreground="#FF00FFFF" Text=" V" />
 					</TextBlock>
 				</StackPanel>
 				<Button

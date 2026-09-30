@@ -25,7 +25,7 @@
 	<Description>Sterowanie jednym lub dwoma zasilaczami Korad KA3005P</Description>
 	<PackageLicenseExpression>PolyForm-Noncommercial-1.0.0</PackageLicenseExpression>
     <ApplicationIcon>Assets/KoradS.ico</ApplicationIcon>
-	<Version>0.2.2</Version>
+	<Version>0.2.3</Version>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>

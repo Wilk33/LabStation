@@ -85,7 +85,11 @@ public sealed class ChartViewModelTests
 		{
 			Ka3005P.App.App application=new();
 			application.InitializeComponent();
+			using ChartViewModel viewModel=new(new FakeOutputController());
 			ChartWindow window=new();
+			window.DataContext=viewModel;
+			window.Show();
+			window.UpdateLayout();
 			Assert.Equal(360,window.Height);
 			Button first=(Button)window.FindName("Cursor1Button");
 			Button second=(Button)window.FindName("Cursor2Button");
