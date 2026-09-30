@@ -16,7 +16,7 @@
 	MaxWidth="{Binding WindowWidth}"
 	MinHeight="{Binding WindowHeight}"
 	MaxHeight="{Binding WindowHeight}"
-	ResizeMode="NoResize"
+	ResizeMode="CanMinimize"
 	WindowStartupLocation="CenterScreen">
 	<Window.Resources>
 		<DataTemplate DataType="{x:Type viewModels:SingleSupplyViewModel}">

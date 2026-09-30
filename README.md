@@ -4,7 +4,7 @@ LabStation to zestaw pięciu niezależnych aplikacji do obsługi przyrządów la
 
 ## Aplikacje
 
-- `KA3005P` - Korad KA3005P v0.2.3
+- `KA3005P` - Korad KA3005P v0.2.4
 - `SDS1000CML Viewer` - Siglent SDS1000CML Viewer v0.6.2
 - `SDG1000X Control` - Siglent SDG1000X Control v0.2.0
 - `SDM3000 Viewer` - Siglent SDM3000 Viewer

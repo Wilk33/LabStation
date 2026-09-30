@@ -210,10 +210,10 @@ public sealed class SingleSupplyViewModel : ObservableObject,ISupplyModeViewMode
 	public bool IsOff => IsConnected && !IsOutputOn;
 	public bool IsOn => IsConnected && IsOutputOn;
 	public string StatusText=>HasStatusError
-		? "Stan zasilacza: BŁĄD - "+ErrorMessage
+		? "Status: BŁĄD - "+ErrorMessage
 		: !IsConnected
-			? "Stan zasilacza: OFFLINE"
-			: IsOutputOn ? "Stan zasilacza: ON" : "Stan zasilacza: OFF";
+			? "Status: OFFLINE"
+			: IsOutputOn ? "Status: ON" : "Status: OFF";
 	public bool HasStatusError=>!string.IsNullOrWhiteSpace(ErrorMessage);
 	public ApplicationMode ApplicationMode => ApplicationMode.Single;
 	public string? PrimaryPort => SelectedPort;

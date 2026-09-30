@@ -12,26 +12,40 @@ namespace Ka3005P.Tests.ViewModels;
 public sealed class ChartViewModelTests
 {
 	[Fact]
-	public void AddSample_KeepsLatest20480AndScalesAxis()
+	public void AddSample_KeepsLatest600SamplesWithinOneMinuteAndScalesAxis()
 	{
 		FakeOutputController output=new();
 		using ChartViewModel viewModel=new(output);
-		for(int index=0;index<20490;index++)
+		for(int index=0;index<610;index++)
 		{
 			viewModel.AddSample(
 				TimeSpan.FromMilliseconds(index*100),
 				index);
 		}
 
-		Assert.Equal(20480,viewModel.Points.Count);
+		Assert.Equal(600,viewModel.Points.Count);
 		Assert.Equal(10,viewModel.Points[0].CurrentAmperes);
-		Assert.Equal(20489,viewModel.Points[^1].CurrentAmperes);
+		Assert.Equal(609,viewModel.Points[^1].CurrentAmperes);
+		Assert.True(viewModel.Points[^1].Elapsed-viewModel.Points[0].Elapsed<=TimeSpan.FromMinutes(1));
 		Assert.Equal(9.5,viewModel.MinimumY);
-		Assert.Equal(20489.5,viewModel.MaximumY);
+		Assert.Equal(609.5,viewModel.MaximumY);
 	}
 
 	[Fact]
-	public async Task Cursors_AreAvailableOnlyWhenConnectedOffAndSamplesExist()
+	public void AddSample_RemovesSamplesOlderThanOneMinute()
+	{
+		using ChartViewModel viewModel=new(new FakeOutputController());
+		for(int second=0;second<=61;second++)
+		{
+			viewModel.AddSample(TimeSpan.FromSeconds(second),second);
+		}
+
+		Assert.Equal(TimeSpan.FromSeconds(1),viewModel.Points[0].Elapsed);
+		Assert.Equal(TimeSpan.FromSeconds(61),viewModel.Points[^1].Elapsed);
+	}
+
+	[Fact]
+	public async Task Cursors_AreAvailableWhenOffOrOfflineAndSamplesExist()
 	{
 		FakeOutputController output=new();
 		using ChartViewModel viewModel=new(output);
@@ -44,7 +58,7 @@ public sealed class ChartViewModelTests
 		await output.SetOutputAsync(false,CancellationToken.None);
 		Assert.True(viewModel.CanUseCursors);
 		output.SetConnected(false);
-		Assert.False(viewModel.CanUseCursors);
+		Assert.True(viewModel.CanUseCursors);
 	}
 
 	[Fact]
@@ -90,6 +104,7 @@ public sealed class ChartViewModelTests
 			window.DataContext=viewModel;
 			window.Show();
 			window.UpdateLayout();
+			Assert.Equal(720,window.Width);
 			Assert.Equal(360,window.Height);
 			Button first=(Button)window.FindName("Cursor1Button");
 			Button second=(Button)window.FindName("Cursor2Button");
@@ -99,6 +114,9 @@ public sealed class ChartViewModelTests
 			Assert.True(Grid.GetColumn(second)<Grid.GetColumn(output));
 			Assert.Equal(3,Grid.GetColumn(output));
 			window.Close();
+			Ka3005P.App.MainWindow main=new();
+			Assert.Equal(System.Windows.ResizeMode.CanMinimize,main.ResizeMode);
+			main.Close();
 			application.Shutdown();
 		});
 	}
@@ -216,6 +234,25 @@ public sealed class ChartViewModelTests
 	}
 
 	[Fact]
+	public async Task ClearChart_RemovesPointsAndRestartsActiveTime()
+	{
+		FakeOutputController output=new();
+		FakeChartSampleSource source=new();
+		using ChartViewModel chart=new(output,source,null,null);
+		output.SetConnected(true);
+		await output.SetOutputAsync(true,CancellationToken.None);
+		source.Publish(new ChartSample(TimeSpan.FromSeconds(10),100,100,false));
+		source.Publish(new ChartSample(TimeSpan.FromSeconds(11),200,200,false));
+
+		chart.ClearChartCommand.Execute(null);
+
+		Assert.Empty(chart.Points);
+		Assert.False(chart.CanUseCursors);
+		source.Publish(new ChartSample(TimeSpan.FromSeconds(12),300,300,false));
+		Assert.Equal(TimeSpan.Zero,Assert.Single(chart.Points).Elapsed);
+	}
+
+	[Fact]
 	public async Task SymmetricMeasurement_ExposesBothPortValuesForHeader()
 	{
 		FakeOutputController output=new();
@@ -247,13 +284,13 @@ public sealed class ChartViewModelTests
 	{
 		FakeOutputController output=new();
 		using ChartViewModel chart=new(output);
-		Assert.Equal("Stan zasilacza: OFFLINE",chart.StatusText);
+		Assert.Equal("Status: OFFLINE",chart.StatusText);
 
 		output.SetConnected(true);
-		Assert.Equal("Stan zasilacza: OFF",chart.StatusText);
+		Assert.Equal("Status: OFF",chart.StatusText);
 
 		await output.SetOutputAsync(true,CancellationToken.None);
-		Assert.Equal("Stan zasilacza: ON",chart.StatusText);
+		Assert.Equal("Status: ON",chart.StatusText);
 	}
 
 	[Fact]

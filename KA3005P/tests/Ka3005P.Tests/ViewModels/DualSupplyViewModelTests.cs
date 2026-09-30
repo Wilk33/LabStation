@@ -20,12 +20,12 @@ public sealed class DualSupplyViewModelTests
 			new PortLeaseRegistry(),
 			new FakeSessionFactory(),
 			["COM5","COM6"]);
-		Assert.Equal("Stan zasilacza: OFFLINE",viewModel.StatusText);
+		Assert.Equal("Status: OFFLINE",viewModel.StatusText);
 
 		await viewModel.ConnectCommand.ExecuteAsync(null);
-		Assert.Equal("Stan zasilacza: OFF",viewModel.StatusText);
+		Assert.Equal("Status: OFF",viewModel.StatusText);
 		await viewModel.ToggleOutputCommand.ExecuteAsync(null);
-		Assert.Equal("Stan zasilacza: ON",viewModel.StatusText);
+		Assert.Equal("Status: ON",viewModel.StatusText);
 		await viewModel.CloseAsync(CancellationToken.None);
 	}
 

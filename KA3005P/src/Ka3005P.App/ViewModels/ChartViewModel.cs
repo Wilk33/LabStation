@@ -18,7 +18,8 @@ public readonly record struct ChartPoint(
 
 public sealed class ChartViewModel : ObservableObject,IDisposable
 {
-	private const int MaximumPoints=20480;
+	private const int MaximumPoints=600;
+	private static readonly TimeSpan MaximumHistory=TimeSpan.FromMinutes(1);
 	private const double CurrentAxisMargin=0.5;
 	private const double VoltageAxisMargin=1;
 	private static readonly CultureInfo PolishCulture=
@@ -89,6 +90,7 @@ public sealed class ChartViewModel : ObservableObject,IDisposable
 			_=>SaveAsync(MeasurementExportKind.VoltageAndCurrent),
 			_=>exporter is not null && fileDialog is not null,
 			exception=>ErrorMessage=exception.Message);
+		ClearChartCommand=new RelayCommand(_=>ClearChart());
 	}
 
 	public ObservableCollection<ChartPoint> Points { get; }=[];
@@ -96,6 +98,7 @@ public sealed class ChartViewModel : ObservableObject,IDisposable
 	public AsyncRelayCommand SaveVoltageCommand { get; }
 	public AsyncRelayCommand SaveCurrentCommand { get; }
 	public AsyncRelayCommand SaveVoltageAndCurrentCommand { get; }
+	public RelayCommand ClearChartCommand { get; }
 
 	public bool IsOutputOn
 	{
@@ -224,12 +227,12 @@ public sealed class ChartViewModel : ObservableObject,IDisposable
 	public bool IsOnline => IsConnected;
 	public bool IsOff => IsConnected && !IsOutputOn;
 	public bool IsOn => IsConnected && IsOutputOn;
-	public bool CanUseCursors=>IsOff && Points.Count>0;
+	public bool CanUseCursors=>!IsOutputOn && Points.Count>0;
 	public string StatusText=>HasStatusError
-		? "Stan zasilacza: BŁĄD - "+ErrorMessage
+		? "Status: BŁĄD - "+ErrorMessage
 		: !IsConnected
-			? "Stan zasilacza: OFFLINE"
-			: IsOutputOn ? "Stan zasilacza: ON" : "Stan zasilacza: OFF";
+			? "Status: OFFLINE"
+			: IsOutputOn ? "Status: ON" : "Status: OFF";
 	public bool HasStatusError=>!string.IsNullOrWhiteSpace(ErrorMessage);
 
 	public string? ErrorMessage
@@ -268,10 +271,20 @@ public sealed class ChartViewModel : ObservableObject,IDisposable
 	private void AddPoint(ChartPoint point)
 	{
 		Points.Add(point);
-		while(Points.Count>MaximumPoints)
+		while(Points.Count>MaximumPoints ||
+			Points.Count>0 && point.Elapsed-Points[0].Elapsed>MaximumHistory)
 		{
 			Points.RemoveAt(0);
 		}
+		OnPropertyChanged(nameof(CanUseCursors));
+		RecalculateAxes();
+	}
+
+	private void ClearChart()
+	{
+		Points.Clear();
+		activeElapsed=TimeSpan.Zero;
+		previousSourceElapsed=null;
 		OnPropertyChanged(nameof(CanUseCursors));
 		RecalculateAxes();
 	}
@@ -361,9 +374,7 @@ public sealed class ChartViewModel : ObservableObject,IDisposable
 		}
 		if(Points.Count>0 && Points[^1].IsSymmetric != sample.IsSymmetric)
 		{
-			Points.Clear();
-			activeElapsed=TimeSpan.Zero;
-			previousSourceElapsed=null;
+			ClearChart();
 		}
 		if(previousSourceElapsed is TimeSpan previous)
 		{

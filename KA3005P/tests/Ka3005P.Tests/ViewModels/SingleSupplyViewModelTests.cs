@@ -17,13 +17,13 @@ public sealed class SingleSupplyViewModelTests
 			new PortLeaseRegistry(),
 			new FakeSingleSessionFactory(),
 			["COM5"]);
-		Assert.Equal("Stan zasilacza: OFFLINE",offline.StatusText);
+		Assert.Equal("Status: OFFLINE",offline.StatusText);
 
 		FakePowerSupplySession session=new();
 		SingleSupplyViewModel online=new(session);
-		Assert.Equal("Stan zasilacza: OFF",online.StatusText);
+		Assert.Equal("Status: OFF",online.StatusText);
 		await online.ToggleOutputCommand.ExecuteAsync(null);
-		Assert.Equal("Stan zasilacza: ON",online.StatusText);
+		Assert.Equal("Status: ON",online.StatusText);
 	}
 
 	[Fact]

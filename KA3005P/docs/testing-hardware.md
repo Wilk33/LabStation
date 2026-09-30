@@ -22,9 +22,12 @@ Procedura dotyczy wyłącznie rzeczywistych zasilaczy dostępnych przez porty CO
 6. Zmień nastawę kilkoma szybkimi kliknięciami i sprawdź responsywność interfejsu.
 7. Otwórz wykres i sprawdź aktualizację prądu oraz napięcia.
 8. Wyłącz wyjście na kilka minut, włącz je ponownie i potwierdź, że dane pozostały na wykresie, a oś czasu nie zawiera okresu OFF.
-9. Zapisz pomiary do CSV i sprawdź numer próbki oraz czas od początku sesji.
-10. Wyłącz wyjście.
-11. Rozłącz urządzenie i potwierdź stan OFF na zasilaczu.
+9. Potwierdź, że widoczna historia nie przekracza 1 minuty ani 600 próbek, a najstarsze próbki przesuwają się poza wykres.
+10. Przy wyjściu OFF sprawdź oba kursory, następnie rozłącz urządzenie i sprawdź kursory ponownie w stanie Offline.
+11. Użyj `Widok > Wyczyść`, potwierdź pusty wykres i brak kursorów, a następnie sprawdź rozpoczęcie osi czasu od zera po kolejnej próbce.
+12. Zapisz pomiary do CSV i sprawdź numer próbki oraz czas od początku sesji.
+13. Wyłącz wyjście.
+14. Rozłącz urządzenie i potwierdź stan OFF na zasilaczu.
 
 ## Test Dual
 

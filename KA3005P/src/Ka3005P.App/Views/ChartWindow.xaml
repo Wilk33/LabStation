@@ -7,9 +7,9 @@
 	Icon="/Korad.KA3005P;component/Assets/KoradS.ico"
 	Background="{StaticResource KoradBackgroundBrush}"
 	Foreground="{StaticResource KoradTextBrush}"
-	Width="650"
+	Width="720"
 	Height="360"
-	MinWidth="480"
+	MinWidth="620"
 	MinHeight="330"
 	WindowStartupLocation="CenterOwner">
 	<DockPanel>
@@ -17,6 +17,8 @@
 			<MenuItem Header="Widok">
 				<MenuItem Header="Prąd" IsCheckable="True" IsChecked="{Binding ShowCurrent,Mode=TwoWay}" />
 				<MenuItem Header="Napięcie" IsCheckable="True" IsChecked="{Binding ShowVoltage,Mode=TwoWay}" />
+				<Separator />
+				<MenuItem Header="Wyczyść" Command="{Binding ClearChartCommand}" />
 			</MenuItem>
 			<MenuItem Header="Zapisz jako">
 				<MenuItem Header="Napięcie CSV" Command="{Binding SaveVoltageCommand}" />
@@ -72,16 +74,14 @@
 							</Style.Triggers>
 						</Style>
 					</StackPanel.Style>
-					<TextBlock Margin="0,0,12,0" FontFamily="Consolas" FontSize="17" Foreground="{StaticResource KoradTextBrush}">
-						<Run Text="P1  " />
-						<Run Text="{Binding FirstCurrentText,Mode=OneWay}" /><Run Foreground="#FFFF0000" Text=" A" />
-						<Run Text="  " />
+					<TextBlock Margin="0,0,8,0" FontFamily="Consolas" FontSize="17" Foreground="{StaticResource KoradTextBrush}">
+						<Run Text="P1 " />
+						<Run Text="{Binding FirstCurrentText,Mode=OneWay}" /><Run Foreground="#FFFF0000" Text=" A " />
 						<Run Text="{Binding FirstVoltageText,Mode=OneWay}" /><Run Foreground="#FF00FF00" Text=" V" />
 					</TextBlock>
 					<TextBlock FontFamily="Consolas" FontSize="17" Foreground="{StaticResource KoradTextBrush}">
-						<Run Text="P2  " />
-						<Run Text="{Binding SecondCurrentText,Mode=OneWay}" /><Run Foreground="#FFFFA500" Text=" A" />
-						<Run Text="  " />
+						<Run Text="P2 " />
+						<Run Text="{Binding SecondCurrentText,Mode=OneWay}" /><Run Foreground="#FFFFA500" Text=" A " />
 						<Run Text="{Binding SecondVoltageText,Mode=OneWay}" /><Run Foreground="#FF00FFFF" Text=" V" />
 					</TextBlock>
 				</StackPanel>

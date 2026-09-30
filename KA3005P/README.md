@@ -2,7 +2,7 @@
 
 Samodzielna aplikacja Windows do sterowania jednym lub dwoma zasilaczami laboratoryjnymi Korad KA3005P przez porty COM.
 
-Bieżąca wersja: `0.2.3`. Powierzchnie pojedynczego i podwójnego zasilacza pozostają niezależnymi panelami WPF. Wspólny motyw, kontrolki nastaw, listy, tekstowe paski stanu, menu, wykres oraz okna Autor/Licencja pochodzą z `Shared/LabStation.UI`. Komunikacja COM, kolejki sesji i logika trybu Dual pozostają częścią Korada.
+Bieżąca wersja: `0.2.4`. Powierzchnie pojedynczego i podwójnego zasilacza pozostają niezależnymi panelami WPF. Wspólny motyw, kontrolki nastaw, listy, tekstowe paski stanu, menu, wykres oraz okna Autor/Licencja pochodzą z `Shared/LabStation.UI`. Komunikacja COM, kolejki sesji i logika trybu Dual pozostają częścią Korada.
 
 ## Zakres
 
@@ -13,12 +13,14 @@ Bieżąca wersja: `0.2.3`. Powierzchnie pojedynczego i podwójnego zasilacza poz
 - Nastawy napięcia i ograniczenia prądu.
 - Sterowanie wyjściem ON i OFF.
 - Odczyt napięcia i prądu wyjściowego.
-- Wykres prądu i opcjonalny wykres napięcia, lokalne powiększanie oraz dwa kursory dostępne po wyłączeniu wyjścia.
-- Do 20 480 widocznych próbek, zgodnie z limitem Oscyloskopu.
+- Wykres prądu i opcjonalny wykres napięcia, lokalne powiększanie oraz dwa kursory dostępne w stanie OFF i Offline, jeśli wykres zawiera dane.
+- Maksymalnie 600 widocznych próbek i najwyżej 1 minuta aktywnego pomiaru. Po osiągnięciu któregokolwiek limitu najstarsze próbki są usuwane.
 - Oś czasu wykresu zlicza wyłącznie czas aktywnego pomiaru w stanie ON. Przejście do OFF zachowuje historię i nie dopisuje przerwy do osi czasu.
-- Przy nominalnym okresie próbkowania 100 ms limit 20 480 próbek odpowiada 34 min 8 s aktywnego pomiaru. Rzeczywisty zakres może być dłuższy, jeśli odpowiedzi urządzenia opóźniają kolejne próbki.
+- Polecenie `Widok > Wyczyść` usuwa całą historię wykresu i rozpoczyna jego oś aktywnego czasu od zera przy następnej próbce.
 - W trybie symetrycznym niezależne dane i serie Portu 1 (+) oraz Portu 2 (-).
-- Nagłówek wykresu trybu symetrycznego pokazuje oddzielne wartości Portu 1 i Portu 2, a kolory jednostek odpowiadają kolorom przebiegów.
+- Nagłówek wykresu trybu symetrycznego pokazuje zwarte, oddzielne wartości Portu 1 i Portu 2, a kolory jednostek odpowiadają kolorom przebiegów.
+- Okno wykresu ma wysokość równą głównemu oknu trybu pojedynczego oraz poszerzony obszar roboczy 720 px.
+- Główne okno zachowuje stałe wymiary, ale ma aktywny przycisk minimalizacji.
 - Test interfejsu rzeczywiście pokazuje okno wykresu z podłączonym modelem danych, aby wykrywać błędy aktywacji powiązań WPF.
 - Eksport napięcia, prądu albo obu wielkości do CSV.
 - Obliczanie rezystancji podczas ograniczenia prądowego.
