@@ -17,8 +17,19 @@ if($LASTEXITCODE -ne 0)
 if($Publish)
 {
 	$releaseName="Korad-KA3005P-v$version-win-x64"
-	$output=Join-Path $root "artifacts/final/$releaseName"
-	$archive=Join-Path $root "artifacts/final/$releaseName.zip"
+	$final=Join-Path $root 'artifacts/final'
+	$output=Join-Path $final 'win-x64'
+	$archive=Join-Path $final "$releaseName.zip"
+	$finalPath=[System.IO.Path]::GetFullPath($final)
+	Get-ChildItem -LiteralPath $final -Directory -Filter 'Korad-KA3005P-v*-win-x64' |
+		ForEach-Object {
+			$candidate=[System.IO.Path]::GetFullPath($_.FullName)
+			if([System.IO.Path]::GetDirectoryName($candidate) -ne $finalPath)
+			{
+				throw "Katalog wydania znajduje się poza artifacts/final: $candidate"
+			}
+			Remove-Item -LiteralPath $candidate -Recurse -Force
+		}
 	if(Test-Path -LiteralPath $output)
 	{
 		Remove-Item -LiteralPath $output -Recurse -Force

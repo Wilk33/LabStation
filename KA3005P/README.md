@@ -28,7 +28,7 @@ Aplikacja nie zawiera trybu demonstracyjnego ani symulowanych urządzeń. Korzys
 
 ## Uruchomienie
 
-Gotowy pakiet znajduje się w wersjonowanym katalogu `artifacts/final/Korad-KA3005P-v<wersja>-win-x64`.
+Najnowszy rozpakowany pakiet znajduje się w stałym katalogu `artifacts/final/win-x64`. Wersjonowane wydania są zachowywane jako archiwa `artifacts/final/Korad-KA3005P-v<wersja>-win-x64.zip`; rozpakowane katalogi poprzednich wersji są usuwane podczas publikacji.
 
 Uruchom:
 
