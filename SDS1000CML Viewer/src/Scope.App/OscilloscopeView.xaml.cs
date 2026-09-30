@@ -35,6 +35,7 @@ public partial class OscilloscopeView : UserControl,IAsyncDisposable
 	private CancellationTokenSource? scanCancellation;
 	private bool busy;
 	private bool commandPending;
+	private bool saving;
 	private bool closing;
 	private bool disposed;
 	private bool autoConnect;
@@ -219,12 +220,9 @@ public partial class OscilloscopeView : UserControl,IAsyncDisposable
 		}
 		int[] channels=Channels;
 		Plot.SetVisibleChannels(channels);
-		Channel1Measurements.Visibility=Channel1CheckBox.IsChecked == true
-			? Visibility.Visible
-			: Visibility.Hidden;
-		Channel2Measurements.Visibility=Channel2CheckBox.IsChecked == true
-			? Visibility.Visible
-			: Visibility.Hidden;
+		UpdateMeasurementRows(
+			lastMeasurements,
+			scope is null && lastMeasurements.Length>0);
 		DetailText.Visibility=channels.Length > 0
 			? Visibility.Visible
 			: Visibility.Hidden;
@@ -560,11 +558,9 @@ public partial class OscilloscopeView : UserControl,IAsyncDisposable
 		{
 			Button button=buttons[index];
 			bool active=Plot.IsCursorActive(index);
-			bool selected=Plot.SelectedCursor == index;
-			bool moving=Plot.MovingCursor == index;
-			button.Content=$"Kursor {index+1}"+(moving ? " RUCH" : "");
-			button.BorderThickness=selected ? new Thickness(3) : new Thickness(1);
-			button.BorderBrush=selected ? Brushes.White : Brushes.Black;
+			button.Content=$"Kursor {index+1}";
+			button.BorderThickness=new Thickness(1);
+			button.BorderBrush=Brushes.Black;
 			button.Background=active
 				? CursorBrushes[index]
 				: (Brush)FindResource("KoradInputBrush");
@@ -576,14 +572,18 @@ public partial class OscilloscopeView : UserControl,IAsyncDisposable
 		ChannelMeasurements[] measurements,
 		bool stale)
 	{
-		Channel1Measurements.Text=MeasurementText(
-			"CH1",
-			measurements.SingleOrDefault(value=>value.Channel == 1),
-			stale);
-		Channel2Measurements.Text=MeasurementText(
-			"CH2",
-			measurements.SingleOrDefault(value=>value.Channel == 2),
-			stale);
+		Channel1Measurements.Text=Channel1CheckBox.IsChecked == true
+			? MeasurementText(
+				"CH1",
+				measurements.SingleOrDefault(value=>value.Channel == 1),
+				stale)
+			: "CH1:";
+		Channel2Measurements.Text=Channel2CheckBox.IsChecked == true
+			? MeasurementText(
+				"CH2",
+				measurements.SingleOrDefault(value=>value.Channel == 2),
+				stale)
+			: "CH2:";
 	}
 
 	private static string MeasurementText(
@@ -637,7 +637,7 @@ public partial class OscilloscopeView : UserControl,IAsyncDisposable
 
 	private void UpdateAcquisition(AcquisitionState state)
 	{
-		AcquisitionText.Text="Stan oscyloskopu: "+state switch
+		AcquisitionText.Text="Status: "+state switch
 		{
 			AcquisitionState.Start=>"START",
 			AcquisitionState.Stop=>"STOP",
@@ -657,20 +657,15 @@ public partial class OscilloscopeView : UserControl,IAsyncDisposable
 		int[] requested=channels.Distinct().ToArray();
 		if(requested.Length == 0 ||
 			requested.Any(channel=>channel is not (1 or 2)) ||
-			busy ||
-			commandPending ||
-			captured is null)
+			requested.Any(channel=>!IsChannelSelected(channel)) ||
+			saving ||
+			closing)
 		{
 			return;
 		}
-		Waveform[] data=captured
+		Waveform[] data=(captured ?? [])
 			.Where(wave=>requested.Contains(wave.Channel))
 			.ToArray();
-		if(requested.Any(
-			channel=>!data.Any(wave=>wave.Channel == channel)))
-		{
-			return;
-		}
 		string channelName=requested.Length == 2
 			? "CH1_CH2"
 			: "CH"+requested[0];
@@ -681,8 +676,7 @@ public partial class OscilloscopeView : UserControl,IAsyncDisposable
 				"SDS1102CML_"+channelName+"_"+
 				DateTime.Now.ToString("yyyyMMdd_HHmmss")+".csv"
 		};
-		busy=true;
-		UpdateEnabled();
+		saving=true;
 		try
 		{
 			if(dialog.ShowDialog(Window.GetWindow(this)) != true)
@@ -717,17 +711,23 @@ public partial class OscilloscopeView : UserControl,IAsyncDisposable
 		}
 		finally
 		{
-			busy=false;
-			UpdateEnabled();
+			saving=false;
 		}
 	}
 
 	private bool CanSaveChannel(int channel)
 	{
-		return captured?.Any(wave=>wave.Channel == channel) == true &&
-			!busy &&
-			!commandPending &&
-			!closing;
+		return IsChannelSelected(channel) && !closing;
+	}
+
+	private bool IsChannelSelected(int channel)
+	{
+		return channel switch
+		{
+			1=>Channel1CheckBox.IsChecked == true,
+			2=>Channel2CheckBox.IsChecked == true,
+			_=>false
+		};
 	}
 
 	private void ShowError(Exception exception,bool showDialog)
@@ -760,7 +760,7 @@ public partial class OscilloscopeView : UserControl,IAsyncDisposable
 		scanCancellation?.Cancel();
 		timer.Stop();
 		UpdateEnabled();
-		while(busy || commandPending)
+		while(busy || commandPending || saving)
 		{
 			await Task.Delay(100);
 		}

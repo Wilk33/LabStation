@@ -20,7 +20,7 @@
 			<Grid.ColumnDefinitions>
 				<ColumnDefinition Width="Auto" />
 				<ColumnDefinition Width="150" />
-				<ColumnDefinition Width="94" />
+				<ColumnDefinition Width="Auto" />
 				<ColumnDefinition Width="Auto" />
 				<ColumnDefinition Width="*" />
 			</Grid.ColumnDefinitions>
@@ -38,32 +38,16 @@
 			<Button
 				x:Name="ConnectionButton"
 				Grid.Column="2"
-				Width="86"
 				Content="Offline"
 				Click="ConnectOrDisconnectClick"
 				ToolTip="Kliknij, aby połączyć lub rozłączyć oscyloskop przez LAN." />
-			<StackPanel Grid.Column="3" Orientation="Horizontal">
-				<CheckBox
-					x:Name="Channel1CheckBox"
-					Content="CH1"
-					Foreground="#FFFFDC32"
-					IsChecked="True"
-					Checked="ChannelSelectionChanged"
-					Unchecked="ChannelSelectionChanged" />
-				<CheckBox
-					x:Name="Channel2CheckBox"
-					Content="CH2"
-					Foreground="#FF50E1E6"
-					IsChecked="True"
-					Checked="ChannelSelectionChanged"
-					Unchecked="ChannelSelectionChanged" />
-				<CheckBox
-					x:Name="LiveCheckBox"
-					Margin="8,0,4,0"
-					Content="Podgląd"
-					IsChecked="True"
-					ToolTip="Cykliczne odczyty. Odznaczenie zatrzymuje tylko odświeżanie aplikacji." />
-			</StackPanel>
+			<CheckBox
+				x:Name="LiveCheckBox"
+				Grid.Column="3"
+				Margin="8,0,4,0"
+				Content="Podgląd"
+				IsChecked="True"
+				ToolTip="Cykliczne odczyty. Odznaczenie zatrzymuje tylko odświeżanie aplikacji." />
 			<Grid Grid.Column="4" HorizontalAlignment="Right">
 				<Grid.ColumnDefinitions>
 					<ColumnDefinition Width="Auto" />
@@ -83,23 +67,38 @@
 				<RowDefinition Height="*" />
 				<RowDefinition Height="*" />
 			</Grid.RowDefinitions>
-			<TextBlock
-				x:Name="Channel1Measurements"
-				VerticalAlignment="Center"
-				FontSize="14"
-				FontWeight="Bold"
-				Foreground="#FFFFDC32"
-				Text="CH1: Vpp -- | Vrms -- | Hz -- | Vmin -- | Vmax -- | Duty --"
-				TextTrimming="CharacterEllipsis" />
-			<TextBlock
-				x:Name="Channel2Measurements"
-				Grid.Row="1"
-				VerticalAlignment="Center"
-				FontSize="14"
-				FontWeight="Bold"
-				Foreground="#FF50E1E6"
-				Text="CH2: Vpp -- | Vrms -- | Hz -- | Vmin -- | Vmax -- | Duty --"
-				TextTrimming="CharacterEllipsis" />
+			<StackPanel Orientation="Horizontal">
+				<CheckBox
+					x:Name="Channel1CheckBox"
+					Foreground="#FFFFDC32"
+					IsChecked="True"
+					Checked="ChannelSelectionChanged"
+					Unchecked="ChannelSelectionChanged" />
+				<TextBlock
+					x:Name="Channel1Measurements"
+					VerticalAlignment="Center"
+					FontSize="14"
+					FontWeight="Bold"
+					Foreground="#FFFFDC32"
+					Text="CH1: Vpp -- | Vrms -- | Hz -- | Vmin -- | Vmax -- | Duty --"
+					TextTrimming="CharacterEllipsis" />
+			</StackPanel>
+			<StackPanel Grid.Row="1" Orientation="Horizontal">
+				<CheckBox
+					x:Name="Channel2CheckBox"
+					Foreground="#FF50E1E6"
+					IsChecked="True"
+					Checked="ChannelSelectionChanged"
+					Unchecked="ChannelSelectionChanged" />
+				<TextBlock
+					x:Name="Channel2Measurements"
+					VerticalAlignment="Center"
+					FontSize="14"
+					FontWeight="Bold"
+					Foreground="#FF50E1E6"
+					Text="CH2: Vpp -- | Vrms -- | Hz -- | Vmin -- | Vmax -- | Duty --"
+					TextTrimming="CharacterEllipsis" />
+			</StackPanel>
 		</Grid>
 
 		<local:WavePlot
@@ -109,12 +108,12 @@
 			ToolTip="Rolka: przybliżenie osi czasu. PPM: odblokuj wybrany kursor. LPM: ustaw kursor." />
 
 		<StackPanel Grid.Row="3" Orientation="Horizontal">
-			<Button x:Name="StartButton" Width="86" Content="Start" Click="StartClick"
+			<Button x:Name="StartButton" Content="Start" Click="StartClick"
 				ToolTip="Wznawia poprzedni tryb wyzwalania. Gdy nieznany, uruchamia TRMD AUTO." />
-			<Button x:Name="StopButton" Width="86" Content="Stop" Click="StopClick" />
-			<Button x:Name="AutoButton" Width="86" Content="Auto" Click="AutoClick"
+			<Button x:Name="StopButton" Content="Stop" Click="StopClick" />
+			<Button x:Name="AutoButton" Content="Auto" Click="AutoClick"
 				ToolTip="Auto Setup oscyloskopu. Zmienia ustawienia pomiaru." />
-			<Button x:Name="CaptureButton" Width="172" Content="Pobierz przebieg" Click="CaptureClick"
+			<Button x:Name="CaptureButton" Content="Pobierz przebieg" Click="CaptureClick"
 				ToolTip="Pobiera pełny dostępny blok próbek. Dla wspólnej akwizycji CH1/CH2 najpierw wybierz Stop." />
 		</StackPanel>
 
@@ -132,7 +131,7 @@
 			FontSize="14"
 			FontWeight="Bold"
 			Foreground="#FFC0C0C0"
-			Text="Stan oscyloskopu: OFFLINE"
+			Text="Status: OFFLINE"
 			TextTrimming="CharacterEllipsis" />
 	</Grid>
 </UserControl>

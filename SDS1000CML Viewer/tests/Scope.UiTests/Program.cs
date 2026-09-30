@@ -10,6 +10,7 @@ using Scope.Core;
 using LabStation.Instruments.Discovery;
 using LabStation.Instruments.Scpi;
 using LabStation.Instruments.Transport;
+using LabStation.UI.Controls;
 using LabStation.UI.Windows;
 
 internal static class Program
@@ -29,6 +30,15 @@ internal static class Program
 			Left=-10000,
 			Top=-10000
 		};
+		OscilloscopeView initialPanel=
+			window.FindName("InstrumentPanel") as OscilloscopeView ??
+			throw new Exception("Missing initial oscilloscope panel");
+		FieldInfo autoConnect=typeof(OscilloscopeView).GetField(
+			"autoConnect",
+			BindingFlags.Instance|BindingFlags.NonPublic)
+			?? throw new Exception("Missing Auto connect state");
+		autoConnect.SetValue(initialPanel,false);
+		Named<TextBox>(initialPanel,"AddressTextBox").Text="192.168.200.41";
 		window.Show();
 		Pump();
 
@@ -39,6 +49,7 @@ internal static class Program
 		AssertToolMenus(window);
 		AssertButtonGeometry(window);
 		AssertCsvAvailability(window);
+		AssertChannelMeasurementRows(window);
 		AssertMenuPopupHasNoFrame(window);
 		AssertSharedUiLibrary();
 		AssertSharedAboutMenuComponent(window);
@@ -62,7 +73,7 @@ internal static class Program
 
 	private static void AssertApplicationIdentity(MainWindow window)
 	{
-		if(window.Title != "Siglent SDS1000CML Viewer v0.7.0")
+		if(window.Title != "Siglent SDS1000CML Viewer v0.7.1")
 		{
 			throw new Exception("Unexpected main-window title: "+window.Title);
 		}
@@ -178,18 +189,31 @@ internal static class Program
 		{
 			if(!ReferenceEquals(cursor.Style,cursorStyle) ||
 				cursor.Width != 76 ||
+				cursor.ActualHeight>30 ||
 				(cursor.Foreground as SolidColorBrush)?.Color != Colors.Black)
 			{
 				throw new Exception("Cursor button does not use the Korad standard");
 			}
 		}
-		if(Named<Button>(panel,"ConnectionButton").Width != 86 ||
-			Named<Button>(panel,"StartButton").Width != 86 ||
-			Named<Button>(panel,"StopButton").Width != 86 ||
-			Named<Button>(panel,"AutoButton").Width != 86 ||
-			Named<Button>(panel,"CaptureButton").Width != 172)
+		Button connection=Named<Button>(panel,"ConnectionButton");
+		Button start=Named<Button>(panel,"StartButton");
+		Button stop=Named<Button>(panel,"StopButton");
+		Button auto=Named<Button>(panel,"AutoButton");
+		Button capture=Named<Button>(panel,"CaptureButton");
+		if(!double.IsNaN(connection.Width) ||
+			!double.IsNaN(start.Width) ||
+			!double.IsNaN(stop.Width) ||
+			!double.IsNaN(auto.Width) ||
+			!double.IsNaN(capture.Width) ||
+			start.ActualWidth != 72 ||
+			stop.ActualWidth != 72 ||
+			auto.ActualWidth != 72 ||
+			new[]{connection,start,stop,auto,capture}
+				.Any(button=>button.ActualHeight>30) ||
+			capture.ActualWidth<=start.ActualWidth)
 		{
-			throw new Exception("General action buttons do not use Korad dimensions");
+			throw new Exception(
+				"General buttons do not use compact content-driven Korad geometry");
 		}
 	}
 
@@ -199,40 +223,95 @@ internal static class Program
 		MenuItem ch1=Named<MenuItem>(window,"SaveChannel1MenuItem");
 		MenuItem ch2=Named<MenuItem>(window,"SaveChannel2MenuItem");
 		MenuItem both=Named<MenuItem>(window,"SaveBothChannelsMenuItem");
-		if(ch1.IsEnabled || ch2.IsEnabled || both.IsEnabled)
+		CheckBox channel1=Named<CheckBox>(panel,"Channel1CheckBox");
+		CheckBox channel2=Named<CheckBox>(panel,"Channel2CheckBox");
+		if(!ch1.IsEnabled || !ch2.IsEnabled || !both.IsEnabled)
 		{
-			throw new Exception("CSV menu is enabled before a manual capture");
+			throw new Exception(
+				"Checked channels cannot be exported before a manual capture");
 		}
-		FieldInfo captured=typeof(OscilloscopeView).GetField(
-			"captured",
+		FieldInfo busy=typeof(OscilloscopeView).GetField(
+			"busy",
 			BindingFlags.Instance|BindingFlags.NonPublic)
-			?? throw new Exception("Missing captured waveform state");
+			?? throw new Exception("Missing preview busy state");
 		MethodInfo update=typeof(OscilloscopeView).GetMethod(
 			"UpdateEnabled",
 			BindingFlags.Instance|BindingFlags.NonPublic)
 			?? throw new Exception("Missing control-state update method");
-		Waveform first=new(1,[1],1,0,DateTimeOffset.UnixEpoch);
-		Waveform second=new(2,[2],1,0,DateTimeOffset.UnixEpoch);
-		captured.SetValue(panel,new[]{first});
+		int changes=0;
+		ch1.IsEnabledChanged+=(_,_)=>changes++;
+		busy.SetValue(panel,true);
 		update.Invoke(panel,null);
 		Pump();
-		if(!ch1.IsEnabled || ch2.IsEnabled || both.IsEnabled)
-		{
-			throw new Exception("CH1-only CSV availability is incorrect");
-		}
-		captured.SetValue(panel,new[]{second});
+		busy.SetValue(panel,false);
 		update.Invoke(panel,null);
+		Pump();
+		if(changes != 0 || !ch1.IsEnabled || !ch2.IsEnabled || !both.IsEnabled)
+		{
+			throw new Exception(
+				"CSV availability flickers with the periodic preview busy state");
+		}
+		channel1.IsChecked=false;
 		Pump();
 		if(ch1.IsEnabled || !ch2.IsEnabled || both.IsEnabled)
 		{
-			throw new Exception("CH2-only CSV availability is incorrect");
+			throw new Exception("CSV availability does not follow the CH1 checkbox");
 		}
-		captured.SetValue(panel,new[]{first,second});
-		update.Invoke(panel,null);
+		channel1.IsChecked=true;
+		channel2.IsChecked=false;
 		Pump();
-		if(!ch1.IsEnabled || !ch2.IsEnabled || !both.IsEnabled)
+		if(!ch1.IsEnabled || ch2.IsEnabled || both.IsEnabled)
 		{
-			throw new Exception("Two-channel CSV availability is incorrect");
+			throw new Exception("CSV availability does not follow the CH2 checkbox");
+		}
+		channel2.IsChecked=true;
+		Pump();
+	}
+
+	private static void AssertChannelMeasurementRows(MainWindow window)
+	{
+		OscilloscopeView panel=Find<OscilloscopeView>(window);
+		CheckBox channel1=Named<CheckBox>(panel,"Channel1CheckBox");
+		CheckBox channel2=Named<CheckBox>(panel,"Channel2CheckBox");
+		TextBlock measurements1=Named<TextBlock>(
+			panel,
+			"Channel1Measurements");
+		TextBlock measurements2=Named<TextBlock>(
+			panel,
+			"Channel2Measurements");
+		double firstDifference=Math.Abs(
+			channel1.TranslatePoint(
+				new Point(0,channel1.ActualHeight/2),
+				panel).Y-
+			measurements1.TranslatePoint(
+				new Point(0,measurements1.ActualHeight/2),
+				panel).Y);
+		double secondDifference=Math.Abs(
+			channel2.TranslatePoint(
+				new Point(0,channel2.ActualHeight/2),
+				panel).Y-
+			measurements2.TranslatePoint(
+				new Point(0,measurements2.ActualHeight/2),
+				panel).Y);
+		if(firstDifference>2 || secondDifference>2)
+		{
+			throw new Exception(
+				"Channel checkboxes are not attached to their measurement rows");
+		}
+		channel2.IsChecked=false;
+		Pump();
+		if(measurements2.Visibility != Visibility.Visible ||
+			measurements2.Text != "CH2:")
+		{
+			throw new Exception(
+				"Unchecked CH2 does not remain as an empty measurement row");
+		}
+		channel2.IsChecked=true;
+		Pump();
+		TextBlock acquisition=Named<TextBlock>(panel,"AcquisitionText");
+		if(!acquisition.Text.StartsWith("Status: ",StringComparison.Ordinal))
+		{
+			throw new Exception("Oscilloscope status does not use the compact prefix");
 		}
 	}
 
@@ -359,8 +438,6 @@ internal static class Program
 		[
 			Named<TextBox>(panel,"AddressTextBox"),
 			Named<Button>(panel,"ConnectionButton"),
-			Named<CheckBox>(panel,"Channel1CheckBox"),
-			Named<CheckBox>(panel,"Channel2CheckBox"),
 			Named<CheckBox>(panel,"LiveCheckBox"),
 			Named<Button>(panel,"Cursor1Button"),
 			Named<Button>(panel,"Cursor2Button"),
@@ -529,7 +606,7 @@ internal static class Program
 			"\n",
 			Descendants<TextBlock>(author).Select(text=>text.Text));
 		if(author.Title !=
-			"Autor - Siglent SDS1000CML Viewer v0.7.0" ||
+			"Autor - Siglent SDS1000CML Viewer v0.7.1" ||
 			!authorText.Contains("Mateusz Skipor",StringComparison.Ordinal) ||
 			!authorText.Contains(
 				"Inżynier technik elektroniki",
@@ -554,7 +631,7 @@ internal static class Program
 		Pump();
 		TextBox licenseText=Descendants<TextBox>(license).Single();
 		if(license.Title !=
-			"Licencja - Siglent SDS1000CML Viewer v0.7.0" ||
+			"Licencja - Siglent SDS1000CML Viewer v0.7.1" ||
 			!licenseText.IsReadOnly ||
 			!licenseText.Text.Contains(
 				"PolyForm Noncommercial License 1.0.0",
@@ -595,6 +672,16 @@ internal static class Program
 		}
 		plot.ClearCursors();
 		plot.ActivateOrSelectCursor(0);
+		Button cursor1=Named<Button>(panel,"Cursor1Button");
+		if(cursor1.BorderThickness != new Thickness(1) ||
+			(cursor1.BorderBrush as SolidColorBrush)?.Color != Colors.Black ||
+			(string?)cursor1.Content != "Kursor 1" ||
+			(cursor1.Background as SolidColorBrush)?.Color !=
+				TimeSeriesPlot.CursorColor(0))
+		{
+			throw new Exception(
+				"Active cursor adds a button outline or changes its label");
+		}
 		plot.ActivateOrSelectCursor(1);
 		plot.ActivateOrSelectCursor(2);
 		if(!plot.ActiveCursorPairs().SequenceEqual([(1,2)]))

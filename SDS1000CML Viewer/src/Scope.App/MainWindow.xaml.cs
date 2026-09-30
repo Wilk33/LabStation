@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Windows;
+using System.Windows.Controls;
 using LabStation.UI;
 
 namespace Scope.App;
@@ -26,11 +27,24 @@ public partial class MainWindow : Window
 
 	private void UpdateMenuState()
 	{
-		ScanNetworkMenuItem.IsEnabled=InstrumentPanel.CanScanNetwork;
-		AutoConnectMenuItem.IsChecked=InstrumentPanel.AutoConnect;
-		SaveChannel1MenuItem.IsEnabled=InstrumentPanel.CanSaveChannel1;
-		SaveChannel2MenuItem.IsEnabled=InstrumentPanel.CanSaveChannel2;
-		SaveBothChannelsMenuItem.IsEnabled=InstrumentPanel.CanSaveBothChannels;
+		SetEnabled(ScanNetworkMenuItem,InstrumentPanel.CanScanNetwork);
+		if(AutoConnectMenuItem.IsChecked != InstrumentPanel.AutoConnect)
+		{
+			AutoConnectMenuItem.IsChecked=InstrumentPanel.AutoConnect;
+		}
+		SetEnabled(SaveChannel1MenuItem,InstrumentPanel.CanSaveChannel1);
+		SetEnabled(SaveChannel2MenuItem,InstrumentPanel.CanSaveChannel2);
+		SetEnabled(
+			SaveBothChannelsMenuItem,
+			InstrumentPanel.CanSaveBothChannels);
+	}
+
+	private static void SetEnabled(MenuItem item,bool enabled)
+	{
+		if(item.IsEnabled != enabled)
+		{
+			item.IsEnabled=enabled;
+		}
 	}
 
 	private async void ScanNetworkClick(

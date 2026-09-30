@@ -1,5 +1,15 @@
 # Zmiany
 
+## 0.7.1 - 2026-09-30
+
+- Ustanowiono kompaktowy rozmiar przycisków Korada jako wspólny standard; większa szerokość wynika wyłącznie z zawartości.
+- Usunięto dodatkową obwódkę aktywnego przycisku kursora.
+- Przeniesiono checkboxy CH1 i CH2 bezpośrednio do wierszy pomiarów oraz zachowano nazwę kanału po jego wyłączeniu.
+- Powiązano dostępność pozycji CSV ze stanem checkboxów kanałów, niezależnie od zawartości ostatniego przebiegu.
+- Dopuszczono eksport pustego kanału do poprawnego pliku CSV zawierającego nagłówek.
+- Odseparowano stan menu `Zapisz jako` od cyklu podglądu, usuwając jego migotanie.
+- Skrócono `Stan oscyloskopu:` do `Status:`.
+
 ## 0.7.0 - 2026-09-30
 
 - Ujednolicono wymiary głównych przycisków i czterech przycisków kursorów ze standardem Korada. Tekst przycisków kursorów jest zawsze czarny.

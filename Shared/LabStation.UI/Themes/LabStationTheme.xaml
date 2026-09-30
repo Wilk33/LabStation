@@ -92,16 +92,21 @@
 		</Setter>
 	</Style>
 	<Style x:Key="KoradButtonBaseStyle" TargetType="primitives:ButtonBase" BasedOn="{StaticResource LabStationButtonBaseStyle}" />
-	<Style x:Key="LabStationCursorButtonStyle" TargetType="Button" BasedOn="{StaticResource LabStationButtonBaseStyle}">
+	<Style x:Key="LabStationButtonStyle" TargetType="Button" BasedOn="{StaticResource LabStationButtonBaseStyle}">
+		<Setter Property="MinWidth" Value="72" />
+		<Setter Property="VerticalAlignment" Value="Center" />
+	</Style>
+	<Style x:Key="LabStationCursorButtonStyle" TargetType="Button" BasedOn="{StaticResource LabStationButtonStyle}">
 		<Setter Property="Width" Value="76" />
 		<Setter Property="Margin" Value="4,3,0,3" />
 		<Setter Property="Padding" Value="5,2" />
 		<Setter Property="Foreground" Value="Black" />
 	</Style>
-	<Style TargetType="Button" BasedOn="{StaticResource LabStationButtonBaseStyle}" />
+	<Style TargetType="Button" BasedOn="{StaticResource LabStationButtonStyle}" />
 	<Style TargetType="RepeatButton" BasedOn="{StaticResource LabStationButtonBaseStyle}">
 		<Setter Property="Margin" Value="0" />
 		<Setter Property="Padding" Value="0" />
+		<Setter Property="MinWidth" Value="0" />
 		<Setter Property="MinHeight" Value="0" />
 	</Style>
 

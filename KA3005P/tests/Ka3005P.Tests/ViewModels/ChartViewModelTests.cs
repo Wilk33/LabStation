@@ -101,6 +101,7 @@ public sealed class ChartViewModelTests
 			Ka3005P.App.App application=new();
 			application.InitializeComponent();
 			using ChartViewModel viewModel=new(new FakeOutputController());
+			viewModel.AddSample(TimeSpan.Zero,1);
 			ChartWindow window=new();
 			window.DataContext=viewModel;
 			window.Show();
@@ -123,6 +124,19 @@ public sealed class ChartViewModelTests
 			Assert.Equal(76,second.Width);
 			Assert.Equal(Colors.Black,((SolidColorBrush)first.Foreground).Color);
 			Assert.Equal(Colors.Black,((SolidColorBrush)second.Foreground).Color);
+			Color inputColor=((SolidColorBrush)window.FindResource(
+				"KoradInputBrush")).Color;
+			Assert.Equal(inputColor,((SolidColorBrush)first.Background).Color);
+			Assert.Equal(inputColor,((SolidColorBrush)second.Background).Color);
+			Assert.Equal(new Thickness(1),first.BorderThickness);
+			chart.ActivateOrSelectCursor(0);
+			Assert.Equal(
+				TimeSeriesPlot.CursorColor(0),
+				((SolidColorBrush)first.Background).Color);
+			Assert.Equal(inputColor,((SolidColorBrush)second.Background).Color);
+			Assert.Equal(new Thickness(1),first.BorderThickness);
+			chart.ActivateOrSelectCursor(0);
+			Assert.Equal(inputColor,((SolidColorBrush)first.Background).Color);
 			Assert.True(chart.ActualHeight-chart.PlotBounds.Bottom>=58);
 			window.Close();
 			Ka3005P.App.MainWindow main=new();

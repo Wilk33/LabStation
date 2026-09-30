@@ -2,7 +2,7 @@
 
 Samodzielna aplikacja Windows do sterowania jednym lub dwoma zasilaczami laboratoryjnymi Korad KA3005P przez porty COM.
 
-Bieżąca wersja: `0.2.5`. Powierzchnie pojedynczego i podwójnego zasilacza pozostają niezależnymi panelami WPF. Wspólny motyw, kontrolki nastaw, listy, tekstowe paski stanu, menu, wykres oraz okna Autor/Licencja pochodzą z `Shared/LabStation.UI`. Komunikacja COM, kolejki sesji i logika trybu Dual pozostają częścią Korada.
+Bieżąca wersja: `0.2.6`. Powierzchnie pojedynczego i podwójnego zasilacza pozostają niezależnymi panelami WPF. Wspólny motyw, kontrolki nastaw, listy, tekstowe paski stanu, menu, wykres oraz okna Autor/Licencja pochodzą z `Shared/LabStation.UI`. Komunikacja COM, kolejki sesji i logika trybu Dual pozostają częścią Korada.
 
 ## Zakres
 
@@ -13,7 +13,7 @@ Bieżąca wersja: `0.2.5`. Powierzchnie pojedynczego i podwójnego zasilacza poz
 - Nastawy napięcia i ograniczenia prądu.
 - Sterowanie wyjściem ON i OFF.
 - Odczyt napięcia i prądu wyjściowego.
-- Wykres prądu i opcjonalny wykres napięcia, lokalne powiększanie oraz dwa kursory dostępne w stanie OFF i Offline, jeśli wykres zawiera dane. Przyciski kursorów korzystają ze wspólnego standardu LabStation i mają zawsze czarny tekst.
+- Wykres prądu i opcjonalny wykres napięcia, lokalne powiększanie oraz dwa kursory dostępne w stanie OFF i Offline, jeśli wykres zawiera dane. Nieaktywny kursor wygląda jak zwykły przycisk, a jego kolor pojawia się dopiero po aktywacji. Przyciski korzystają ze wspólnego standardu LabStation i mają zawsze czarny tekst.
 - Maksymalnie 600 widocznych próbek i najwyżej 1 minuta aktywnego pomiaru. Po osiągnięciu któregokolwiek limitu najstarsze próbki są usuwane.
 - Oś czasu wykresu zlicza wyłącznie czas aktywnego pomiaru w stanie ON. Przejście do OFF zachowuje historię i nie dopisuje przerwy do osi czasu.
 - Polecenie `Widok > Wyczyść` usuwa całą historię wykresu i rozpoczyna jego oś aktywnego czasu od zera przy następnej próbce.

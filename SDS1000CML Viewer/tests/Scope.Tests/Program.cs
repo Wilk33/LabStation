@@ -137,6 +137,17 @@ Test("CSV is culture independent and preserves each channel time axis", () =>
 		throw new Exception(csv);
 
 });
+Test("Empty CSV contains the header and no samples", () =>
+
+{
+
+	using StringWriter s=new();
+	Csv.Write(s, []);
+	string csv=s.ToString().Replace("\r", "");
+	if (csv != "channel,time_s,voltage_V,captured_utc\n")
+		throw new Exception(csv);
+
+});
 Test("Capture never starts, stops, autoscales or enables oscilloscope channels", () =>
 
 {
