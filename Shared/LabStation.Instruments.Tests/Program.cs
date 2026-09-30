@@ -2,6 +2,7 @@ using System.Buffers.Binary;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using LabStation.Instruments.Discovery;
 using LabStation.Instruments.Scpi;
 using LabStation.Instruments.Scheduling;
 using LabStation.Instruments.Transport;
@@ -120,6 +121,74 @@ Test("Socket SCPI odczytuje tekst i blok binarny",()=>
 	Equal("TEXT?\nBINARY?\nAFTER?\n",server.Commands);
 });
 
+Test("Podsieć IPv4 pomija adres lokalny sieci i rozgłoszeniowy",()=>
+{
+	IReadOnlyList<IPAddress> addresses=Ipv4Subnet.Hosts(
+		IPAddress.Parse("192.168.200.7"),
+		IPAddress.Parse("255.255.255.0"));
+	Equal(253,addresses.Count);
+	Equal("192.168.200.1",addresses[0].ToString());
+	Equal("192.168.200.254",addresses[^1].ToString());
+	if(addresses.Any(address=>address.ToString() is
+		"192.168.200.0" or "192.168.200.7" or "192.168.200.255"))
+	{
+		throw new Exception("Lista zawiera adres zabroniony");
+	}
+});
+
+Test("Duża podsieć jest ograniczona do lokalnego segmentu 24 bit",()=>
+{
+	IReadOnlyList<IPAddress> addresses=Ipv4Subnet.Hosts(
+		IPAddress.Parse("10.20.30.40"),
+		IPAddress.Parse("255.255.0.0"));
+	Equal(253,addresses.Count);
+	Equal("10.20.30.1",addresses[0].ToString());
+	Equal("10.20.30.254",addresses[^1].ToString());
+});
+
+Test("Skaner izoluje błędy i zwraca wyłącznie obsługiwany model",()=>
+{
+	IPAddress[] addresses=
+	[
+		IPAddress.Parse("192.168.200.10"),
+		IPAddress.Parse("192.168.200.11"),
+		IPAddress.Parse("192.168.200.12")
+	];
+	ScriptedIdentityProbe probe=new(new Dictionary<string,object>
+	{
+		["192.168.200.10"]=new IOException("Brak urządzenia"),
+		["192.168.200.11"]=new ScpiIdentity("SIGLENT","SDG1032X","G","1"),
+		["192.168.200.12"]=new ScpiIdentity("SIGLENT","SDS1102CML+","S","6.01")
+	});
+	IInstrumentNetworkScanner scanner=new InstrumentNetworkScanner(
+		()=>addresses,
+		probe,
+		2);
+	DiscoveredInstrument? found=scanner.FindFirstAsync(
+		identity=>identity.Model.Equals(
+			"SDS1102CML+",
+			StringComparison.OrdinalIgnoreCase),
+		CancellationToken.None).GetAwaiter().GetResult();
+	Equal("192.168.200.12",found?.Address);
+	Equal("SDS1102CML+",found?.Identity.Model);
+});
+
+Test("Skaner zwraca brak wyniku gdy żaden model nie jest obsługiwany",()=>
+{
+	IPAddress[] addresses=[IPAddress.Parse("192.168.200.20")];
+	IInstrumentNetworkScanner scanner=new InstrumentNetworkScanner(
+		()=>addresses,
+		new ScriptedIdentityProbe(new Dictionary<string,object>
+		{
+			["192.168.200.20"]=new ScpiIdentity("SIGLENT","SDM3055","M","1")
+		}),
+		1);
+	DiscoveredInstrument? found=scanner.FindFirstAsync(
+		identity=>identity.Model == "SDS1102CML+",
+		CancellationToken.None).GetAwaiter().GetResult();
+	Equal<DiscoveredInstrument?>(null,found);
+});
+
 Console.WriteLine($"Wynik: {passed} zaliczonych, {failed} niezaliczonych");
 return failed == 0 ? 0 : 1;
 
@@ -132,6 +201,23 @@ sealed class ScriptedTransport(byte[] response) : IInstrumentTransport
 	public byte[] Query(string command)=>Response;
 	public void Dispose()
 	{
+	}
+}
+
+sealed class ScriptedIdentityProbe(Dictionary<string,object> responses)
+	: IInstrumentIdentityProbe
+{
+	public ValueTask<ScpiIdentity?> IdentifyAsync(
+		string address,
+		CancellationToken cancellationToken)
+	{
+		cancellationToken.ThrowIfCancellationRequested();
+		object response=responses[address];
+		if(response is Exception exception)
+		{
+			return ValueTask.FromException<ScpiIdentity?>(exception);
+		}
+		return ValueTask.FromResult<ScpiIdentity?>((ScpiIdentity)response);
 	}
 }
 
