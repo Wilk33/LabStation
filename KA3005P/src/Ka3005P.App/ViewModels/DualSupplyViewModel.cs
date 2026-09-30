@@ -231,6 +231,7 @@ public sealed class DualSupplyViewModel : ObservableObject,ISupplyModeViewModel
 				OnPropertyChanged(nameof(IsOffline));
 				OnPropertyChanged(nameof(IsOff));
 				OnPropertyChanged(nameof(IsOn));
+				OnPropertyChanged(nameof(StatusText));
 				OnPropertyChanged(nameof(CanSelectPort));
 				ConnectCommand?.RaiseCanExecuteChanged();
 				ToggleOutputCommand?.RaiseCanExecuteChanged();
@@ -249,6 +250,7 @@ public sealed class DualSupplyViewModel : ObservableObject,ISupplyModeViewModel
 				OnPropertyChanged(nameof(OutputButtonText));
 				OnPropertyChanged(nameof(IsOff));
 				OnPropertyChanged(nameof(IsOn));
+				OnPropertyChanged(nameof(StatusText));
 				OutputStateChanged?.Invoke(this,value);
 			}
 		}
@@ -259,6 +261,12 @@ public sealed class DualSupplyViewModel : ObservableObject,ISupplyModeViewModel
 	public bool IsOffline => !IsConnected;
 	public bool IsOff => IsConnected && !IsOutputOn;
 	public bool IsOn => IsConnected && IsOutputOn;
+	public string StatusText=>HasStatusError
+		? "Stan zasilacza: BŁĄD - "+ErrorMessage
+		: !IsConnected
+			? "Stan zasilacza: OFFLINE"
+			: IsOutputOn ? "Stan zasilacza: ON" : "Stan zasilacza: OFF";
+	public bool HasStatusError=>!string.IsNullOrWhiteSpace(ErrorMessage);
 	public ApplicationMode ApplicationMode => ApplicationMode.Dual;
 	public string? PrimaryPort => SelectedFirstPort;
 	public string? SecondaryPort => SelectedSecondPort;
@@ -422,7 +430,14 @@ public sealed class DualSupplyViewModel : ObservableObject,ISupplyModeViewModel
 	public string? ErrorMessage
 	{
 		get => errorMessage;
-		private set => SetProperty(ref errorMessage,value);
+		private set
+		{
+			if(SetProperty(ref errorMessage,value))
+			{
+				OnPropertyChanged(nameof(StatusText));
+				OnPropertyChanged(nameof(HasStatusError));
+			}
+		}
 	}
 
 	public void SetVoltageFromHundredths(int value)

@@ -14,6 +14,22 @@ namespace Ka3005P.Tests.ViewModels;
 public sealed class DualSupplyViewModelTests
 {
 	[Fact]
+	public async Task StatusText_FollowsOfflineOffAndOn()
+	{
+		DualSupplyViewModel viewModel=new(
+			new PortLeaseRegistry(),
+			new FakeSessionFactory(),
+			["COM5","COM6"]);
+		Assert.Equal("Stan zasilacza: OFFLINE",viewModel.StatusText);
+
+		await viewModel.ConnectCommand.ExecuteAsync(null);
+		Assert.Equal("Stan zasilacza: OFF",viewModel.StatusText);
+		await viewModel.ToggleOutputCommand.ExecuteAsync(null);
+		Assert.Equal("Stan zasilacza: ON",viewModel.StatusText);
+		await viewModel.CloseAsync(CancellationToken.None);
+	}
+
+	[Fact]
 	public void AvailablePorts_SelectTwoDistinctPortsAndFilterOppositeChoice()
 	{
 		DualSupplyViewModel viewModel=new(
@@ -240,12 +256,13 @@ public sealed class DualSupplyViewModelTests
 	}
 
 	[Fact]
-	public void SymmetricMeasurements_ShowPositivePortOneAndNegativePortTwo()
+	public async Task SymmetricMeasurements_ShowPositivePortOneAndNegativePortTwo()
 	{
 		(DualSupplyViewModel viewModel,FakePowerSupplySession first,FakePowerSupplySession second)=
 			CreateViewModel();
 		viewModel.Mode=DualMode.Symmetric;
 		using ChartViewModel chart=viewModel.CreateChartViewModel(new FakeFileDialogService());
+		await viewModel.ToggleOutputCommand.ExecuteAsync(null);
 
 		first.PublishMeasurement(new MeasurementSample(TimeSpan.Zero,1200,400));
 		second.PublishMeasurement(new MeasurementSample(TimeSpan.Zero,1100,350));

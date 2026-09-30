@@ -32,6 +32,7 @@ public sealed class CurrentChart : TimeSeriesPlot
 	public CurrentChart()
 	{
 		CursorCount=2;
+		PlotPadding=new Thickness(62,14,62,42);
 		HorizontalTitle="Czas";
 		HorizontalUnit="s";
 		EmptyMessage="Brak danych pomiarowych";

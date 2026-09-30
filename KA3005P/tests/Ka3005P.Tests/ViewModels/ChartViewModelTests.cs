@@ -2,7 +2,9 @@ using Ka3005P.App.ViewModels;
 using Ka3005P.Core.Measurements;
 using Ka3005P.Tests.Fakes;
 using Ka3005P.App.Views;
+using Ka3005P.App.Controls;
 using LabStation.UI.Controls;
+using System.Windows.Controls;
 using System.Windows.Media;
 
 namespace Ka3005P.Tests.ViewModels;
@@ -85,6 +87,13 @@ public sealed class ChartViewModelTests
 			application.InitializeComponent();
 			ChartWindow window=new();
 			Assert.Equal(360,window.Height);
+			Button first=(Button)window.FindName("Cursor1Button");
+			Button second=(Button)window.FindName("Cursor2Button");
+			Button output=(Button)window.FindName("OutputButton");
+
+			Assert.True(Grid.GetColumn(first)<Grid.GetColumn(output));
+			Assert.True(Grid.GetColumn(second)<Grid.GetColumn(output));
+			Assert.Equal(3,Grid.GetColumn(output));
 			window.Close();
 			application.Shutdown();
 		});
@@ -153,11 +162,13 @@ public sealed class ChartViewModelTests
 	}
 
 	[Fact]
-	public void Measurement_UpdatesTotalValuesResistanceAndBothSeries()
+	public async Task Measurement_UpdatesTotalValuesResistanceAndBothSeries()
 	{
 		FakeOutputController output=new();
 		FakeChartSampleSource source=new();
 		using ChartViewModel chart=new(output,source,null,null);
+		output.SetConnected(true);
+		await output.SetOutputAsync(true,CancellationToken.None);
 
 		source.Publish(new ChartSample(
 			TimeSpan.FromSeconds(1),
@@ -174,6 +185,89 @@ public sealed class ChartViewModelTests
 		Assert.True(chart.IsResistanceVisible);
 		Assert.True(chart.ShowCurrent);
 		Assert.False(chart.ShowVoltage);
+	}
+
+	[Fact]
+	public async Task MeasurementTime_CountsOnlyOutputOnAndPreservesPointsAcrossOff()
+	{
+		FakeOutputController output=new();
+		FakeChartSampleSource source=new();
+		using ChartViewModel chart=new(output,source,null,null);
+		output.SetConnected(true);
+		await output.SetOutputAsync(true,CancellationToken.None);
+		source.Publish(new ChartSample(TimeSpan.FromSeconds(1),100,100,false));
+		source.Publish(new ChartSample(TimeSpan.FromSeconds(2),200,200,false));
+
+		await output.SetOutputAsync(false,CancellationToken.None);
+		source.Publish(new ChartSample(TimeSpan.FromSeconds(302),300,300,false));
+		await output.SetOutputAsync(true,CancellationToken.None);
+		source.Publish(new ChartSample(TimeSpan.FromSeconds(303),400,400,false));
+		source.Publish(new ChartSample(TimeSpan.FromSeconds(304),500,500,false));
+
+		Assert.Equal(4,chart.Points.Count);
+		Assert.Equal(TimeSpan.Zero,chart.Points[0].Elapsed);
+		Assert.Equal(TimeSpan.FromSeconds(1),chart.Points[1].Elapsed);
+		Assert.Equal(TimeSpan.FromSeconds(1),chart.Points[2].Elapsed);
+		Assert.Equal(TimeSpan.FromSeconds(2),chart.Points[3].Elapsed);
+	}
+
+	[Fact]
+	public async Task SymmetricMeasurement_ExposesBothPortValuesForHeader()
+	{
+		FakeOutputController output=new();
+		FakeChartSampleSource source=new();
+		using ChartViewModel chart=new(output,source,null,null);
+		output.SetConnected(true);
+		await output.SetOutputAsync(true,CancellationToken.None);
+
+		source.Publish(new ChartSample(
+			TimeSpan.FromSeconds(1),
+			2400,
+			1500,
+			false,
+			true,
+			1200,
+			-1200,
+			750,
+			-750));
+
+		Assert.True(chart.IsSymmetric);
+		Assert.Equal("12,00",chart.FirstVoltageText);
+		Assert.Equal("-12,00",chart.SecondVoltageText);
+		Assert.Equal("0,750",chart.FirstCurrentText);
+		Assert.Equal("-0,750",chart.SecondCurrentText);
+	}
+
+	[Fact]
+	public async Task StatusText_FollowsOfflineOffAndOn()
+	{
+		FakeOutputController output=new();
+		using ChartViewModel chart=new(output);
+		Assert.Equal("Stan zasilacza: OFFLINE",chart.StatusText);
+
+		output.SetConnected(true);
+		Assert.Equal("Stan zasilacza: OFF",chart.StatusText);
+
+		await output.SetOutputAsync(true,CancellationToken.None);
+		Assert.Equal("Stan zasilacza: ON",chart.StatusText);
+	}
+
+	[Fact]
+	public void CurrentChart_UsesExpandedPlotArea()
+	{
+		RunSta(()=>
+		{
+			CurrentChart chart=new()
+			{
+				Width=600,
+				Height=240
+			};
+			chart.Measure(new System.Windows.Size(600,240));
+			chart.Arrange(new System.Windows.Rect(0,0,600,240));
+
+			Assert.True(chart.PlotBounds.Width>444);
+			Assert.True(chart.PlotBounds.Height>154);
+		});
 	}
 
 	private sealed class FakeOutputController : IOutputController

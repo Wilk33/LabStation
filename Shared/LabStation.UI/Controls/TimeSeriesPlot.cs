@@ -53,6 +53,7 @@ public class TimeSeriesPlot : FrameworkElement
 	private int selectedCursor=-1;
 	private int movingCursor=-1;
 	private bool stale;
+	private Thickness plotPadding=new(78,28,78,58);
 
 	public TimeSeriesPlot()
 	{
@@ -97,6 +98,21 @@ public class TimeSeriesPlot : FrameworkElement
 	public int MovingCursor=>movingCursor;
 	public (double Min,double Max) VisibleRange=>(viewXMin,viewXMax);
 	public IReadOnlyList<PlotSeries> Series=>series;
+	public Rect PlotBounds=>PlotArea;
+
+	public Thickness PlotPadding
+	{
+		get=>plotPadding;
+		set
+		{
+			if(value.Left<0 || value.Top<0 || value.Right<0 || value.Bottom<0)
+			{
+				throw new ArgumentOutOfRangeException(nameof(value));
+			}
+			plotPadding=value;
+			InvalidateVisual();
+		}
+	}
 
 	public void SetSeries(IEnumerable<PlotSeries> value)
 	{
@@ -367,10 +383,10 @@ public class TimeSeriesPlot : FrameworkElement
 	}
 
 	private Rect PlotArea=>new(
-		78,
-		28,
-		Math.Max(1,ActualWidth-156),
-		Math.Max(1,ActualHeight-86));
+		PlotPadding.Left,
+		PlotPadding.Top,
+		Math.Max(1,ActualWidth-PlotPadding.Left-PlotPadding.Right),
+		Math.Max(1,ActualHeight-PlotPadding.Top-PlotPadding.Bottom));
 
 	private void DrawGrid(DrawingContext drawingContext,Rect area)
 	{

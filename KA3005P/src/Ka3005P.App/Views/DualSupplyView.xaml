@@ -85,7 +85,6 @@
 				<ColumnDefinition Width="*" />
 				<ColumnDefinition Width="Auto" />
 			</Grid.ColumnDefinitions>
-			<controls:StatusLamps IsOnline="{Binding IsConnected}" IsOff="{Binding IsOff}" IsOn="{Binding IsOn}" />
 			<Button Grid.Column="1" Width="86" Command="{Binding ToggleOutputCommand}" Content="{Binding OutputButtonText}" />
 		</Grid>
 		<Grid Grid.Row="4" Margin="0,6,0,0">
@@ -149,6 +148,13 @@
 				<TextBlock HorizontalAlignment="Right" Style="{StaticResource ValueTextStyle}" Text="{Binding SecondSideCurrentText}" />
 			</StackPanel>
 		</Grid>
-		<TextBlock Grid.Row="6" Foreground="#FFFFA0A0" TextWrapping="Wrap" Text="{Binding ErrorMessage}" />
+		<Border
+			Grid.Row="6"
+			Style="{StaticResource LabStationStatusPanelStyle}">
+			<TextBlock
+				Style="{StaticResource LabStationStatusTextStyle}"
+				Text="{Binding StatusText}"
+				ToolTip="{Binding ErrorMessage}" />
+		</Border>
 	</Grid>
 </UserControl>

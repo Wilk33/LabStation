@@ -21,9 +21,10 @@ Procedura dotyczy wyłącznie rzeczywistych zasilaczy dostępnych przez porty CO
 5. Włącz wyjście i porównaj pomiary aplikacji z wyświetlaczem zasilacza.
 6. Zmień nastawę kilkoma szybkimi kliknięciami i sprawdź responsywność interfejsu.
 7. Otwórz wykres i sprawdź aktualizację prądu oraz napięcia.
-8. Zapisz pomiary do CSV i sprawdź numer próbki oraz czas od początku sesji.
-9. Wyłącz wyjście.
-10. Rozłącz urządzenie i potwierdź stan OFF na zasilaczu.
+8. Wyłącz wyjście na kilka minut, włącz je ponownie i potwierdź, że dane pozostały na wykresie, a oś czasu nie zawiera okresu OFF.
+9. Zapisz pomiary do CSV i sprawdź numer próbki oraz czas od początku sesji.
+10. Wyłącz wyjście.
+11. Rozłącz urządzenie i potwierdź stan OFF na zasilaczu.
 
 ## Test Dual
 

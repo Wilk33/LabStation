@@ -45,20 +45,30 @@
 				<ColumnDefinition Width="*" />
 				<ColumnDefinition Width="Auto" />
 			</Grid.ColumnDefinitions>
-			<controls:StatusLamps IsOnline="{Binding IsConnected}" IsOff="{Binding IsOff}" IsOn="{Binding IsOn}" />
 			<Button Grid.Column="1" Width="72" Command="{Binding ToggleOutputCommand}" Content="{Binding OutputButtonText}" />
 		</Grid>
-		<Grid Grid.Row="4" Grid.RowSpan="3">
+		<Grid Grid.Row="4" Grid.RowSpan="4">
 			<Grid.ColumnDefinitions>
 				<ColumnDefinition Width="*" />
 				<ColumnDefinition Width="Auto" />
 			</Grid.ColumnDefinitions>
-			<TextBlock
-				HorizontalAlignment="Left"
-				VerticalAlignment="Center"
-				FontFamily="Consolas"
-				FontSize="17"
-				Text="{Binding ResistanceText}" />
+			<Grid>
+				<TextBlock
+					HorizontalAlignment="Left"
+					VerticalAlignment="Center"
+					FontFamily="Consolas"
+					FontSize="17"
+					Text="{Binding ResistanceText}" />
+				<Border
+					HorizontalAlignment="Left"
+					VerticalAlignment="Bottom"
+					Style="{StaticResource LabStationStatusPanelStyle}">
+					<TextBlock
+						Style="{StaticResource LabStationStatusTextStyle}"
+						Text="{Binding StatusText}"
+						ToolTip="{Binding ErrorMessage}" />
+				</Border>
+			</Grid>
 			<StackPanel Grid.Column="1">
 				<TextBlock
 					HorizontalAlignment="Right"
@@ -70,6 +80,5 @@
 					Text="{Binding MeasuredCurrentText}" />
 			</StackPanel>
 		</Grid>
-		<TextBlock Grid.Row="7" Foreground="#FFFFA0A0" TextWrapping="Wrap" Text="{Binding ErrorMessage}" />
 	</Grid>
 </UserControl>

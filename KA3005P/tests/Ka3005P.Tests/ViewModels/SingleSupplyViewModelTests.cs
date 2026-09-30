@@ -11,6 +11,22 @@ namespace Ka3005P.Tests.ViewModels;
 public sealed class SingleSupplyViewModelTests
 {
 	[Fact]
+	public async Task StatusText_FollowsOfflineOffAndOn()
+	{
+		SingleSupplyViewModel offline=new(
+			new PortLeaseRegistry(),
+			new FakeSingleSessionFactory(),
+			["COM5"]);
+		Assert.Equal("Stan zasilacza: OFFLINE",offline.StatusText);
+
+		FakePowerSupplySession session=new();
+		SingleSupplyViewModel online=new(session);
+		Assert.Equal("Stan zasilacza: OFF",online.StatusText);
+		await online.ToggleOutputCommand.ExecuteAsync(null);
+		Assert.Equal("Stan zasilacza: ON",online.StatusText);
+	}
+
+	[Fact]
 	public void AvailablePorts_RestorePreferredOrChooseFirst()
 	{
 		SingleSupplyViewModel preferred=new(

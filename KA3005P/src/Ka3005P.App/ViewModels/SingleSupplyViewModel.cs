@@ -146,7 +146,14 @@ public sealed class SingleSupplyViewModel : ObservableObject,ISupplyModeViewMode
 	public string? ErrorMessage
 	{
 		get => errorMessage;
-		private set => SetProperty(ref errorMessage,value);
+		private set
+		{
+			if(SetProperty(ref errorMessage,value))
+			{
+				OnPropertyChanged(nameof(StatusText));
+				OnPropertyChanged(nameof(HasStatusError));
+			}
+		}
 	}
 
 	public bool IsConnected
@@ -160,6 +167,7 @@ public sealed class SingleSupplyViewModel : ObservableObject,ISupplyModeViewMode
 				OnPropertyChanged(nameof(IsOffline));
 				OnPropertyChanged(nameof(IsOff));
 				OnPropertyChanged(nameof(IsOn));
+				OnPropertyChanged(nameof(StatusText));
 				OnPropertyChanged(nameof(CanSelectPort));
 				ConnectCommand?.RaiseCanExecuteChanged();
 				ToggleOutputCommand?.RaiseCanExecuteChanged();
@@ -178,6 +186,7 @@ public sealed class SingleSupplyViewModel : ObservableObject,ISupplyModeViewMode
 				OnPropertyChanged(nameof(OutputButtonText));
 				OnPropertyChanged(nameof(IsOff));
 				OnPropertyChanged(nameof(IsOn));
+				OnPropertyChanged(nameof(StatusText));
 				OutputStateChanged?.Invoke(this,value);
 			}
 		}
@@ -200,6 +209,12 @@ public sealed class SingleSupplyViewModel : ObservableObject,ISupplyModeViewMode
 	public bool IsOffline => !IsConnected;
 	public bool IsOff => IsConnected && !IsOutputOn;
 	public bool IsOn => IsConnected && IsOutputOn;
+	public string StatusText=>HasStatusError
+		? "Stan zasilacza: BŁĄD - "+ErrorMessage
+		: !IsConnected
+			? "Stan zasilacza: OFFLINE"
+			: IsOutputOn ? "Stan zasilacza: ON" : "Stan zasilacza: OFF";
+	public bool HasStatusError=>!string.IsNullOrWhiteSpace(ErrorMessage);
 	public ApplicationMode ApplicationMode => ApplicationMode.Single;
 	public string? PrimaryPort => SelectedPort;
 	public string? SecondaryPort => null;

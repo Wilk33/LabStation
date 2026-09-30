@@ -38,8 +38,15 @@ public sealed class ChartViewModel : ObservableObject,IDisposable
 	private double maximumVoltageY=1;
 	private string voltageText="0,00";
 	private string currentText="0,000";
+	private string firstVoltageText="0,00";
+	private string secondVoltageText="0,00";
+	private string firstCurrentText="0,000";
+	private string secondCurrentText="0,000";
 	private string? resistanceText;
 	private string? errorMessage;
+	private bool isSymmetric;
+	private TimeSpan activeElapsed;
+	private TimeSpan? previousSourceElapsed;
 	private bool disposed;
 
 	public ChartViewModel(IOutputController outputController)
@@ -101,6 +108,7 @@ public sealed class ChartViewModel : ObservableObject,IDisposable
 				OnPropertyChanged(nameof(IsOff));
 				OnPropertyChanged(nameof(IsOn));
 				OnPropertyChanged(nameof(CanUseCursors));
+				OnPropertyChanged(nameof(StatusText));
 			}
 		}
 	}
@@ -116,6 +124,7 @@ public sealed class ChartViewModel : ObservableObject,IDisposable
 				OnPropertyChanged(nameof(IsOff));
 				OnPropertyChanged(nameof(IsOn));
 				OnPropertyChanged(nameof(CanUseCursors));
+				OnPropertyChanged(nameof(StatusText));
 				ToggleOutputCommand.RaiseCanExecuteChanged();
 			}
 		}
@@ -169,6 +178,36 @@ public sealed class ChartViewModel : ObservableObject,IDisposable
 		private set => SetProperty(ref currentText,value);
 	}
 
+	public string FirstVoltageText
+	{
+		get=>firstVoltageText;
+		private set=>SetProperty(ref firstVoltageText,value);
+	}
+
+	public string SecondVoltageText
+	{
+		get=>secondVoltageText;
+		private set=>SetProperty(ref secondVoltageText,value);
+	}
+
+	public string FirstCurrentText
+	{
+		get=>firstCurrentText;
+		private set=>SetProperty(ref firstCurrentText,value);
+	}
+
+	public string SecondCurrentText
+	{
+		get=>secondCurrentText;
+		private set=>SetProperty(ref secondCurrentText,value);
+	}
+
+	public bool IsSymmetric
+	{
+		get=>isSymmetric;
+		private set=>SetProperty(ref isSymmetric,value);
+	}
+
 	public string? ResistanceText
 	{
 		get => resistanceText;
@@ -186,11 +225,24 @@ public sealed class ChartViewModel : ObservableObject,IDisposable
 	public bool IsOff => IsConnected && !IsOutputOn;
 	public bool IsOn => IsConnected && IsOutputOn;
 	public bool CanUseCursors=>IsOff && Points.Count>0;
+	public string StatusText=>HasStatusError
+		? "Stan zasilacza: BŁĄD - "+ErrorMessage
+		: !IsConnected
+			? "Stan zasilacza: OFFLINE"
+			: IsOutputOn ? "Stan zasilacza: ON" : "Stan zasilacza: OFF";
+	public bool HasStatusError=>!string.IsNullOrWhiteSpace(ErrorMessage);
 
 	public string? ErrorMessage
 	{
 		get => errorMessage;
-		private set => SetProperty(ref errorMessage,value);
+		private set
+		{
+			if(SetProperty(ref errorMessage,value))
+			{
+				OnPropertyChanged(nameof(StatusText));
+				OnPropertyChanged(nameof(HasStatusError));
+			}
+		}
 	}
 
 	public void AddSample(TimeSpan elapsed,double value)
@@ -288,22 +340,43 @@ public sealed class ChartViewModel : ObservableObject,IDisposable
 
 	private void OnOutputStateChanged(object? sender,bool enabled)
 	{
+		previousSourceElapsed=null;
 		IsOutputOn=enabled;
 	}
 
 	private void OnConnectionStateChanged(object? sender,bool connected)
 	{
+		if(!connected)
+		{
+			previousSourceElapsed=null;
+		}
 		IsConnected=connected;
 	}
 
 	private void OnChartSampleReceived(object? sender,ChartSample sample)
 	{
+		if(!IsOutputOn)
+		{
+			return;
+		}
 		if(Points.Count>0 && Points[^1].IsSymmetric != sample.IsSymmetric)
 		{
 			Points.Clear();
+			activeElapsed=TimeSpan.Zero;
+			previousSourceElapsed=null;
 		}
+		if(previousSourceElapsed is TimeSpan previous)
+		{
+			TimeSpan increment=sample.Elapsed-previous;
+			if(increment>TimeSpan.Zero)
+			{
+				activeElapsed+=increment;
+			}
+		}
+		previousSourceElapsed=sample.Elapsed;
+		IsSymmetric=sample.IsSymmetric;
 		AddPoint(new ChartPoint(
-			sample.Elapsed,
+			activeElapsed,
 			sample.VoltageHundredths/100d,
 			sample.CurrentThousandths/1000d,
 			sample.IsSymmetric,
@@ -314,6 +387,14 @@ public sealed class ChartViewModel : ObservableObject,IDisposable
 		VoltageText=(sample.VoltageHundredths/100m)
 			.ToString("0.00",PolishCulture);
 		CurrentText=(sample.CurrentThousandths/1000m)
+			.ToString("0.000",PolishCulture);
+		FirstVoltageText=(sample.FirstSignedVoltageHundredths/100m)
+			.ToString("0.00",PolishCulture);
+		SecondVoltageText=(sample.SecondSignedVoltageHundredths/100m)
+			.ToString("0.00",PolishCulture);
+		FirstCurrentText=(sample.FirstSignedCurrentThousandths/1000m)
+			.ToString("0.000",PolishCulture);
+		SecondCurrentText=(sample.SecondSignedCurrentThousandths/1000m)
 			.ToString("0.000",PolishCulture);
 		if(sample.IsCurrentLimited && ResistanceFormatter.TryFormat(
 			sample.VoltageHundredths,

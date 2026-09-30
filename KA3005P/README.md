@@ -2,7 +2,7 @@
 
 Samodzielna aplikacja Windows do sterowania jednym lub dwoma zasilaczami laboratoryjnymi Korad KA3005P przez porty COM.
 
-Bieżąca wersja: `0.2.1`. Powierzchnie pojedynczego i podwójnego zasilacza pozostają niezależnymi panelami WPF. Wspólny motyw, kontrolki nastaw, listy, lampki stanu, menu, wykres oraz okna Autor/Licencja pochodzą z `Shared/LabStation.UI`. Komunikacja COM, kolejki sesji i logika trybu Dual pozostają częścią Korada.
+Bieżąca wersja: `0.2.2`. Powierzchnie pojedynczego i podwójnego zasilacza pozostają niezależnymi panelami WPF. Wspólny motyw, kontrolki nastaw, listy, tekstowe paski stanu, menu, wykres oraz okna Autor/Licencja pochodzą z `Shared/LabStation.UI`. Komunikacja COM, kolejki sesji i logika trybu Dual pozostają częścią Korada.
 
 ## Zakres
 
@@ -15,7 +15,10 @@ Bieżąca wersja: `0.2.1`. Powierzchnie pojedynczego i podwójnego zasilacza poz
 - Odczyt napięcia i prądu wyjściowego.
 - Wykres prądu i opcjonalny wykres napięcia, lokalne powiększanie oraz dwa kursory dostępne po wyłączeniu wyjścia.
 - Do 20 480 widocznych próbek, zgodnie z limitem Oscyloskopu.
+- Oś czasu wykresu zlicza wyłącznie czas aktywnego pomiaru w stanie ON. Przejście do OFF zachowuje historię i nie dopisuje przerwy do osi czasu.
+- Przy nominalnym okresie próbkowania 100 ms limit 20 480 próbek odpowiada 34 min 8 s aktywnego pomiaru. Rzeczywisty zakres może być dłuższy, jeśli odpowiedzi urządzenia opóźniają kolejne próbki.
 - W trybie symetrycznym niezależne dane i serie Portu 1 (+) oraz Portu 2 (-).
+- Nagłówek wykresu trybu symetrycznego pokazuje oddzielne wartości Portu 1 i Portu 2, a kolory jednostek odpowiadają kolorom przebiegów.
 - Eksport napięcia, prądu albo obu wielkości do CSV.
 - Obliczanie rezystancji podczas ograniczenia prądowego.
 - Zapamiętywanie ostatnio wybranych portów.

@@ -16,6 +16,7 @@
 	<SolidColorBrush x:Key="LabStationOffBrush" Color="{StaticResource LabStationOff}" />
 	<SolidColorBrush x:Key="LabStationOnBrush" Color="{StaticResource LabStationOn}" />
 	<SolidColorBrush x:Key="LabStationOnActiveBrush" Color="{StaticResource LabStationOnActive}" />
+	<SolidColorBrush x:Key="LabStationMutedTextBrush" Color="#E0E0E0" />
 	<SolidColorBrush x:Key="KoradBackgroundBrush" Color="{StaticResource LabStationBackground}" />
 	<SolidColorBrush x:Key="KoradInputBrush" Color="{StaticResource LabStationInput}" />
 	<SolidColorBrush x:Key="KoradTextBrush" Color="{StaticResource LabStationText}" />
@@ -391,5 +392,20 @@
 		<Setter Property="FontSize" Value="26" />
 		<Setter Property="FontWeight" Value="Normal" />
 		<Setter Property="Foreground" Value="{StaticResource LabStationTextBrush}" />
+	</Style>
+	<Style x:Key="LabStationStatusPanelStyle" TargetType="Border">
+		<Setter Property="Padding" Value="7,5" />
+		<Setter Property="Background" Value="{StaticResource LabStationBackgroundBrush}" />
+	</Style>
+	<Style x:Key="LabStationStatusTextStyle" TargetType="TextBlock">
+		<Setter Property="Foreground" Value="{StaticResource LabStationMutedTextBrush}" />
+		<Setter Property="FontFamily" Value="Consolas" />
+		<Setter Property="FontSize" Value="11" />
+		<Setter Property="TextTrimming" Value="CharacterEllipsis" />
+		<Style.Triggers>
+			<DataTrigger Binding="{Binding HasStatusError}" Value="True">
+				<Setter Property="Foreground" Value="#FFFF8080" />
+			</DataTrigger>
+		</Style.Triggers>
 	</Style>
 </ResourceDictionary>
