@@ -6,7 +6,7 @@ namespace Sdg1032X.Core;
 public sealed class GeneratorSession : IAsyncDisposable
 {
 	private readonly SiglentGeneratorClient client;
-	private readonly LatestRequestQueue<string> requests=new();
+	private readonly LatestRequestQueue<GeneratorWrite> requests=new();
 	private readonly SemaphoreSlim ioGate=new(1,1);
 	private readonly CancellationTokenSource cancellation=new();
 	private readonly Task worker;
@@ -49,19 +49,43 @@ public sealed class GeneratorSession : IAsyncDisposable
 	public Task SetLatestAsync(string key,string command)
 	{
 		ObjectDisposedException.ThrowIf(disposed,this);
-		return requests.EnqueueLatest(key,command).Completion;
+		return requests.EnqueueLatest(
+			key,
+			new(generator=>generator.Write(command))).Completion;
 	}
 
 	public Task WritePriorityAsync(string command)
 	{
 		ObjectDisposedException.ThrowIf(disposed,this);
-		return requests.EnqueuePriority(command).Completion;
+		return requests.EnqueuePriority(
+			new(generator=>generator.Write(command))).Completion;
 	}
 
 	public Task WriteOrderedAsync(string command)
 	{
 		ObjectDisposedException.ThrowIf(disposed,this);
-		return requests.EnqueueOrdered(command).Completion;
+		return requests.EnqueueOrdered(
+			new(generator=>generator.Write(command))).Completion;
+	}
+
+	public Task UploadArbitraryWaveformAsync(
+		int channel,
+		ArbitraryWaveformData waveform,
+		double frequencyHz,
+		double amplitudeVpp,
+		double offsetVolts,
+		double phaseDegrees)
+	{
+		ObjectDisposedException.ThrowIf(disposed,this);
+		ArgumentNullException.ThrowIfNull(waveform);
+		return requests.EnqueueOrdered(
+			new(generator=>generator.UploadArbitraryWaveform(
+				channel,
+				waveform,
+				frequencyHz,
+				amplitudeVpp,
+				offsetVolts,
+				phaseDegrees))).Completion;
 	}
 
 	public async Task<ChannelSnapshot> ReadChannelAsync(int channel)
@@ -112,14 +136,17 @@ public sealed class GeneratorSession : IAsyncDisposable
 		while(!cancellation.IsCancellationRequested)
 		{
 			await requests.WaitAsync(cancellation.Token);
-			while(requests.TryTakeNext(out ScheduledRequest<string>? request))
+			while(requests.TryTakeNext(
+				out ScheduledRequest<GeneratorWrite>? request))
 			{
 				try
 				{
 					await ioGate.WaitAsync(cancellation.Token);
 					try
 					{
-						await Task.Run(()=>client.Write(request.Value),cancellation.Token);
+						await Task.Run(
+							()=>request.Value.Execute(client),
+							cancellation.Token);
 					}
 					finally
 					{
@@ -140,4 +167,7 @@ public sealed class GeneratorSession : IAsyncDisposable
 			}
 		}
 	}
+
+	private sealed record GeneratorWrite(
+		Action<SiglentGeneratorClient> Execute);
 }

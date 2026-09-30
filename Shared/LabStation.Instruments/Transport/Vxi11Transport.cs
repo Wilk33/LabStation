@@ -2,7 +2,7 @@ using System.Text;
 
 namespace LabStation.Instruments.Transport;
 
-public sealed class Vxi11Transport : IInstrumentTransport
+public sealed class Vxi11Transport : IInstrumentTransport,IRawInstrumentTransport
 {
 	private const uint Program=395183;
 	private readonly object gate=new();
@@ -78,7 +78,15 @@ public sealed class Vxi11Transport : IInstrumentTransport
 	{
 		lock(gate)
 		{
-			WriteCore(command);
+			WriteCore(Encoding.ASCII.GetBytes(command+options.CommandTerminator));
+		}
+	}
+
+	public void Write(ReadOnlyMemory<byte> data)
+	{
+		lock(gate)
+		{
+			WriteCore(data.ToArray());
 		}
 	}
 
@@ -86,7 +94,7 @@ public sealed class Vxi11Transport : IInstrumentTransport
 	{
 		lock(gate)
 		{
-			WriteCore(command);
+			WriteCore(Encoding.ASCII.GetBytes(command+options.CommandTerminator));
 			using MemoryStream output=new();
 			while(true)
 			{
@@ -143,10 +151,9 @@ public sealed class Vxi11Transport : IInstrumentTransport
 		}
 	}
 
-	private void WriteCore(string command)
+	private void WriteCore(byte[] data)
 	{
 		ObjectDisposedException.ThrowIf(disposed,this);
-		byte[] data=Encoding.ASCII.GetBytes(command+options.CommandTerminator);
 		for(int offset=0;offset<data.Length;)
 		{
 			int count=Math.Min(maximumWrite,data.Length-offset);

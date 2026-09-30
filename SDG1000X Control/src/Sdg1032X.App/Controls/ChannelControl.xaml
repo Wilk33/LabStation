@@ -2,9 +2,9 @@
 	x:Class="Sdg1032X.App.Controls.ChannelControl"
 	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
 	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-	xmlns:controls="clr-namespace:Sdg1032X.App.Controls"
-	Background="{StaticResource WindowBrush}"
-	Foreground="{StaticResource TextBrush}">
+	xmlns:sharedControls="clr-namespace:LabStation.UI.Controls;assembly=LabStation.UI"
+	Background="{StaticResource LabStationBackgroundBrush}"
+	Foreground="{StaticResource LabStationTextBrush}">
 	<Grid Margin="10,8">
 		<Grid.RowDefinitions>
 			<RowDefinition Height="38" />
@@ -12,12 +12,10 @@
 		</Grid.RowDefinitions>
 		<Button
 			x:Name="OutputButton"
-			Width="126"
-			Height="32"
 			HorizontalAlignment="Right"
 			VerticalAlignment="Top"
 			Click="OutputClick"
-			Content="Wyjście OFF" />
+			Content="OFF" />
 		<ScrollViewer
 			Grid.Row="1"
 			VerticalScrollBarVisibility="Auto"
@@ -25,7 +23,7 @@
 			<StackPanel>
 			<TextBlock
 				Margin="0,0,0,3"
-				Foreground="{StaticResource TextBrush}"
+				Foreground="{StaticResource LabStationTextBrush}"
 				FontSize="11"
 				Text="Przebieg" />
 			<ComboBox
@@ -33,7 +31,7 @@
 				Margin="0,0,0,7"
 				DisplayMemberPath="Name"
 				SelectionChanged="WaveformSelectionChanged" />
-			<controls:NumericEditor
+			<sharedControls:NumericValueEditor
 				x:Name="FrequencyEditor"
 				Label="Częstotliwość"
 				Unit="Hz"
@@ -42,7 +40,7 @@
 				Maximum="30000000"
 				DecimalPlaces="3"
 				ValueCommitted="FrequencyCommitted" />
-			<controls:NumericEditor
+			<sharedControls:NumericValueEditor
 				x:Name="AmplitudeEditor"
 				Label="Amplituda"
 				Unit="Vpp"
@@ -51,7 +49,7 @@
 				Maximum="20"
 				DecimalPlaces="3"
 				ValueCommitted="AmplitudeCommitted" />
-			<controls:NumericEditor
+			<sharedControls:NumericValueEditor
 				x:Name="OffsetEditor"
 				Label="Offset"
 				Unit="V"
@@ -60,7 +58,7 @@
 				Maximum="20"
 				DecimalPlaces="3"
 				ValueCommitted="OffsetCommitted" />
-			<controls:NumericEditor
+			<sharedControls:NumericValueEditor
 				x:Name="PhaseEditor"
 				Label="Faza"
 				Unit="°"
@@ -69,7 +67,7 @@
 				Maximum="360"
 				DecimalPlaces="1"
 				ValueCommitted="PhaseCommitted" />
-			<controls:NumericEditor
+			<sharedControls:NumericValueEditor
 				x:Name="DutyEditor"
 				Label="Wypełnienie"
 				Unit="%"
@@ -78,7 +76,7 @@
 				Maximum="100"
 				DecimalPlaces="1"
 				ValueCommitted="DutyCommitted" />
-			<controls:NumericEditor
+			<sharedControls:NumericValueEditor
 				x:Name="SymmetryEditor"
 				Label="Symetria"
 				Unit="%"
@@ -87,7 +85,7 @@
 				Maximum="100"
 				DecimalPlaces="1"
 				ValueCommitted="SymmetryCommitted" />
-			<controls:NumericEditor
+			<sharedControls:NumericValueEditor
 				x:Name="PulseWidthEditor"
 				Label="Szerokość impulsu"
 				Unit="µs"
@@ -97,7 +95,7 @@
 				Maximum="1000"
 				DecimalPlaces="3"
 				ValueCommitted="PulseWidthCommitted" />
-			<controls:NumericEditor
+			<sharedControls:NumericValueEditor
 				x:Name="NoiseDeviationEditor"
 				Label="Odchylenie standardowe"
 				Unit="V"
@@ -106,7 +104,7 @@
 				Maximum="20"
 				DecimalPlaces="3"
 				ValueCommitted="NoiseDeviationCommitted" />
-			<controls:NumericEditor
+			<sharedControls:NumericValueEditor
 				x:Name="NoiseMeanEditor"
 				Label="Średnia"
 				Unit="V"
@@ -115,7 +113,7 @@
 				Maximum="20"
 				DecimalPlaces="3"
 				ValueCommitted="NoiseMeanCommitted" />
-			<controls:NumericEditor
+			<sharedControls:NumericValueEditor
 				x:Name="DcLevelEditor"
 				Label="Poziom DC"
 				Unit="V"
@@ -133,7 +131,7 @@
 				<StackPanel>
 					<TextBlock
 						Margin="0,0,0,3"
-						Foreground="{StaticResource TextBrush}"
+						Foreground="{StaticResource LabStationTextBrush}"
 						FontSize="11"
 						Text="Obciążenie" />
 					<ComboBox
@@ -146,7 +144,7 @@
 				<StackPanel Grid.Column="2">
 					<TextBlock
 						Margin="0,0,0,3"
-						Foreground="{StaticResource TextBrush}"
+						Foreground="{StaticResource LabStationTextBrush}"
 						FontSize="11"
 						Text="Polaryzacja" />
 					<ComboBox

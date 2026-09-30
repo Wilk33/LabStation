@@ -5,6 +5,10 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Threading;
+using LabStation.Instruments.Discovery;
+using LabStation.Instruments.Scpi;
 using LabStation.Instruments.Scheduling;
 using LabStation.Instruments.Transport;
 using LabStation.UI;
@@ -15,6 +19,26 @@ using Sdg1032X.Core;
 
 int failed=0;
 int passed=0;
+
+if(args.SequenceEqual(["--scan-hardware"]))
+{
+	using CancellationTokenSource timeout=new(TimeSpan.FromSeconds(45));
+	IInstrumentNetworkScanner scanner=new InstrumentNetworkScanner();
+	DiscoveredInstrument? discovered=scanner.FindFirstAsync(
+		SiglentGeneratorClient.IsSupported,
+		timeout.Token).GetAwaiter().GetResult();
+	if(discovered is null)
+	{
+		Console.Error.WriteLine("Nie znaleziono obsługiwanego generatora SIGLENT SDG1032X.");
+		return 1;
+	}
+	Console.WriteLine(
+		$"Znaleziono {discovered.Identity.Manufacturer},"+
+		$"{discovered.Identity.Model},"+
+		$"{discovered.Identity.SerialNumber},"+
+		$"{discovered.Identity.Firmware} pod adresem {discovered.Address}.");
+	return 0;
+}
 
 void Test(string name,Action action)
 {
@@ -83,6 +107,35 @@ void RunSta(Action action)
 	}
 }
 
+void RunStaAsync(Func<Task> action)
+{
+	Exception? failure=null;
+	Thread thread=new(()=>
+	{
+		Dispatcher dispatcher=Dispatcher.CurrentDispatcher;
+		SynchronizationContext.SetSynchronizationContext(
+			new DispatcherSynchronizationContext(dispatcher));
+		DispatcherFrame frame=new();
+		Task task=action();
+		task.ContinueWith(completed=>
+		{
+			if(completed.IsFaulted)
+			{
+				failure=completed.Exception?.GetBaseException();
+			}
+			frame.Continue=false;
+		},TaskScheduler.FromCurrentSynchronizationContext());
+		Dispatcher.PushFrame(frame);
+	});
+	thread.SetApartmentState(ApartmentState.STA);
+	thread.Start();
+	thread.Join();
+	if(failure is not null)
+	{
+		throw failure;
+	}
+}
+
 IEnumerable<T> VisualChildren<T>(DependencyObject parent) where T : DependencyObject
 {
 	for(int index=0;index<VisualTreeHelper.GetChildrenCount(parent);index++)
@@ -118,16 +171,58 @@ IEnumerable<T> LogicalChildren<T>(DependencyObject parent) where T : DependencyO
 	}
 }
 
-Test("Lista przebiegów zawiera wyłącznie sześć podstawowych typów",()=>
+Test("Lista przebiegów obejmuje sześć podstawowych typów i własny",()=>
 {
 	BasicWaveform[] values=Enum.GetValues<BasicWaveform>();
-	Equal(6,values.Length);
+	Equal(7,values.Length);
 	Equal("SINE",SiglentProtocol.WaveformCode(BasicWaveform.Sine));
 	Equal("SQUARE",SiglentProtocol.WaveformCode(BasicWaveform.Square));
 	Equal("RAMP",SiglentProtocol.WaveformCode(BasicWaveform.Ramp));
 	Equal("PULSE",SiglentProtocol.WaveformCode(BasicWaveform.Pulse));
 	Equal("NOISE",SiglentProtocol.WaveformCode(BasicWaveform.Noise));
 	Equal("DC",SiglentProtocol.WaveformCode(BasicWaveform.Dc));
+	ChannelSnapshot arbitrary=SiglentProtocol.ParseSnapshot(
+		1,
+		"C1:BSWV WVTP,ARB,FRQ,1KHZ,AMP,2V,OFST,0V,PHSE,0",
+		"C1:OUTP OFF,LOAD,HZ,PLRT,NOR");
+	Equal(BasicWaveform.Arbitrary,arbitrary.Waveform);
+});
+
+Test("Plik własnego przebiegu wymaga par próbek i bezpiecznej nazwy",()=>
+{
+	ArbitraryWaveformData waveform=ArbitraryWaveformData.FromBytes(
+		"wave 1.bin",
+		[0x00,0xE0,0x00,0x20]);
+	Equal("wave_1",waveform.Name);
+	Equal(2,waveform.SampleCount);
+	Equal(4,waveform.Data.Length);
+	try
+	{
+		ArbitraryWaveformData.FromBytes("odd.bin",[0x00,0x01,0x02]);
+	}
+	catch(InvalidDataException)
+	{
+		return;
+	}
+	throw new Exception("Nieparzysta liczba bajtów przebiegu została zaakceptowana");
+});
+
+Test("Własny przebieg jest wysyłany binarnie i wybierany po nazwie",()=>
+{
+	using RecordingRawTransport transport=new();
+	using SiglentGeneratorClient client=new(transport);
+	ArbitraryWaveformData waveform=ArbitraryWaveformData.FromBytes(
+		"wave1.bin",
+		[0x00,0xE0,0x00,0x20]);
+	client.UploadArbitraryWaveform(1,waveform,2000,4,0,0);
+	byte[] header=Encoding.ASCII.GetBytes(
+		"C1:WVDT WVNM,wave1,FREQ,2000,AMPL,4,OFST,0,PHASE,0,WAVEDATA,");
+	byte[] expected=[..header,0x00,0xE0,0x00,0x20];
+	if(!expected.SequenceEqual(transport.RawWrites.Single()))
+	{
+		throw new Exception("Nieprawidłowy transfer binarny WVDT");
+	}
+	Equal("C1:ARWV NAME,wave1",transport.Writes.Single());
 });
 
 Test("Polecenia SCPI używają kanału i formatu niezależnego od kultury",()=>
@@ -175,7 +270,7 @@ Test("Nieznany przebieg z urządzenia jest odrzucany",()=>
 {
 	Reject(()=>SiglentProtocol.ParseSnapshot(
 		1,
-		"C1:BSWV WVTP,ARB",
+		"C1:BSWV WVTP,CUSTOM",
 		"C1:OUTP OFF,LOAD,HZ,PLRT,NOR"));
 });
 
@@ -301,8 +396,8 @@ Test("Metadane aplikacji zachowują autora, wersję i licencję",()=>
 	Equal("Mateusz Skipor",ProductInformation.AuthorName);
 	Equal("Inżynier technik elektroniki",ProductInformation.AuthorProfession);
 	Equal("mskiporsklep@op.pl",ProductInformation.AuthorEmail);
-	Equal("0.2.0",ProductInformation.Version);
-	Equal("Siglent SDG1000X Control v0.2.0",ProductInformation.GetWindowTitle());
+	Equal("0.2.1",ProductInformation.Version);
+	Equal("Siglent SDG1000X Control v0.2.1",ProductInformation.GetWindowTitle());
 	string license=ProductInformation.LoadLicenseText();
 	if(!license.Contains("PolyForm Noncommercial License 1.0.0",StringComparison.Ordinal))
 	{
@@ -322,13 +417,46 @@ Test("Interfejs zachowuje kompaktowy rozmiar i pełne pola klikalne",()=>
 	{
 		Sdg1032X.App.App application=new();
 		application.InitializeComponent();
+		if(application.Resources.Contains("WindowBrush") ||
+			application.Resources.Contains("ControlBrush") ||
+			application.Resources.Contains("TextBrush") ||
+			application.Resources.Contains("MutedTextBrush"))
+		{
+			throw new Exception("Generator nadal duplikuje zasoby wspólnego motywu");
+		}
 		MainWindow window=new();
+		GeneratorView defaultView=LogicalChildren<GeneratorView>(window).Single();
+		DockPanel root=(DockPanel)window.Content;
+		root.Children.Remove(defaultView);
+		GeneratorView generatorView=new(
+			new StubScanner(null),
+			_=>new GeneratorDeviceTransport(),
+			new MemoryGeneratorSettingsStore(new("192.168.200.132",false)));
+		root.Children.Add(generatorView);
+		window.WindowStartupLocation=WindowStartupLocation.Manual;
+		window.Left=-10000;
+		window.Top=-10000;
+		window.ShowActivated=false;
+		window.Show();
+		window.Dispatcher.Invoke(()=>{},DispatcherPriority.ApplicationIdle);
 		window.Measure(new Size(350,749));
 		window.Arrange(new Rect(0,0,350,749));
 		window.ApplyTemplate();
 
 		Equal(749d,window.Height);
-		GeneratorView generatorView=LogicalChildren<GeneratorView>(window).Single();
+		Directory.CreateDirectory(Path.Combine("SDG1000X Control","artifacts","qa"));
+		RenderTargetBitmap bitmap=new(350,749,96,96,PixelFormats.Pbgra32);
+		bitmap.Render(window);
+		PngBitmapEncoder encoder=new();
+		encoder.Frames.Add(BitmapFrame.Create(bitmap));
+		using(FileStream stream=File.Create(Path.Combine(
+			"SDG1000X Control",
+			"artifacts",
+			"qa",
+			"generator-ui.png")))
+		{
+			encoder.Save(stream);
+		}
 		AboutMenuItem about=LogicalChildren<AboutMenuItem>(window).Single();
 		Equal("O aplikacji",about.Header);
 		if(about.Presentation?.DisplayName != ProductInformation.DisplayName)
@@ -340,9 +468,73 @@ Test("Interfejs zachowuje kompaktowy rozmiar i pełne pola klikalne",()=>
 		TextBox host=LogicalChildren<TextBox>(window)
 			.First(textBox=>textBox.Name == "HostEditor");
 		Equal("192.168.200.132",host.Text);
+		Equal(150d,host.ActualWidth);
+		TextBlock ipLabel=LogicalChildren<TextBlock>(window)
+			.Single(textBlock=>textBlock.Name == "IpLabel");
+		Equal("IP:",ipLabel.Text);
 		if(host.Padding.Top>2 || host.Padding.Bottom>2)
 		{
 			throw new Exception("Pole IP ma zbyt duży pionowy margines wewnętrzny");
+		}
+		Button connection=LogicalChildren<Button>(window)
+			.Single(button=>button.Name == "ConnectionButton");
+		if(!double.IsNaN(connection.Width) || connection.MinWidth != 72)
+		{
+			throw new Exception("Przycisk połączenia nie ma wspólnego kompaktowego rozmiaru");
+		}
+		Button output=LogicalChildren<Button>(window)
+			.First(button=>button.Name == "OutputButton");
+		Equal("OFF",output.Content);
+		TextBlock status=LogicalChildren<TextBlock>(window)
+			.Single(textBlock=>textBlock.Name == "StatusText");
+		Equal("Status: OFFLINE",status.Text);
+
+		TabControl tabs=LogicalChildren<TabControl>(window)
+			.Single(tabControl=>tabControl.Name == "ChannelTabs");
+		TabItem[] tabItems=LogicalChildren<TabItem>(tabs).ToArray();
+		Equal(2,tabItems.Length);
+		if(Math.Abs(tabItems[0].ActualWidth-tabItems[1].ActualWidth)>1)
+		{
+			throw new Exception("Zakładki kanałów nie zajmują równych połówek");
+		}
+		if(tabItems.Any(tabItem=>tabItem.ActualWidth<tabs.ActualWidth*0.45))
+		{
+			throw new Exception("Zakładki kanałów nie wypełniają szerokości panelu");
+		}
+		if(tabItems[0].Foreground is not SolidColorBrush activeForeground ||
+			activeForeground.Color != Colors.Black)
+		{
+			throw new Exception("Aktywna zakładka nie ma czarnego tekstu");
+		}
+		if(tabItems[1].Foreground is not SolidColorBrush inactiveForeground ||
+			inactiveForeground.Color != Colors.White)
+		{
+			throw new Exception("Nieaktywna zakładka nie ma białego tekstu");
+		}
+		if(tabItems[0].Background is SolidColorBrush activeBackground &&
+			activeBackground.Color == Colors.White)
+		{
+			throw new Exception("Aktywna zakładka nadal ma białe tło");
+		}
+
+		if(LogicalChildren<FrameworkElement>(window).Any(element=>
+			element.GetType().FullName ==
+			"Sdg1032X.App.Controls.NumericEditor"))
+		{
+			throw new Exception("Generator nadal używa lokalnego duplikatu edytora liczbowego");
+		}
+		if(!LogicalChildren<NumericValueEditor>(window).Any())
+		{
+			throw new Exception("Generator nie używa wspólnego edytora wartości");
+		}
+		MenuItem tools=LogicalChildren<MenuItem>(window)
+			.Single(item=>Equals(item.Header,"Narzędzia"));
+		string[] toolItems=LogicalChildren<MenuItem>(tools)
+			.Select(item=>item.Header?.ToString() ?? "")
+			.ToArray();
+		if(!toolItems.Contains("Skanuj sieć") || !toolItems.Contains("Auto connect"))
+		{
+			throw new Exception("Brak wspólnych funkcji sieciowych w menu Narzędzia");
 		}
 		if(LogicalChildren<Button>(window)
 			.Any(button=>Equals(button.Content,"Odczytaj kanał")))
@@ -389,6 +581,65 @@ Test("Interfejs zachowuje kompaktowy rozmiar i pełne pola klikalne",()=>
 		{
 			throw new Exception("Panel pozostawia obsługę błędu podłączoną podczas zamykania");
 		}
+		generatorView.DisposeAsync().AsTask().GetAwaiter().GetResult();
+		window.Hide();
+	});
+});
+
+Test("Ustawienia Generatora zachowują adres i Auto connect",()=>
+{
+	string directory=Path.Combine(
+		Path.GetTempPath(),
+		"LabStation-GeneratorSettings-"+Guid.NewGuid().ToString("N"));
+	string path=Path.Combine(directory,"settings.json");
+	try
+	{
+		JsonGeneratorSettingsStore store=new(
+			path,
+			new("192.168.200.132",false));
+		Equal(
+			new GeneratorSettings("192.168.200.132",false),
+			store.Load());
+		store.Save(new("192.168.200.50",true));
+		Equal(
+			new GeneratorSettings("192.168.200.50",true),
+			store.Load());
+	}
+	finally
+	{
+		if(Directory.Exists(directory))
+		{
+			Directory.Delete(directory,true);
+		}
+	}
+});
+
+Test("Skan wpisuje adres Generatora i Auto connect nawiązuje połączenie",()=>
+{
+	RunStaAsync(async()=>
+	{
+		MemoryGeneratorSettingsStore settings=new(
+			new("",true));
+		StubScanner scanner=new(
+			new(
+				"192.168.200.132",
+				new("SIGLENT","SDG1032X","123456","1.0")));
+		GeneratorView view=new(
+			scanner,
+			_=>new GeneratorDeviceTransport(),
+			settings);
+		await view.ScanNetworkAsync();
+		TextBox host=LogicalChildren<TextBox>(view)
+			.Single(textBox=>textBox.Name == "HostEditor");
+		Button connection=LogicalChildren<Button>(view)
+			.Single(button=>button.Name == "ConnectionButton");
+		Equal("192.168.200.132",host.Text);
+		Equal("Online",connection.Content);
+		Equal(false,host.IsEnabled);
+		Equal(
+			new GeneratorSettings("192.168.200.132",true),
+			settings.Value);
+		await view.DisposeAsync();
 	});
 });
 
@@ -404,6 +655,84 @@ sealed class ScriptedTransport(string identity) : IInstrumentTransport
 	public byte[] Query(string command)
 	{
 		return Encoding.ASCII.GetBytes(identity);
+	}
+
+	public void Dispose()
+	{
+	}
+}
+
+sealed class RecordingRawTransport : IInstrumentTransport,IRawInstrumentTransport
+{
+	public List<string> Writes { get; }=[];
+	public List<byte[]> RawWrites { get; }=[];
+
+	public void Write(string command)
+	{
+		Writes.Add(command);
+	}
+
+	public void Write(ReadOnlyMemory<byte> data)
+	{
+		RawWrites.Add(data.ToArray());
+	}
+
+	public byte[] Query(string command)
+	{
+		return Encoding.ASCII.GetBytes("SIGLENT,SDG1032X,123456,1.0");
+	}
+
+	public void Dispose()
+	{
+	}
+}
+
+sealed class StubScanner(DiscoveredInstrument? result) : IInstrumentNetworkScanner
+{
+	public Task<DiscoveredInstrument?> FindFirstAsync(
+		Func<ScpiIdentity,bool> isSupported,
+		CancellationToken cancellationToken)
+	{
+		return Task.FromResult(
+			result is not null && isSupported(result.Identity)
+				? result
+				: null);
+	}
+}
+
+sealed class MemoryGeneratorSettingsStore(GeneratorSettings value) : IGeneratorSettingsStore
+{
+	public GeneratorSettings Value { get; private set; }=value;
+
+	public GeneratorSettings Load()
+	{
+		return Value;
+	}
+
+	public void Save(GeneratorSettings settings)
+	{
+		Value=settings;
+	}
+}
+
+sealed class GeneratorDeviceTransport : IInstrumentTransport
+{
+	public void Write(string command)
+	{
+	}
+
+	public byte[] Query(string command)
+	{
+		string response=command switch
+		{
+			"*IDN?"=>"SIGLENT,SDG1032X,123456,1.0",
+			"C1:BSWV?"=>"C1:BSWV WVTP,SINE,FRQ,3000HZ,AMP,4V,OFST,0V,PHSE,0",
+			"C2:BSWV?"=>"C2:BSWV WVTP,SINE,FRQ,2000HZ,AMP,3V,OFST,0V,PHSE,0",
+			"C1:OUTP?"=>"C1:OUTP OFF,LOAD,HZ,PLRT,NOR",
+			"C2:OUTP?"=>"C2:OUTP OFF,LOAD,HZ,PLRT,NOR",
+			_=>throw new InvalidOperationException(command)
+		};
+		return Encoding.ASCII.GetBytes(response);
 	}
 
 	public void Dispose()

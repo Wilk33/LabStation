@@ -404,11 +404,74 @@
 		<Setter Property="Background" Value="{StaticResource LabStationBackgroundBrush}" />
 		<Setter Property="BorderThickness" Value="0" />
 	</Style>
+	<Style x:Key="LabStationChannelTabControlStyle" TargetType="TabControl">
+		<Setter Property="Background" Value="{StaticResource LabStationBackgroundBrush}" />
+		<Setter Property="BorderThickness" Value="0" />
+		<Setter Property="Template">
+			<Setter.Value>
+				<ControlTemplate TargetType="TabControl">
+					<Grid KeyboardNavigation.TabNavigation="Local">
+						<Grid.RowDefinitions>
+							<RowDefinition Height="Auto" />
+							<RowDefinition Height="*" />
+						</Grid.RowDefinitions>
+						<ItemsPresenter
+							Grid.Row="0"
+							HorizontalAlignment="Stretch"
+							SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+						<Border
+							Grid.Row="1"
+							Background="{TemplateBinding Background}"
+							BorderBrush="{TemplateBinding BorderBrush}"
+							BorderThickness="{TemplateBinding BorderThickness}">
+							<ContentPresenter
+								x:Name="PART_SelectedContentHost"
+								ContentSource="SelectedContent"
+								HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+								VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+								SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+						</Border>
+					</Grid>
+				</ControlTemplate>
+			</Setter.Value>
+		</Setter>
+	</Style>
 	<Style TargetType="TabItem">
 		<Setter Property="Background" Value="{StaticResource LabStationInputBrush}" />
 		<Setter Property="Foreground" Value="{StaticResource LabStationTextBrush}" />
 		<Setter Property="Padding" Value="8,4" />
 		<Setter Property="Margin" Value="0,0,2,0" />
+	</Style>
+	<Style x:Key="LabStationChannelTabItemStyle" TargetType="TabItem">
+		<Setter Property="Background" Value="{StaticResource LabStationInputBrush}" />
+		<Setter Property="Foreground" Value="White" />
+		<Setter Property="Padding" Value="8,4" />
+		<Setter Property="Margin" Value="0" />
+		<Setter Property="HorizontalContentAlignment" Value="Stretch" />
+		<Setter Property="Template">
+			<Setter.Value>
+				<ControlTemplate TargetType="TabItem">
+					<Border
+						x:Name="HeaderBorder"
+						Padding="{TemplateBinding Padding}"
+						Background="{TemplateBinding Background}"
+						BorderBrush="#303030"
+						BorderThickness="1">
+						<ContentPresenter
+							HorizontalAlignment="Stretch"
+							VerticalAlignment="Center"
+							ContentSource="Header"
+							RecognizesAccessKey="True" />
+					</Border>
+					<ControlTemplate.Triggers>
+						<Trigger Property="IsSelected" Value="True">
+							<Setter Property="Background" Value="{Binding Tag,RelativeSource={RelativeSource Self}}" />
+							<Setter Property="Foreground" Value="Black" />
+						</Trigger>
+					</ControlTemplate.Triggers>
+				</ControlTemplate>
+			</Setter.Value>
+		</Setter>
 	</Style>
 
 	<Style x:Key="ValueTextStyle" TargetType="TextBlock">

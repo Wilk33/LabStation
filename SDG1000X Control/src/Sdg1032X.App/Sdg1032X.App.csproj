@@ -18,6 +18,7 @@
 	</PropertyGroup>
 	<ItemGroup>
 		<ProjectReference Include="../Sdg1032X.Core/Sdg1032X.Core.csproj" />
+		<ProjectReference Include="../../../Shared/LabStation.Instruments/LabStation.Instruments.csproj" />
 		<ProjectReference Include="../../../Shared/LabStation.UI/LabStation.UI.csproj" />
 		<Resource Include="../../sdg1062x.ico" Link="Assets/sdg1062x.ico" />
 		<Content Include="../../sdg1062x.png" Link="ReferenceAssets/sdg1062x.png" CopyToPublishDirectory="PreserveNewest" />

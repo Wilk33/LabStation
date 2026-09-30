@@ -107,6 +107,18 @@ Test("VXI-11 obsługuje fragmenty RPC i wieloczęściowy odczyt",()=>
 	Equal("C1:WF? ALL\n",server.LastCommand);
 });
 
+Test("VXI-11 zapisuje surowe dane bez terminatora tekstowego",()=>
+{
+	using LoopbackVxi11Server server=new();
+	using Vxi11Transport transport=new("127.0.0.1",server.MapperPort);
+	byte[] payload=[(byte)'A',0,10,13,255,(byte)'Z'];
+	((IRawInstrumentTransport)transport).Write(payload);
+	if(!server.WrittenBytes.SequenceEqual(payload))
+	{
+		throw new Exception("Surowy zapis VXI-11 zmienił dane lub dodał terminator");
+	}
+});
+
 Test("Socket SCPI odczytuje tekst i blok binarny",()=>
 {
 	using LoopbackScpiServer server=new();
@@ -241,6 +253,7 @@ sealed class LoopbackVxi11Server : IDisposable
 
 	public int MapperPort { get; }
 	public string LastCommand=>Encoding.ASCII.GetString(written.ToArray());
+	public byte[] WrittenBytes=>written.ToArray();
 
 	public void Dispose()
 	{

@@ -37,3 +37,13 @@ Zapisz model, wersję firmware, użyte połączenie, wynik każdego kroku oraz w
 - pierwotne częstotliwości 3000 Hz i 2000 Hz zostały przywrócone i potwierdzone ponownym odczytem.
 
 Test nie obejmował włączania wyjść, zmiany typu przebiegu, amplitudy, offsetu, obciążenia ani polaryzacji.
+
+## Walidacja skanowania wersji 0.2.1
+
+30 września 2026 r. wykonano rzeczywisty skan lokalnej sieci za pomocą kodu używanego przez aplikację:
+
+- skaner odnalazł urządzenie pod adresem `192.168.200.132`,
+- odpowiedź identyfikacyjna wskazała producenta `Siglent Technologies`, model `SDG1032X` i firmware `1.01.01.33R8`,
+- operacja korzystała wyłącznie z VXI-11 i zapytania `*IDN?`,
+- test nie odczytywał nastaw kanałów i nie wysyłał żadnego polecenia zmieniającego stan,
+- przesyłanie własnego przebiegu pozostało zweryfikowane testem protokołu z lokalnym serwerem VXI-11 i nie było wykonywane na fizycznym generatorze.

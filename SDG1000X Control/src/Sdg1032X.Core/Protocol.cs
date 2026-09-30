@@ -99,6 +99,53 @@ public static class SiglentProtocol
 		return $"C{channel}:OUTP "+(enabled ? "ON" : "OFF");
 	}
 
+	public static string ArbitraryWaveformHeader(
+		int channel,
+		string name,
+		double frequencyHz,
+		double amplitudeVpp,
+		double offsetVolts,
+		double phaseDegrees)
+	{
+		ValidateChannel(channel);
+		if(string.IsNullOrWhiteSpace(name) ||
+			name.Length>16 ||
+			name.Any(character=>
+				!char.IsAsciiLetterOrDigit(character) &&
+				character != '_'))
+		{
+			throw new ArgumentException("Nieprawidłowa nazwa przebiegu.",nameof(name));
+		}
+		double[] values=
+		[
+			frequencyHz,
+			amplitudeVpp,
+			offsetVolts,
+			phaseDegrees
+		];
+		if(values.Any(value=>!double.IsFinite(value)))
+		{
+			throw new ArgumentOutOfRangeException(nameof(frequencyHz));
+		}
+		return $"C{channel}:WVDT WVNM,{name}"+
+			$",FREQ,{Format(frequencyHz)}"+
+			$",AMPL,{Format(amplitudeVpp)}"+
+			$",OFST,{Format(offsetVolts)}"+
+			$",PHASE,{Format(phaseDegrees)},WAVEDATA,";
+	}
+
+	public static string ArbitraryWaveformSelectCommand(
+		int channel,
+		string name)
+	{
+		ValidateChannel(channel);
+		if(string.IsNullOrWhiteSpace(name))
+		{
+			throw new ArgumentException("Brak nazwy przebiegu.",nameof(name));
+		}
+		return $"C{channel}:ARWV NAME,{name}";
+	}
+
 	public static ChannelSnapshot ParseSnapshot(int channel,string basicWave,string output)
 	{
 		ValidateChannel(channel);
@@ -112,6 +159,7 @@ public static class SiglentProtocol
 			"PULSE"=>BasicWaveform.Pulse,
 			"NOISE"=>BasicWaveform.Noise,
 			"DC"=>BasicWaveform.Dc,
+			"ARB"=>BasicWaveform.Arbitrary,
 			string unknown=>throw new InvalidDataException("Nieobsługiwany przebieg: "+unknown),
 			null=>throw new InvalidDataException("Brak typu przebiegu w odpowiedzi.")
 		};
@@ -139,6 +187,9 @@ public static class SiglentProtocol
 				: OutputPolarity.Normal
 		};
 	}
+
+	private static string Format(double value)=>
+		value.ToString("G17",CultureInfo.InvariantCulture);
 
 	private static (OutputLoad Load,double? Ohms) ParseLoad(Dictionary<string,string> state)
 	{

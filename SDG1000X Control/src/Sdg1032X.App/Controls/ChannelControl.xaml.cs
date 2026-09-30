@@ -1,6 +1,8 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using LabStation.UI.Controls;
+using Microsoft.Win32;
 using Sdg1032X.Core;
 
 namespace Sdg1032X.App.Controls;
@@ -27,6 +29,7 @@ public partial class ChannelControl : UserControl
 	private bool updating;
 	private double frequencyHz;
 	private double amplitudeVpp;
+	private BasicWaveform confirmedWaveform=BasicWaveform.Sine;
 	private OutputLoad confirmedLoad=OutputLoad.HighImpedance;
 	private double? confirmedLoadOhms;
 
@@ -40,7 +43,8 @@ public partial class ChannelControl : UserControl
 			new WaveformChoice("Rampa",BasicWaveform.Ramp),
 			new WaveformChoice("Impuls",BasicWaveform.Pulse),
 			new WaveformChoice("Szum",BasicWaveform.Noise),
-			new WaveformChoice("DC",BasicWaveform.Dc)
+			new WaveformChoice("DC",BasicWaveform.Dc),
+			new WaveformChoice("Własny",BasicWaveform.Arbitrary)
 		};
 		WaveformSelector.SelectedIndex=0;
 		LoadSelector.SelectedIndex=0;
@@ -67,6 +71,7 @@ public partial class ChannelControl : UserControl
 		updating=true;
 		try
 		{
+			confirmedWaveform=snapshot.Waveform;
 			WaveformSelector.SelectedItem=((WaveformChoice[])WaveformSelector.ItemsSource)
 				.Single(choice=>choice.Value == snapshot.Waveform);
 			frequencyHz=snapshot.FrequencyHz;
@@ -105,11 +110,17 @@ public partial class ChannelControl : UserControl
 		{
 			return;
 		}
+		if(choice.Value == BasicWaveform.Arbitrary)
+		{
+			await LoadArbitraryWaveformAsync(session);
+			return;
+		}
 		try
 		{
 			await session.SetLatestAsync(
 				$"C{channel}:WVTP",
 				SiglentProtocol.WaveformCommand(channel,choice.Value));
+			confirmedWaveform=choice.Value;
 			showStatus($"CH{channel}: ustawiono przebieg {choice.Name}.",false);
 			await RefreshAsync();
 		}
@@ -118,7 +129,63 @@ public partial class ChannelControl : UserControl
 		}
 		catch(Exception exception)
 		{
+			SelectWaveform(confirmedWaveform);
 			showStatus(exception.Message,true);
+		}
+	}
+
+	private async Task LoadArbitraryWaveformAsync(
+		GeneratorSession session)
+	{
+		OpenFileDialog dialog=new()
+		{
+			Filter="Przebieg binarny SIGLENT (*.bin)|*.bin",
+			CheckFileExists=true,
+			Multiselect=false
+		};
+		if(dialog.ShowDialog(Window.GetWindow(this)) != true)
+		{
+			SelectWaveform(confirmedWaveform);
+			return;
+		}
+		try
+		{
+			ArbitraryWaveformData waveform=await Task.Run(
+				()=>ArbitraryWaveformData.FromFile(dialog.FileName));
+			await session.UploadArbitraryWaveformAsync(
+				channel,
+				waveform,
+				frequencyHz,
+				amplitudeVpp,
+				OffsetEditor.Value,
+				PhaseEditor.Value);
+			confirmedWaveform=BasicWaveform.Arbitrary;
+			showStatus(
+				$"CH{channel}: wczytano {waveform.Name}, {waveform.SampleCount:N0} próbek.",
+				false);
+			await RefreshAsync();
+		}
+		catch(Exception exception)
+		{
+			SelectWaveform(confirmedWaveform);
+			showStatus(exception.Message,true);
+		}
+	}
+
+	private void SelectWaveform(BasicWaveform waveform)
+	{
+		bool wasUpdating=updating;
+		updating=true;
+		try
+		{
+			WaveformSelector.SelectedItem=
+				((WaveformChoice[])WaveformSelector.ItemsSource)
+				.Single(choice=>choice.Value == waveform);
+			UpdateFieldVisibility(waveform);
+		}
+		finally
+		{
+			updating=wasUpdating;
 		}
 	}
 
@@ -341,11 +408,11 @@ public partial class ChannelControl : UserControl
 	private void SetOutputState(bool enabled)
 	{
 		outputEnabled=enabled;
-		OutputButton.Content=enabled ? "Wyjście ON" : "Wyjście OFF";
+		OutputButton.Content=enabled ? "ON" : "OFF";
 		OutputButton.Background=enabled
 			? new SolidColorBrush(Color.FromRgb(22,135,70))
-			: new SolidColorBrush(Color.FromRgb(70,70,70));
-		OutputButton.Foreground=Brushes.White;
+			: (Brush)FindResource("LabStationInputBrush");
+		OutputButton.Foreground=enabled ? Brushes.White : Brushes.Black;
 		OutputStateChanged?.Invoke(this,enabled);
 		RaiseSummaryChanged();
 	}
@@ -366,10 +433,10 @@ public partial class ChannelControl : UserControl
 
 	private void UpdateFieldVisibility(BasicWaveform waveform)
 	{
-		FrequencyEditor.Visibility=Visible(waveform is BasicWaveform.Sine or BasicWaveform.Square or BasicWaveform.Ramp or BasicWaveform.Pulse);
-		AmplitudeEditor.Visibility=Visible(waveform is BasicWaveform.Sine or BasicWaveform.Square or BasicWaveform.Ramp or BasicWaveform.Pulse);
-		OffsetEditor.Visibility=Visible(waveform is BasicWaveform.Sine or BasicWaveform.Square or BasicWaveform.Ramp or BasicWaveform.Pulse);
-		PhaseEditor.Visibility=Visible(waveform is BasicWaveform.Sine or BasicWaveform.Square or BasicWaveform.Ramp);
+		FrequencyEditor.Visibility=Visible(waveform is BasicWaveform.Sine or BasicWaveform.Square or BasicWaveform.Ramp or BasicWaveform.Pulse or BasicWaveform.Arbitrary);
+		AmplitudeEditor.Visibility=Visible(waveform is BasicWaveform.Sine or BasicWaveform.Square or BasicWaveform.Ramp or BasicWaveform.Pulse or BasicWaveform.Arbitrary);
+		OffsetEditor.Visibility=Visible(waveform is BasicWaveform.Sine or BasicWaveform.Square or BasicWaveform.Ramp or BasicWaveform.Pulse or BasicWaveform.Arbitrary);
+		PhaseEditor.Visibility=Visible(waveform is BasicWaveform.Sine or BasicWaveform.Square or BasicWaveform.Ramp or BasicWaveform.Arbitrary);
 		DutyEditor.Visibility=Visible(waveform == BasicWaveform.Square);
 		SymmetryEditor.Visibility=Visible(waveform == BasicWaveform.Ramp);
 		PulseWidthEditor.Visibility=Visible(waveform == BasicWaveform.Pulse);

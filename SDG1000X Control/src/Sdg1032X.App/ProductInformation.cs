@@ -12,6 +12,7 @@ public static class ProductInformation
 	public const string AuthorName="Mateusz Skipor";
 	public const string AuthorProfession="Inżynier technik elektroniki";
 	public const string AuthorEmail="mskiporsklep@op.pl";
+	public const string DataDirectoryName="Siglent SDG1000X Control";
 	public const string AuthorText=
 		AuthorName+"\n"+AuthorProfession+"\n"+AuthorEmail;
 
