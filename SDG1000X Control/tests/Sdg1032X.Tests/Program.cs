@@ -448,8 +448,8 @@ Test("Metadane aplikacji zachowują autora, wersję i licencję",()=>
 	Equal("Mateusz Skipor",ProductInformation.AuthorName);
 	Equal("Inżynier technik elektroniki",ProductInformation.AuthorProfession);
 	Equal("mskiporsklep@op.pl",ProductInformation.AuthorEmail);
-	Equal("0.2.3",ProductInformation.Version);
-	Equal("Siglent SDG1000X Control v0.2.3",ProductInformation.GetWindowTitle());
+	Equal("0.2.4",ProductInformation.Version);
+	Equal("Siglent SDG1000X Control v0.2.4",ProductInformation.GetWindowTitle());
 	string license=ProductInformation.LoadLicenseText();
 	if(!license.Contains("PolyForm Noncommercial License 1.0.0",StringComparison.Ordinal))
 	{
@@ -687,6 +687,69 @@ Test("Interfejs zachowuje kompaktowy rozmiar i pełne pola klikalne",()=>
 		{
 			throw new Exception("Generator nie używa wspólnego edytora wartości");
 		}
+		FrameworkElement stepSelector=LogicalChildren<FrameworkElement>(channel1)
+			.Single(element=>element.Name == "StepMultiplierSelector");
+		Button[] stepButtons=LogicalChildren<Button>(stepSelector)
+			.Where(button=>button.Tag is double)
+			.ToArray();
+		string[] stepButtonNames=stepButtons
+			.Select(button=>button.Content?.ToString() ?? "")
+			.ToArray();
+		if(!stepButtonNames.SequenceEqual(["G","M","k","1","m","u","n"]))
+		{
+			throw new Exception("Selektor kroku nie zawiera kompletu mnożników SI");
+		}
+		Button activeStep=stepButtons.Single(button=>Equals(button.Content,"m"));
+		if(activeStep.Background is not SolidColorBrush activeStepBackground ||
+			activeStepBackground.Color != Color.FromRgb(0,255,0) ||
+			activeStep.Foreground is not SolidColorBrush activeStepForeground ||
+			activeStepForeground.Color != Colors.Black)
+		{
+			throw new Exception("Aktywny mnożnik nie ma zielonego tła i czarnego tekstu");
+		}
+		Button inactiveStep=stepButtons.Single(button=>Equals(button.Content,"1"));
+		if(inactiveStep.Background is SolidColorBrush inactiveStepBackground &&
+			inactiveStepBackground.Color == Color.FromRgb(0,255,0) ||
+			inactiveStep.Foreground is not SolidColorBrush inactiveStepForeground ||
+			inactiveStepForeground.Color != Colors.White)
+		{
+			throw new Exception("Nieaktywny mnożnik nie zachowuje standardowego wyglądu przycisku");
+		}
+		NumericValueEditor frequencyEditor=LogicalChildren<NumericValueEditor>(channel1)
+			.Single(editor=>editor.Name == "FrequencyEditor");
+		NumericValueEditor amplitudeEditor=LogicalChildren<NumericValueEditor>(channel1)
+			.Single(editor=>editor.Name == "AmplitudeEditor");
+		NumericValueEditor phaseEditor=LogicalChildren<NumericValueEditor>(channel1)
+			.Single(editor=>editor.Name == "PhaseEditor");
+		NumericValueEditor dutyEditor=LogicalChildren<NumericValueEditor>(channel1)
+			.Single(editor=>editor.Name == "DutyEditor");
+		NumericValueEditor pulseWidthEditor=LogicalChildren<NumericValueEditor>(channel1)
+			.Single(editor=>editor.Name == "PulseWidthEditor");
+		Equal(0.001,frequencyEditor.Step);
+		Equal(0.001,amplitudeEditor.Step);
+		Equal(0.1,phaseEditor.Step);
+		Equal(0.1,dutyEditor.Step);
+		Equal(0.000000001,pulseWidthEditor.Step);
+		inactiveStep.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+		Equal(1d,frequencyEditor.Step);
+		Equal(1d,amplitudeEditor.Step);
+		Equal(1d,phaseEditor.Step);
+		Equal(0.000001,pulseWidthEditor.Step);
+		Button kiloStep=stepButtons.Single(button=>Equals(button.Content,"k"));
+		kiloStep.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+		dutyEditor.Value=0;
+		RepeatButton dutyIncrement=LogicalChildren<RepeatButton>(dutyEditor)
+			.Single(button=>Equals(button.Content,"▲"));
+		RepeatButton dutyDecrement=LogicalChildren<RepeatButton>(dutyEditor)
+			.Single(button=>Equals(button.Content,"▼"));
+		dutyIncrement.RaiseEvent(new RoutedEventArgs(RepeatButton.ClickEvent));
+		Equal(100d,dutyEditor.Value);
+		dutyDecrement.RaiseEvent(new RoutedEventArgs(RepeatButton.ClickEvent));
+		Equal(0d,dutyEditor.Value);
+		Button microStep=stepButtons.Single(button=>Equals(button.Content,"u"));
+		microStep.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+		Equal(0.001,frequencyEditor.Step);
+		Equal(0.1,dutyEditor.Step);
 		MenuItem tools=LogicalChildren<MenuItem>(window)
 			.Single(item=>Equals(item.Header,"Narzędzia"));
 		string[] toolItems=LogicalChildren<MenuItem>(tools)

@@ -1,0 +1,79 @@
+<UserControl
+	x:Class="LabStation.UI.Controls.EngineeringStepSelector"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	Background="Transparent"
+	Foreground="{StaticResource LabStationTextBrush}">
+	<UniformGrid Columns="7">
+		<Button
+			x:Name="GigaButton"
+			Margin="1"
+			Padding="0"
+			MinWidth="0"
+			Height="26"
+			Click="MultiplierClick"
+			Content="G"
+			FontSize="14"
+			ToolTip="Krok 10^9" />
+		<Button
+			x:Name="MegaButton"
+			Margin="1"
+			Padding="0"
+			MinWidth="0"
+			Height="26"
+			Click="MultiplierClick"
+			Content="M"
+			FontSize="14"
+			ToolTip="Krok 10^6" />
+		<Button
+			x:Name="KiloButton"
+			Margin="1"
+			Padding="0"
+			MinWidth="0"
+			Height="26"
+			Click="MultiplierClick"
+			Content="k"
+			FontSize="14"
+			ToolTip="Krok 10^3" />
+		<Button
+			x:Name="OneButton"
+			Margin="1"
+			Padding="0"
+			MinWidth="0"
+			Height="26"
+			Click="MultiplierClick"
+			Content="1"
+			FontSize="14"
+			ToolTip="Krok 1" />
+		<Button
+			x:Name="MilliButton"
+			Margin="1"
+			Padding="0"
+			MinWidth="0"
+			Height="26"
+			Click="MultiplierClick"
+			Content="m"
+			FontSize="14"
+			ToolTip="Krok 10^-3" />
+		<Button
+			x:Name="MicroButton"
+			Margin="1"
+			Padding="0"
+			MinWidth="0"
+			Height="26"
+			Click="MultiplierClick"
+			Content="u"
+			FontSize="14"
+			ToolTip="Krok 10^-6" />
+		<Button
+			x:Name="NanoButton"
+			Margin="1"
+			Padding="0"
+			MinWidth="0"
+			Height="26"
+			Click="MultiplierClick"
+			Content="n"
+			FontSize="14"
+			ToolTip="Krok 10^-9" />
+	</UniformGrid>
+</UserControl>

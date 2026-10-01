@@ -50,6 +50,7 @@ public partial class ChannelControl : UserControl
 		LoadSelector.SelectedIndex=0;
 		PolaritySelector.SelectedIndex=0;
 		UpdateFieldVisibility(BasicWaveform.Sine);
+		ApplyStepMultiplier(StepMultiplierSelector.SelectedMultiplier);
 	}
 
 	public event EventHandler<bool>? OutputStateChanged;
@@ -208,6 +209,35 @@ public partial class ChannelControl : UserControl
 	private void FrequencyCommitted(object sender,NumericValueCommittedEventArgs eventArgs)
 	{
 		Commit(GeneratorParameter.Frequency,eventArgs.Value);
+	}
+
+	private void StepMultiplierChanged(
+		object sender,
+		EngineeringMultiplierChangedEventArgs eventArgs)
+	{
+		ApplyStepMultiplier(eventArgs.Multiplier);
+	}
+
+	private void ApplyStepMultiplier(double multiplier)
+	{
+		SetEditorStep(FrequencyEditor,0.001,multiplier);
+		SetEditorStep(AmplitudeEditor,0.001,multiplier);
+		SetEditorStep(OffsetEditor,0.001,multiplier);
+		SetEditorStep(PhaseEditor,0.1,multiplier);
+		SetEditorStep(DutyEditor,0.1,multiplier);
+		SetEditorStep(SymmetryEditor,0.1,multiplier);
+		SetEditorStep(PulseWidthEditor,0.001,multiplier);
+		SetEditorStep(NoiseDeviationEditor,0.001,multiplier);
+		SetEditorStep(NoiseMeanEditor,0.001,multiplier);
+		SetEditorStep(DcLevelEditor,0.001,multiplier);
+	}
+
+	private static void SetEditorStep(
+		NumericValueEditor editor,
+		double minimumVisibleStep,
+		double multiplier)
+	{
+		editor.Step=Math.Max(minimumVisibleStep,multiplier)*editor.Scale;
 	}
 
 	private void AmplitudeCommitted(object sender,NumericValueCommittedEventArgs eventArgs)

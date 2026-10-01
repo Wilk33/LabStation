@@ -74,3 +74,17 @@ Nie wysyłano pliku CSV ani BIN do fizycznego generatora, ponieważ byłoby to p
 - parser EasyWave CSV oraz transfer `WVDT` i wybór `ARWV` pozostały objęte testami automatycznymi.
 
 Nie wykonywano zapisu przebiegu do fizycznego generatora. Poprzedni test skanowania `*IDN?` pozostaje testem wyłącznie do odczytu.
+
+## Walidacja wersji 0.2.4
+
+1 października 2026 r. wykonano testy programowe precyzyjnych kroków nastaw bez zapisu do fizycznego generatora:
+
+- domyślny krok częstotliwości, amplitudy i offsetu wynosi `0,001` w jednostce widocznej przy polu,
+- domyślny krok fazy, wypełnienia i symetrii wynosi `0,1`,
+- selektor zawiera mnożniki `G`, `M`, `k`, `1`, `m`, `u`, `n`,
+- aktywne `m` ma zielone tło i czarny tekst, a nieaktywne przyciski standardowe tło i biały tekst,
+- mnożniki mniejsze od rozdzielczości pola nie zmniejszają kroku poniżej najmniejszej widocznej wartości,
+- duży krok jest ograniczany przez minimum i maksimum pola, na przykład wypełnienie przechodzi jednym kliknięciem z `0` do `100` i z `100` do `0`,
+- wybór mnożnika i użycie strzałek nie zmienia mechanizmu kolejki `latest-wins`.
+
+Nie wykonywano zmiany nastaw na fizycznym generatorze.
