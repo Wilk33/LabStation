@@ -38,6 +38,8 @@ public sealed class SingleSupplyViewModel : ObservableObject,ISupplyModeViewMode
 	private bool hasValidationError;
 	private bool closing;
 	private int faultCleanupScheduled;
+	private int voltageStep=1;
+	private int currentStep=1;
 
 	public event EventHandler<bool>? OutputStateChanged;
 	public event EventHandler<bool>? ConnectionStateChanged;
@@ -89,6 +91,16 @@ public sealed class SingleSupplyViewModel : ObservableObject,ISupplyModeViewMode
 	public RelayCommand CommitVoltageCommand { get; private set; }=null!;
 	public RelayCommand CommitCurrentCommand { get; private set; }=null!;
 	public AsyncRelayCommand ToggleOutputCommand { get; private set; }=null!;
+
+	public void SetStepMultiplier(double multiplier)
+	{
+		if(multiplier<=0 || double.IsNaN(multiplier) || double.IsInfinity(multiplier))
+		{
+			throw new ArgumentOutOfRangeException(nameof(multiplier));
+		}
+		voltageStep=Math.Max(1,(int)Math.Round(multiplier*100));
+		currentStep=Math.Max(1,(int)Math.Round(multiplier*1000));
+	}
 
 	public ObservableCollection<string> AvailablePorts { get; }=[];
 
@@ -356,10 +368,10 @@ public sealed class SingleSupplyViewModel : ObservableObject,ISupplyModeViewMode
 
 	private void InitializeCommands()
 	{
-		IncrementVoltageCommand=new RelayCommand(_=>ChangeVoltage(1));
-		DecrementVoltageCommand=new RelayCommand(_=>ChangeVoltage(-1));
-		IncrementCurrentCommand=new RelayCommand(_=>ChangeCurrent(1));
-		DecrementCurrentCommand=new RelayCommand(_=>ChangeCurrent(-1));
+		IncrementVoltageCommand=new RelayCommand(_=>ChangeVoltage(voltageStep));
+		DecrementVoltageCommand=new RelayCommand(_=>ChangeVoltage(-voltageStep));
+		IncrementCurrentCommand=new RelayCommand(_=>ChangeCurrent(currentStep));
+		DecrementCurrentCommand=new RelayCommand(_=>ChangeCurrent(-currentStep));
 		CommitVoltageCommand=new RelayCommand(_=>CommitVoltage());
 		CommitCurrentCommand=new RelayCommand(_=>CommitCurrent());
 		ToggleOutputCommand=new AsyncRelayCommand(

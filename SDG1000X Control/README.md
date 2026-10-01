@@ -1,4 +1,4 @@
-# Siglent SDG1000X Control v0.2.4
+# Siglent SDG1000X Control v0.2.5
 
 Wąska aplikacja Windows do podstawowego sterowania dwukanałowym generatorem SIGLENT SDG1032X przez LAN/VXI-11. Główna powierzchnia `GeneratorView` jest panelem wielokrotnego użytku, a samodzielne EXE jest jego cienką powłoką.
 
@@ -17,7 +17,9 @@ Wąska aplikacja Windows do podstawowego sterowania dwukanałowym generatorem SI
 - Operacje sieciowe nie blokują wątku interfejsu.
 - Szybkie zmiany tego samego parametru są łączone, a do urządzenia trafia najnowsza oczekująca wartość.
 - Strzałki domyślnie zmieniają wartość o najmniejszy widoczny krok. Selektor `G`, `M`, `k`, `1`, `m`, `u`, `n` na dole kanału wybiera większy lub mniejszy krok we wskazanej jednostce.
-- Aktywny mnożnik ma zielone tło i czarny tekst. Nieaktywne mnożniki zachowują standardowy wygląd przycisku i biały tekst.
+- Aktywny mnożnik ma zielone tło i czarny tekst. Nieaktywne mnożniki zachowują standardowy wygląd przycisku i biały tekst. Podczas najechania tekst każdego mnożnika jest biały.
+- Zwykły status ma biały tekst, a czerwony kolor jest zarezerwowany dla błędów.
+- Samodzielny plik wykonywalny ma ogólną nazwę `Siglent.SDG1000X.Control.exe`, bez oznaczenia konkretnego modelu.
 - Mnożnik nie pozwala zejść poniżej najmniejszego widocznego kroku pola, a każda zmiana pozostaje ograniczona do zakresu nastawy.
 
 ## Obsługiwane ustawienia
@@ -79,12 +81,12 @@ Aplikacja nie zawiera trybu demonstracyjnego ani symulowanego urządzenia.
 Wymagany jest .NET 10 SDK dla Windows.
 
     dotnet run --project tests/Sdg1032X.Tests/Sdg1032X.Tests.csproj -c Release
-    dotnet build SDG1032X.slnx -c Release
+    dotnet build SDG1000X.Control.slnx -c Release
     dotnet publish src/Sdg1032X.App/Sdg1032X.App.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true
 
 ## Status weryfikacji
 
-Testy automatyczne nie łączą się z fizycznym urządzeniem i nie zmieniają jego stanu. Zakres ograniczonej walidacji wcześniejszej wersji 0.1.2 na rzeczywistym generatorze oraz pełna procedura testowa są opisane w [docs/hardware-testing.md](docs/hardware-testing.md). Wersja 0.2.4 została zweryfikowana programowo, włącznie z parserem rzeczywistego układu pliku EasyWave CSV, kodowaniem próbek, selektorem mnożnika i ograniczaniem kroków do zakresu nastaw. Skanowanie sieci jest dodatkowo sprawdzane na rzeczywistym urządzeniu wyłącznie przez odczyt `*IDN?`. Wysyłanie przebiegu arbitralnego nie zostało potwierdzone na fizycznym generatorze w ramach tego wydania.
+Testy automatyczne nie łączą się z fizycznym urządzeniem i nie zmieniają jego stanu. Zakres ograniczonej walidacji wcześniejszej wersji 0.1.2 na rzeczywistym generatorze oraz pełna procedura testowa są opisane w [docs/hardware-testing.md](docs/hardware-testing.md). Wersja 0.2.5 została zweryfikowana programowo, włącznie z parserem rzeczywistego układu pliku EasyWave CSV, kodowaniem próbek, selektorem mnożnika, jego stanem hover i ograniczaniem kroków do zakresu nastaw. Skanowanie sieci jest dodatkowo sprawdzane na rzeczywistym urządzeniu wyłącznie przez odczyt `*IDN?`. Wysyłanie przebiegu arbitralnego nie zostało potwierdzone na fizycznym generatorze w ramach tego wydania.
 
 ## Autor i licencja
 

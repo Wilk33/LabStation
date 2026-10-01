@@ -278,7 +278,7 @@ public partial class GeneratorView : UserControl,IAsyncDisposable
 			: "Status: "+message;
 		StatusText.Foreground=error
 			? new SolidColorBrush(Color.FromRgb(255,128,128))
-			: (Brush)FindResource("LabStationMutedTextBrush");
+			: (Brush)FindResource("LabStationTextBrush");
 	}
 
 	private void SaveSettings()

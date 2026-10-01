@@ -7,7 +7,7 @@
 	Title="Siglent SDG1000X Control"
 	Width="350"
 	Height="749"
-	Icon="/SDG1032X.Controller;component/Assets/sdg1062x.ico"
+	Icon="/Siglent.SDG1000X.Control;component/Assets/sdg1062x.ico"
 	ResizeMode="NoResize"
 	WindowStartupLocation="CenterScreen">
 	<DockPanel>

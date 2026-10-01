@@ -1,5 +1,10 @@
 # Zmiany
 
+## 0.7.2 - 2026-10-01
+
+- Nieaktywny przycisk kursora ma biały tekst, aktywny czarny, a podczas najechania tekst jest biały.
+- Status ma biały tekst we wszystkich stanach normalnych i czerwony tekst przy błędzie.
+
 ## 0.7.1 - 2026-09-30
 
 - Ustanowiono kompaktowy rozmiar przycisków Korada jako wspólny standard; większa szerokość wynika wyłącznie z zawartości.
@@ -12,7 +17,7 @@
 
 ## 0.7.0 - 2026-09-30
 
-- Ujednolicono wymiary głównych przycisków i czterech przycisków kursorów ze standardem Korada. Tekst przycisków kursorów jest zawsze czarny.
+- Ujednolicono wymiary głównych przycisków i czterech przycisków kursorów ze standardem Korada.
 - Dodano menu `Narzędzia` z odczytowym skanem sieci lokalnej i zapamiętywaną opcją `Auto connect`.
 - Przeniesiono ogólny mechanizm wykrywania urządzeń VXI-11 do `Shared/LabStation.Instruments`; obsługiwany model nadal wybiera `Scope.Core`.
 - Zastąpiono dolny przycisk CSV menu `Zapisz jako` z osobnymi pozycjami dla CH1, CH2 oraz obu kanałów.

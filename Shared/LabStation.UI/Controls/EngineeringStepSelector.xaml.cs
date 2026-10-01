@@ -11,7 +11,17 @@ public sealed class EngineeringMultiplierChangedEventArgs(double multiplier) : E
 
 public partial class EngineeringStepSelector : UserControl
 {
+	public static readonly DependencyProperty VisibleMultipliersProperty=
+		DependencyProperty.Register(
+			nameof(VisibleMultipliers),
+			typeof(string),
+			typeof(EngineeringStepSelector),
+			new FrameworkPropertyMetadata(
+				"G,M,k,1,m,u,n",
+				OnVisibleMultipliersChanged));
+
 	private readonly Dictionary<Button,double> multipliers;
+	private readonly HashSet<Button> hoveringButtons=[];
 
 	public EngineeringStepSelector()
 	{
@@ -29,13 +39,22 @@ public partial class EngineeringStepSelector : UserControl
 		foreach((Button button,double multiplier) in multipliers)
 		{
 			button.Tag=multiplier;
+			button.MouseEnter+=ButtonMouseEnter;
+			button.MouseLeave+=ButtonMouseLeave;
 		}
+		ApplyVisibleMultipliers();
 		ApplyVisualState();
 	}
 
 	public event EventHandler<EngineeringMultiplierChangedEventArgs>? MultiplierChanged;
 
 	public double SelectedMultiplier { get; private set; }=0.001;
+
+	public string VisibleMultipliers
+	{
+		get=>(string)GetValue(VisibleMultipliersProperty);
+		set=>SetValue(VisibleMultipliersProperty,value);
+	}
 
 	private void MultiplierClick(object sender,RoutedEventArgs eventArgs)
 	{
@@ -53,16 +72,72 @@ public partial class EngineeringStepSelector : UserControl
 	{
 		foreach((Button button,double multiplier) in multipliers)
 		{
-			if(multiplier == SelectedMultiplier)
+			ApplyButtonVisualState(button,multiplier);
+		}
+	}
+
+	private void ApplyButtonVisualState(Button button,double multiplier)
+	{
+		if(multiplier == SelectedMultiplier)
+		{
+			button.Background=(Brush)FindResource("LabStationOnActiveBrush");
+			button.Foreground=hoveringButtons.Contains(button)
+				? Brushes.White
+				: Brushes.Black;
+		}
+		else
+		{
+			button.Background=(Brush)FindResource("LabStationInputBrush");
+			button.Foreground=(Brush)FindResource("LabStationTextBrush");
+		}
+	}
+
+	private void ButtonMouseEnter(object sender,System.Windows.Input.MouseEventArgs eventArgs)
+	{
+		if(sender is Button button)
+		{
+			hoveringButtons.Add(button);
+			button.Foreground=Brushes.White;
+		}
+	}
+
+	private void ButtonMouseLeave(object sender,System.Windows.Input.MouseEventArgs eventArgs)
+	{
+		if(sender is Button button &&
+			multipliers.TryGetValue(button,out double multiplier))
+		{
+			hoveringButtons.Remove(button);
+			ApplyButtonVisualState(button,multiplier);
+		}
+	}
+
+	private static void OnVisibleMultipliersChanged(
+		DependencyObject sender,
+		DependencyPropertyChangedEventArgs eventArgs)
+	{
+		((EngineeringStepSelector)sender).ApplyVisibleMultipliers();
+	}
+
+	private void ApplyVisibleMultipliers()
+	{
+		if(multipliers is null)
+		{
+			return;
+		}
+		HashSet<string> visible=VisibleMultipliers.Split(
+			',',
+			StringSplitOptions.RemoveEmptyEntries|StringSplitOptions.TrimEntries)
+			.ToHashSet(StringComparer.Ordinal);
+		int visibleCount=0;
+		foreach(Button button in multipliers.Keys)
+		{
+			bool show=visible.Contains(button.Content?.ToString() ?? string.Empty);
+			button.Visibility=show ? Visibility.Visible : Visibility.Collapsed;
+			if(show)
 			{
-				button.Background=(Brush)FindResource("LabStationOnActiveBrush");
-				button.Foreground=Brushes.Black;
-			}
-			else
-			{
-				button.Background=(Brush)FindResource("LabStationInputBrush");
-				button.Foreground=(Brush)FindResource("LabStationTextBrush");
+				visibleCount++;
 			}
 		}
+		ButtonPanel.Columns=Math.Max(1,visibleCount);
 	}
 }

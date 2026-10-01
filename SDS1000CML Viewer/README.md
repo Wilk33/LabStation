@@ -1,4 +1,4 @@
-# Siglent SDS1000CML Viewer v0.7.1
+# Siglent SDS1000CML Viewer v0.7.2
 
 Prosta aplikacja Windows do podglądu CH1/CH2 i pobierania przebiegów do CSV.
 C# / WPF, szary interfejs zgodny z Koradem i czcionka Consolas. Bez EasyScopeX, NI-VISA, pakietów NI i zależności NuGet.
@@ -16,7 +16,7 @@ Aplikacja nie wymaga uprawnień administratora.
 - Połączenie LAN przez VXI-11.
 - Cykliczny podgląd przebiegów CH1 i CH2. Odznaczenie „Podgląd” zatrzymuje wyłącznie odświeżanie programu.
 - Vpp, Vrms, częstotliwość, Vmin, Vmax i Duty są odczytywane dla wybranych i dostępnych kanałów.
-- Cztery lokalne kursory pokazują czas i napięcie zaznaczonych kanałów oraz różnice dla kolejnych aktywnych par. Ich przyciski korzystają ze wspólnego standardu Korada i mają czarny tekst.
+- Cztery lokalne kursory pokazują czas i napięcie zaznaczonych kanałów oraz różnice dla kolejnych aktywnych par. Nieaktywny przycisk ma biały tekst, aktywny czarny, a podczas najechania tekst jest biały.
 - Rolka myszy nad wykresem zmienia wyłącznie lokalny zakres osi czasu.
 - „Pobierz przebieg” zachowuje pełny odebrany blok próbek w pamięci aplikacji.
 - Menu `Zapisz jako` zapisuje ostatni ręcznie pobrany przebieg jako `CH1 CSV`, `CH2 CSV` albo `CH1 i CH2 CSV`. Pozycje wymagające nieobecnego kanału są nieaktywne. Późniejsze odświeżenia podglądu nie zastępują ręcznie pobranego przebiegu.
@@ -83,6 +83,10 @@ liczba rzeczywiście odebranych punktów jest widoczna w programie.
 Wykres stosuje min/max przy ograniczaniu punktów do szerokości ekranu.
 CSV zawiera wszystkie odebrane próbki, bez tego ograniczenia.
 Niepełny lub nierozpoznany deskryptor jest odrzucany.
+
+## Stan wersji 0.7.2
+
+W wersji 0.7.2 ujednolicono stany tekstu przycisków kursorów ze wspólnym standardem LabStation. Status ma biały tekst dla stanów normalnych, a czerwony wyłącznie dla błędu.
 
 ## Stan wersji 0.7.1
 

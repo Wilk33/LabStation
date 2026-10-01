@@ -70,6 +70,29 @@ public sealed class SingleSupplyViewModelTests
 		Assert.False(viewModel.HasValidationError);
 	}
 
+	[Fact]
+	public void StepMultiplier_ChangesArrowPrecisionBetweenBaseAndMilli()
+	{
+		FakePowerSupplySession session=new();
+		SingleSupplyViewModel viewModel=new(session)
+		{
+			VoltageText="12,00",
+			CurrentText="1,000"
+		};
+
+		viewModel.SetStepMultiplier(1);
+		viewModel.IncrementVoltageCommand.Execute(null);
+		viewModel.IncrementCurrentCommand.Execute(null);
+		Assert.Equal("13,00",viewModel.VoltageText);
+		Assert.Equal("2,000",viewModel.CurrentText);
+
+		viewModel.SetStepMultiplier(0.001);
+		viewModel.IncrementVoltageCommand.Execute(null);
+		viewModel.IncrementCurrentCommand.Execute(null);
+		Assert.Equal("13,01",viewModel.VoltageText);
+		Assert.Equal("2,001",viewModel.CurrentText);
+	}
+
 	[Theory]
 	[InlineData("12,34",1234)]
 	[InlineData("12.34",1234)]

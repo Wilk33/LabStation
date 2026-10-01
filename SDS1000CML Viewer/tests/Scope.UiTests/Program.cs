@@ -3,6 +3,7 @@ using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Scope.App;
@@ -73,7 +74,7 @@ internal static class Program
 
 	private static void AssertApplicationIdentity(MainWindow window)
 	{
-		if(window.Title != "Siglent SDS1000CML Viewer v0.7.1")
+		if(window.Title != "Siglent SDS1000CML Viewer v0.7.2")
 		{
 			throw new Exception("Unexpected main-window title: "+window.Title);
 		}
@@ -190,7 +191,7 @@ internal static class Program
 			if(!ReferenceEquals(cursor.Style,cursorStyle) ||
 				cursor.Width != 76 ||
 				cursor.ActualHeight>30 ||
-				(cursor.Foreground as SolidColorBrush)?.Color != Colors.Black)
+				(cursor.Foreground as SolidColorBrush)?.Color != Colors.White)
 			{
 				throw new Exception("Cursor button does not use the Korad standard");
 			}
@@ -312,6 +313,20 @@ internal static class Program
 		if(!acquisition.Text.StartsWith("Status: ",StringComparison.Ordinal))
 		{
 			throw new Exception("Oscilloscope status does not use the compact prefix");
+		}
+		if((acquisition.Foreground as SolidColorBrush)?.Color != Colors.White)
+		{
+			throw new Exception("Zwykły status oscyloskopu nie ma białego tekstu");
+		}
+		MethodInfo showError=typeof(OscilloscopeView).GetMethod(
+			"ShowError",
+			BindingFlags.Instance|BindingFlags.NonPublic)
+			?? throw new Exception("Brak obsługi statusu błędu");
+		showError.Invoke(panel,[new InvalidOperationException("test"),false]);
+		if(!acquisition.Text.StartsWith("Status: BŁĄD - ",StringComparison.Ordinal) ||
+			(acquisition.Foreground as SolidColorBrush)?.Color != Color.FromRgb(255,128,128))
+		{
+			throw new Exception("Błąd oscyloskopu nie ustawia czerwonego statusu");
 		}
 	}
 
@@ -606,7 +621,7 @@ internal static class Program
 			"\n",
 			Descendants<TextBlock>(author).Select(text=>text.Text));
 		if(author.Title !=
-			"Autor - Siglent SDS1000CML Viewer v0.7.1" ||
+			"Autor - Siglent SDS1000CML Viewer v0.7.2" ||
 			!authorText.Contains("Mateusz Skipor",StringComparison.Ordinal) ||
 			!authorText.Contains(
 				"Inżynier technik elektroniki",
@@ -631,7 +646,7 @@ internal static class Program
 		Pump();
 		TextBox licenseText=Descendants<TextBox>(license).Single();
 		if(license.Title !=
-			"Licencja - Siglent SDS1000CML Viewer v0.7.1" ||
+			"Licencja - Siglent SDS1000CML Viewer v0.7.2" ||
 			!licenseText.IsReadOnly ||
 			!licenseText.Text.Contains(
 				"PolyForm Noncommercial License 1.0.0",
@@ -671,8 +686,12 @@ internal static class Program
 				"Mouse-wheel zoom did not narrow the time axis");
 		}
 		plot.ClearCursors();
-		plot.ActivateOrSelectCursor(0);
 		Button cursor1=Named<Button>(panel,"Cursor1Button");
+		cursor1.RaiseEvent(new MouseEventArgs(Mouse.PrimaryDevice,0)
+		{
+			RoutedEvent=Mouse.MouseEnterEvent
+		});
+		plot.ActivateOrSelectCursor(0);
 		if(cursor1.BorderThickness != new Thickness(1) ||
 			(cursor1.BorderBrush as SolidColorBrush)?.Color != Colors.Black ||
 			(string?)cursor1.Content != "Kursor 1" ||
@@ -681,6 +700,18 @@ internal static class Program
 		{
 			throw new Exception(
 				"Active cursor adds a button outline or changes its label");
+		}
+		if((cursor1.Foreground as SolidColorBrush)?.Color != Colors.White)
+		{
+			throw new Exception("Aktywacja kursora podczas hover nie zachowuje białego tekstu");
+		}
+		cursor1.RaiseEvent(new MouseEventArgs(Mouse.PrimaryDevice,0)
+		{
+			RoutedEvent=Mouse.MouseLeaveEvent
+		});
+		if((cursor1.Foreground as SolidColorBrush)?.Color != Colors.Black)
+		{
+			throw new Exception("Kursor po hover nie odzyskuje czarnego tekstu");
 		}
 		plot.ActivateOrSelectCursor(1);
 		plot.ActivateOrSelectCursor(2);

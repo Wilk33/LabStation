@@ -84,8 +84,16 @@
 			<Grid.ColumnDefinitions>
 				<ColumnDefinition Width="*" />
 				<ColumnDefinition Width="Auto" />
+				<ColumnDefinition Width="Auto" />
 			</Grid.ColumnDefinitions>
-			<Button Grid.Column="1" Width="86" Command="{Binding ToggleOutputCommand}" Content="{Binding OutputButtonText}" />
+			<controls:EngineeringStepSelector
+				x:Name="StepMultiplierSelector"
+				Grid.Column="1"
+				Width="64"
+				Margin="0,3,2,3"
+				VisibleMultipliers="1,m"
+				MultiplierChanged="StepMultiplierChanged" />
+			<Button x:Name="OutputButton" Grid.Column="2" Width="86" Command="{Binding ToggleOutputCommand}" Content="{Binding OutputButtonText}" />
 		</Grid>
 		<Grid Grid.Row="4" Margin="0,6,0,0">
 			<Grid.ColumnDefinitions>

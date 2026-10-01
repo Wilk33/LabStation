@@ -4,7 +4,7 @@
 	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
 	Background="Transparent"
 	Foreground="{StaticResource LabStationTextBrush}">
-	<UniformGrid Columns="7">
+	<UniformGrid x:Name="ButtonPanel" Columns="7">
 		<Button
 			x:Name="GigaButton"
 			Margin="1"

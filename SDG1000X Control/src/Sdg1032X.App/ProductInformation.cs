@@ -38,7 +38,7 @@ public static class ProductInformation
 		AuthorEmail,
 		LoadLicenseText(),
 		BitmapFrame.Create(new Uri(
-			"pack://application:,,,/SDG1032X.Controller;component/Assets/sdg1062x.ico")));
+			"pack://application:,,,/Siglent.SDG1000X.Control;component/Assets/sdg1062x.ico")));
 
 	public static string LoadLicenseText()
 	{

@@ -2,9 +2,9 @@
 	<PropertyGroup>
 		<OutputType>WinExe</OutputType>
 		<UseWPF>true</UseWPF>
-		<AssemblyName>SDG1032X.Controller</AssemblyName>
-		<Product>SIGLENT SDG1032X Controller</Product>
-		<Description>Podstawowe sterowanie generatorem SIGLENT SDG1032X przez LAN/VXI-11</Description>
+		<AssemblyName>Siglent.SDG1000X.Control</AssemblyName>
+		<Product>SIGLENT SDG1000X Control</Product>
+		<Description>Sterowanie generatorami SIGLENT serii SDG1000X przez LAN/VXI-11</Description>
 		<PackageLicenseExpression>PolyForm-Noncommercial-1.0.0</PackageLicenseExpression>
 		<ApplicationIcon>../../sdg1062x.ico</ApplicationIcon>
 	</PropertyGroup>

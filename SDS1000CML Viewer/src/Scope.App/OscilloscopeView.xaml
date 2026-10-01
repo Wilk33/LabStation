@@ -130,7 +130,7 @@
 			VerticalAlignment="Center"
 			FontSize="14"
 			FontWeight="Bold"
-			Foreground="#FFC0C0C0"
+			Foreground="{StaticResource LabStationTextBrush}"
 			Text="Status: OFFLINE"
 			TextTrimming="CharacterEllipsis" />
 	</Grid>

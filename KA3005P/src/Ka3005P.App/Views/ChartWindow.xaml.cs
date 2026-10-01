@@ -36,11 +36,12 @@ public partial class ChartWindow : Window
 		];
 		for(int index=0;index<buttons.Length;index++)
 		{
-			buttons[index].Background=Chart.IsCursorActive(index)
-				? new System.Windows.Media.SolidColorBrush(
-					TimeSeriesPlot.CursorColor(index))
-				: (System.Windows.Media.Brush)FindResource(
-					"KoradInputBrush");
+			CursorButtonVisual.Apply(
+				buttons[index],
+				Chart.IsCursorActive(index),
+				new System.Windows.Media.SolidColorBrush(
+					TimeSeriesPlot.CursorColor(index)),
+				(System.Windows.Media.Brush)FindResource("KoradInputBrush"));
 		}
 	}
 

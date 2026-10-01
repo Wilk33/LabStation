@@ -102,6 +102,26 @@ public sealed class DualSupplyViewModelTests
 	}
 
 	[Fact]
+	public void StepMultiplier_ChangesArrowPrecisionBetweenBaseAndMilli()
+	{
+		(DualSupplyViewModel viewModel,_,_)=CreateViewModel();
+		viewModel.VoltageText="12,00";
+		viewModel.CurrentText="1,000";
+
+		viewModel.SetStepMultiplier(1);
+		viewModel.IncrementVoltageCommand.Execute(null);
+		viewModel.IncrementCurrentCommand.Execute(null);
+		Assert.Equal("13,00",viewModel.VoltageText);
+		Assert.Equal("2,000",viewModel.CurrentText);
+
+		viewModel.SetStepMultiplier(0.001);
+		viewModel.IncrementVoltageCommand.Execute(null);
+		viewModel.IncrementCurrentCommand.Execute(null);
+		Assert.Equal("13,01",viewModel.VoltageText);
+		Assert.Equal("2,001",viewModel.CurrentText);
+	}
+
+	[Fact]
 	public async Task Connect_EnablesOutputCommand()
 	{
 		DualSupplyViewModel viewModel=new(

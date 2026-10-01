@@ -6,6 +6,7 @@ using Ka3005P.App.Controls;
 using LabStation.UI.Controls;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 
 namespace Ka3005P.Tests.ViewModels;
@@ -122,17 +123,27 @@ public sealed class ChartViewModelTests
 			Assert.Same(cursorStyle,second.Style);
 			Assert.Equal(76,first.Width);
 			Assert.Equal(76,second.Width);
-			Assert.Equal(Colors.Black,((SolidColorBrush)first.Foreground).Color);
-			Assert.Equal(Colors.Black,((SolidColorBrush)second.Foreground).Color);
+			Assert.Equal(Colors.White,((SolidColorBrush)first.Foreground).Color);
+			Assert.Equal(Colors.White,((SolidColorBrush)second.Foreground).Color);
 			Color inputColor=((SolidColorBrush)window.FindResource(
 				"KoradInputBrush")).Color;
 			Assert.Equal(inputColor,((SolidColorBrush)first.Background).Color);
 			Assert.Equal(inputColor,((SolidColorBrush)second.Background).Color);
 			Assert.Equal(new Thickness(1),first.BorderThickness);
+			first.RaiseEvent(new MouseEventArgs(Mouse.PrimaryDevice,0)
+			{
+				RoutedEvent=Mouse.MouseEnterEvent
+			});
 			chart.ActivateOrSelectCursor(0);
 			Assert.Equal(
 				TimeSeriesPlot.CursorColor(0),
 				((SolidColorBrush)first.Background).Color);
+			Assert.Equal(Colors.White,((SolidColorBrush)first.Foreground).Color);
+			first.RaiseEvent(new MouseEventArgs(Mouse.PrimaryDevice,0)
+			{
+				RoutedEvent=Mouse.MouseLeaveEvent
+			});
+			Assert.Equal(Colors.Black,((SolidColorBrush)first.Foreground).Color);
 			Assert.Equal(inputColor,((SolidColorBrush)second.Background).Color);
 			Assert.Equal(new Thickness(1),first.BorderThickness);
 			chart.ActivateOrSelectCursor(0);
@@ -142,8 +153,44 @@ public sealed class ChartViewModelTests
 			Ka3005P.App.MainWindow main=new();
 			Assert.Equal(System.Windows.ResizeMode.CanMinimize,main.ResizeMode);
 			main.Close();
+			SingleSupplyView single=new()
+			{
+				DataContext=new SingleSupplyViewModel(new FakePowerSupplySession())
+			};
+			DualSupplyView dual=new();
+			AssertStepSelector(single);
+			AssertStepSelector(dual);
 			application.Shutdown();
 		});
+	}
+
+	private static void AssertStepSelector(UserControl view)
+	{
+		EngineeringStepSelector selector=(EngineeringStepSelector)(
+			view.FindName("StepMultiplierSelector") ??
+			throw new Exception("Brak selektora kroku"));
+		Button output=(Button)(view.FindName("OutputButton") ??
+			throw new Exception("Brak przycisku wyjścia"));
+		Button one=(Button)(selector.FindName("OneButton") ??
+			throw new Exception("Brak przycisku 1"));
+		Button milli=(Button)(selector.FindName("MilliButton") ??
+			throw new Exception("Brak przycisku m"));
+		Button[] hidden=
+		[
+			(Button)selector.FindName("GigaButton"),
+			(Button)selector.FindName("MegaButton"),
+			(Button)selector.FindName("KiloButton"),
+			(Button)selector.FindName("MicroButton"),
+			(Button)selector.FindName("NanoButton")
+		];
+
+		Assert.Equal(Grid.GetColumn(selector)+1,Grid.GetColumn(output));
+		Assert.Equal(Visibility.Visible,one.Visibility);
+		Assert.Equal(Visibility.Visible,milli.Visibility);
+		Assert.All(hidden,button=>Assert.Equal(Visibility.Collapsed,button.Visibility));
+		Assert.Equal(0.001,selector.SelectedMultiplier);
+		one.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+		Assert.Equal(1,selector.SelectedMultiplier);
 	}
 
 	[Fact]

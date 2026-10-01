@@ -1,9 +1,11 @@
 using System.Globalization;
 using System.IO;
+using System.Reflection;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
@@ -448,8 +450,9 @@ Test("Metadane aplikacji zachowują autora, wersję i licencję",()=>
 	Equal("Mateusz Skipor",ProductInformation.AuthorName);
 	Equal("Inżynier technik elektroniki",ProductInformation.AuthorProfession);
 	Equal("mskiporsklep@op.pl",ProductInformation.AuthorEmail);
-	Equal("0.2.4",ProductInformation.Version);
-	Equal("Siglent SDG1000X Control v0.2.4",ProductInformation.GetWindowTitle());
+	Equal("0.2.5",ProductInformation.Version);
+	Equal("Siglent SDG1000X Control v0.2.5",ProductInformation.GetWindowTitle());
+	Equal("Siglent.SDG1000X.Control",typeof(MainWindow).Assembly.GetName().Name);
 	string license=ProductInformation.LoadLicenseText();
 	if(!license.Contains("PolyForm Noncommercial License 1.0.0",StringComparison.Ordinal))
 	{
@@ -573,6 +576,27 @@ Test("Interfejs zachowuje kompaktowy rozmiar i pełne pola klikalne",()=>
 		TextBlock status=LogicalChildren<TextBlock>(window)
 			.Single(textBlock=>textBlock.Name == "StatusText");
 		Equal("Status: OFFLINE",status.Text);
+		if(status.Foreground is not SolidColorBrush statusForeground ||
+			statusForeground.Color != Colors.White)
+		{
+			throw new Exception("Zwykły status Generatora nie ma białego tekstu");
+		}
+		MethodInfo showStatus=typeof(GeneratorView).GetMethod(
+			"ShowStatus",
+			BindingFlags.Instance|BindingFlags.NonPublic)
+			?? throw new Exception("Brak obsługi statusu Generatora");
+		showStatus.Invoke(generatorView,["BŁĄD TESTOWY",true]);
+		if(status.Foreground is not SolidColorBrush errorForeground ||
+			errorForeground.Color != Color.FromRgb(255,128,128))
+		{
+			throw new Exception("Błąd Generatora nie ustawia czerwonego statusu");
+		}
+		showStatus.Invoke(generatorView,["ONLINE",false]);
+		if(status.Foreground is not SolidColorBrush restoredForeground ||
+			restoredForeground.Color != Colors.White)
+		{
+			throw new Exception("Status Generatora po błędzie nie wraca do białego tekstu");
+		}
 
 		TabControl tabs=LogicalChildren<TabControl>(window)
 			.Single(tabControl=>tabControl.Name == "ChannelTabs");
@@ -707,6 +731,19 @@ Test("Interfejs zachowuje kompaktowy rozmiar i pełne pola klikalne",()=>
 		{
 			throw new Exception("Aktywny mnożnik nie ma zielonego tła i czarnego tekstu");
 		}
+		activeStep.RaiseEvent(new MouseEventArgs(Mouse.PrimaryDevice,0)
+		{
+			RoutedEvent=Mouse.MouseEnterEvent
+		});
+		if(activeStep.Foreground is not SolidColorBrush hoverForeground ||
+			hoverForeground.Color != Colors.White)
+		{
+			throw new Exception("Hover aktywnego mnożnika nie ustawia białego tekstu");
+		}
+		activeStep.RaiseEvent(new MouseEventArgs(Mouse.PrimaryDevice,0)
+		{
+			RoutedEvent=Mouse.MouseLeaveEvent
+		});
 		Button inactiveStep=stepButtons.Single(button=>Equals(button.Content,"1"));
 		if(inactiveStep.Background is SolidColorBrush inactiveStepBackground &&
 			inactiveStepBackground.Color == Color.FromRgb(0,255,0) ||
@@ -730,7 +767,25 @@ Test("Interfejs zachowuje kompaktowy rozmiar i pełne pola klikalne",()=>
 		Equal(0.1,phaseEditor.Step);
 		Equal(0.1,dutyEditor.Step);
 		Equal(0.000000001,pulseWidthEditor.Step);
+		inactiveStep.RaiseEvent(new MouseEventArgs(Mouse.PrimaryDevice,0)
+		{
+			RoutedEvent=Mouse.MouseEnterEvent
+		});
 		inactiveStep.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+		if(inactiveStep.Foreground is not SolidColorBrush clickedHoverForeground ||
+			clickedHoverForeground.Color != Colors.White)
+		{
+			throw new Exception("Aktywacja mnożnika podczas hover nie zachowuje białego tekstu");
+		}
+		inactiveStep.RaiseEvent(new MouseEventArgs(Mouse.PrimaryDevice,0)
+		{
+			RoutedEvent=Mouse.MouseLeaveEvent
+		});
+		if(inactiveStep.Foreground is not SolidColorBrush clickedForeground ||
+			clickedForeground.Color != Colors.Black)
+		{
+			throw new Exception("Aktywny mnożnik po hover nie odzyskuje czarnego tekstu");
+		}
 		Equal(1d,frequencyEditor.Step);
 		Equal(1d,amplitudeEditor.Step);
 		Equal(1d,phaseEditor.Step);

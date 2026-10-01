@@ -9,6 +9,7 @@ using Scope.Core;
 using LabStation.Instruments.Discovery;
 using LabStation.Instruments.Scheduling;
 using LabStation.Instruments.Transport;
+using LabStation.UI.Controls;
 
 namespace Scope.App;
 
@@ -561,10 +562,11 @@ public partial class OscilloscopeView : UserControl,IAsyncDisposable
 			button.Content=$"Kursor {index+1}";
 			button.BorderThickness=new Thickness(1);
 			button.BorderBrush=Brushes.Black;
-			button.Background=active
-				? CursorBrushes[index]
-				: (Brush)FindResource("KoradInputBrush");
-			button.Foreground=Brushes.Black;
+			CursorButtonVisual.Apply(
+				button,
+				active,
+				CursorBrushes[index],
+				(Brush)FindResource("KoradInputBrush"));
 		}
 	}
 
@@ -643,12 +645,7 @@ public partial class OscilloscopeView : UserControl,IAsyncDisposable
 			AcquisitionState.Stop=>"STOP",
 			_=>scope is null ? "OFFLINE" : "NIEZNANY"
 		};
-		AcquisitionText.Foreground=state switch
-		{
-			AcquisitionState.Start=>Brushes.LimeGreen,
-			AcquisitionState.Stop=>Brushes.Gold,
-			_=>Brushes.Silver
-		};
+		AcquisitionText.Foreground=(Brush)FindResource("LabStationTextBrush");
 	}
 
 	public async Task SaveCsvAsync(int[] channels)
@@ -732,6 +729,8 @@ public partial class OscilloscopeView : UserControl,IAsyncDisposable
 
 	private void ShowError(Exception exception,bool showDialog)
 	{
+		AcquisitionText.Text="Status: BŁĄD - "+exception.Message;
+		AcquisitionText.Foreground=new SolidColorBrush(Color.FromRgb(255,128,128));
 		if(showDialog)
 		{
 			MessageBox.Show(
