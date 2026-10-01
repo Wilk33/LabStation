@@ -1,4 +1,4 @@
-# Siglent SDG1000X Control v0.2.2
+# Siglent SDG1000X Control v0.2.3
 
 Wąska aplikacja Windows do podstawowego sterowania dwukanałowym generatorem SIGLENT SDG1032X przez LAN/VXI-11. Główna powierzchnia `GeneratorView` jest panelem wielokrotnego użytku, a samodzielne EXE jest jego cienką powłoką.
 
@@ -27,9 +27,9 @@ Przebiegi:
 - impuls,
 - szum,
 - DC,
-- własny przebieg z pliku EasyWave CSV albo binarnego pliku SIGLENT.
+- `Arbitralne` z pliku EasyWave CSV albo binarnego pliku SIGLENT.
 
-Każdy kanał ma osobną zakładkę `Własny`. Można wpisać ścieżkę ręcznie albo wybrać plik przyciskiem z ikoną katalogu, a następnie użyć przycisku `Wczytaj`.
+`Arbitralne` pozostaje pozycją listy `Przebieg`. Po wybraniu tej pozycji bezpośrednio pod listą pojawiają się pole ścieżki, przycisk z ikoną katalogu i przycisk `Wczytaj`.
 
 Obsługiwane są dwa formaty:
 
@@ -81,7 +81,7 @@ Wymagany jest .NET 10 SDK dla Windows.
 
 ## Status weryfikacji
 
-Testy automatyczne nie łączą się z fizycznym urządzeniem i nie zmieniają jego stanu. Zakres ograniczonej walidacji wcześniejszej wersji 0.1.2 na rzeczywistym generatorze oraz pełna procedura testowa są opisane w [docs/hardware-testing.md](docs/hardware-testing.md). Wersja 0.2.2 została zweryfikowana programowo, włącznie z parserem rzeczywistego układu pliku EasyWave CSV, kodowaniem próbek, stałym wyglądem przycisków i zakładką `Własny`. Skanowanie sieci jest dodatkowo sprawdzane na rzeczywistym urządzeniu wyłącznie przez odczyt `*IDN?`. Wysyłanie własnego przebiegu nie zostało potwierdzone na fizycznym generatorze w ramach tego wydania.
+Testy automatyczne nie łączą się z fizycznym urządzeniem i nie zmieniają jego stanu. Zakres ograniczonej walidacji wcześniejszej wersji 0.1.2 na rzeczywistym generatorze oraz pełna procedura testowa są opisane w [docs/hardware-testing.md](docs/hardware-testing.md). Wersja 0.2.3 została zweryfikowana programowo, włącznie z parserem rzeczywistego układu pliku EasyWave CSV, kodowaniem próbek, stałym wyglądem przycisków i pozycją `Arbitralne` na liście przebiegów. Skanowanie sieci jest dodatkowo sprawdzane na rzeczywistym urządzeniu wyłącznie przez odczyt `*IDN?`. Wysyłanie przebiegu arbitralnego nie zostało potwierdzone na fizycznym generatorze w ramach tego wydania.
 
 ## Autor i licencja
 

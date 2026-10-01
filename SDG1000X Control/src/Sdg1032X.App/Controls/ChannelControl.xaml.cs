@@ -43,7 +43,8 @@ public partial class ChannelControl : UserControl
 			new WaveformChoice("Rampa",BasicWaveform.Ramp),
 			new WaveformChoice("Impuls",BasicWaveform.Pulse),
 			new WaveformChoice("Szum",BasicWaveform.Noise),
-			new WaveformChoice("DC",BasicWaveform.Dc)
+			new WaveformChoice("DC",BasicWaveform.Dc),
+			new WaveformChoice("Arbitralne",BasicWaveform.Arbitrary)
 		};
 		WaveformSelector.SelectedIndex=0;
 		LoadSelector.SelectedIndex=0;
@@ -103,7 +104,12 @@ public partial class ChannelControl : UserControl
 			return;
 		}
 		UpdateFieldVisibility(choice.Value);
+		UpdateCustomWaveformVisibility(choice.Value);
 		if(updating || sessionProvider() is not GeneratorSession session)
+		{
+			return;
+		}
+		if(choice.Value == BasicWaveform.Arbitrary)
 		{
 			return;
 		}
@@ -169,7 +175,7 @@ public partial class ChannelControl : UserControl
 				OffsetEditor.Value,
 				PhaseEditor.Value);
 			confirmedWaveform=BasicWaveform.Arbitrary;
-			WaveformTabs.SelectedIndex=1;
+			SelectWaveform(BasicWaveform.Arbitrary);
 			showStatus(
 				$"CH{channel}: wczytano {waveform.Name}, {waveform.SampleCount:N0} próbek.",
 				false);
@@ -187,16 +193,11 @@ public partial class ChannelControl : UserControl
 		updating=true;
 		try
 		{
-			if(waveform == BasicWaveform.Arbitrary)
-			{
-				WaveformTabs.SelectedIndex=1;
-				return;
-			}
-			WaveformTabs.SelectedIndex=0;
 			WaveformSelector.SelectedItem=
 				((WaveformChoice[])WaveformSelector.ItemsSource)
 				.Single(choice=>choice.Value == waveform);
 			UpdateFieldVisibility(waveform);
+			UpdateCustomWaveformVisibility(waveform);
 		}
 		finally
 		{
@@ -454,6 +455,11 @@ public partial class ChannelControl : UserControl
 		NoiseDeviationEditor.Visibility=Visible(waveform == BasicWaveform.Noise);
 		NoiseMeanEditor.Visibility=Visible(waveform == BasicWaveform.Noise);
 		DcLevelEditor.Visibility=Visible(waveform == BasicWaveform.Dc);
+	}
+
+	private void UpdateCustomWaveformVisibility(BasicWaveform waveform)
+	{
+		CustomWaveformPanel.Visibility=Visible(waveform == BasicWaveform.Arbitrary);
 	}
 
 	private static Visibility Visible(bool visible)

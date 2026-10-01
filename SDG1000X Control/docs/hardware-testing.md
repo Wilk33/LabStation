@@ -61,3 +61,16 @@ Test nie obejmował włączania wyjść, zmiany typu przebiegu, amplitudy, offse
 - transfer `WVDT` i wybór `ARWV` są nadal sprawdzane przez transport testowy.
 
 Nie wysyłano pliku CSV ani BIN do fizycznego generatora, ponieważ byłoby to polecenie zmieniające stan urządzenia i wymaga osobnego bezpiecznego testu z potwierdzonymi wyjściami OFF oraz znanym obciążeniem.
+
+## Walidacja wersji 0.2.3
+
+1 października 2026 r. wykonano testy programowe poprawionego interfejsu bez zapisu do fizycznego generatora:
+
+- `Arbitralne` jest pozycją listy `Przebieg`, a nie osobną zakładką,
+- po wybraniu `Arbitralne` pod listą pojawiają się pole ścieżki, wybór pliku i przycisk `Wczytaj`,
+- panel nie ma dodatkowego koloru ani dodatkowego nagłówka,
+- etykiety nastaw i jednostki używają standardowego jasnego koloru tekstu,
+- wybór `Arbitralne` sam nie wysyła polecenia do urządzenia,
+- parser EasyWave CSV oraz transfer `WVDT` i wybór `ARWV` pozostały objęte testami automatycznymi.
+
+Nie wykonywano zapisu przebiegu do fizycznego generatora. Poprzedni test skanowania `*IDN?` pozostaje testem wyłącznie do odczytu.

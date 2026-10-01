@@ -448,8 +448,8 @@ Test("Metadane aplikacji zachowują autora, wersję i licencję",()=>
 	Equal("Mateusz Skipor",ProductInformation.AuthorName);
 	Equal("Inżynier technik elektroniki",ProductInformation.AuthorProfession);
 	Equal("mskiporsklep@op.pl",ProductInformation.AuthorEmail);
-	Equal("0.2.2",ProductInformation.Version);
-	Equal("Siglent SDG1000X Control v0.2.2",ProductInformation.GetWindowTitle());
+	Equal("0.2.3",ProductInformation.Version);
+	Equal("Siglent SDG1000X Control v0.2.3",ProductInformation.GetWindowTitle());
 	string license=ProductInformation.LoadLicenseText();
 	if(!license.Contains("PolyForm Noncommercial License 1.0.0",StringComparison.Ordinal))
 	{
@@ -612,27 +612,32 @@ Test("Interfejs zachowuje kompaktowy rozmiar i pełne pola klikalne",()=>
 			throw new Exception("Aktywna zakładka nadal ma białe tło");
 		}
 
-		TabControl waveformTabs=LogicalChildren<TabControl>(channel1)
-			.Single(tabControl=>tabControl.Name == "WaveformTabs");
-		string[] waveformTabNames=waveformTabs.Items
-			.OfType<TabItem>()
-			.Select(tabItem=>tabItem.Header?.ToString() ?? "")
-			.ToArray();
-		if(!waveformTabNames.SequenceEqual(["Przebieg","Własny"]))
+		if(LogicalChildren<TabControl>(channel1)
+			.Any(tabControl=>tabControl.Name == "WaveformTabs"))
 		{
-			throw new Exception("Brak osobnej zakładki Własny");
+			throw new Exception("Panel Przebieg nadal jest dodatkową zakładką");
 		}
-		if(waveformTabs.Items.OfType<TabItem>().Any(tabItem=>tabItem.ActualHeight<20))
+		TextBlock waveformLabel=LogicalChildren<TextBlock>(channel1)
+			.Single(textBlock=>textBlock.Name == "WaveformLabel");
+		Equal("Przebieg",waveformLabel.Text);
+		if(waveformLabel.Foreground is not SolidColorBrush waveformLabelForeground ||
+			waveformLabelForeground.Color != Colors.White)
 		{
-			throw new Exception("Nagłówki Przebieg/Własny nie są widoczne");
+			throw new Exception("Etykieta Przebieg nie ma standardowego białego tekstu");
 		}
 		ComboBox waveformSelector=LogicalChildren<ComboBox>(channel1)
 			.Single(comboBox=>comboBox.Name == "WaveformSelector");
-		if(waveformSelector.Items.Cast<WaveformChoice>()
-			.Any(choice=>choice.Value == BasicWaveform.Arbitrary))
+		WaveformChoice arbitraryChoice=waveformSelector.Items
+			.Cast<WaveformChoice>()
+			.Single(choice=>choice.Value == BasicWaveform.Arbitrary);
+		Equal("Arbitralne",arbitraryChoice.Name);
+		if(waveformSelector.Items.Count != 7)
 		{
-			throw new Exception("Własny nadal jest pozycją listy przebiegów");
+			throw new Exception("Lista przebiegów nie zawiera wszystkich siedmiu pozycji");
 		}
+		FrameworkElement customPanel=LogicalChildren<FrameworkElement>(channel1)
+			.Single(element=>element.Name == "CustomWaveformPanel");
+		Equal(Visibility.Collapsed,customPanel.Visibility);
 		TextBox customPath=LogicalChildren<TextBox>(channel1)
 			.Single(textBox=>textBox.Name == "CustomWaveformPathEditor");
 		Button browseCustom=LogicalChildren<Button>(channel1)
@@ -646,8 +651,19 @@ Test("Interfejs zachowuje kompaktowy rozmiar i pełne pola klikalne",()=>
 		{
 			throw new Exception("Przycisk wyboru pliku nie ma ikony katalogu");
 		}
-		waveformTabs.SelectedIndex=1;
+		waveformSelector.SelectedItem=arbitraryChoice;
 		window.Dispatcher.Invoke(()=>{},DispatcherPriority.ApplicationIdle);
+		Equal(Visibility.Visible,customPanel.Visibility);
+		foreach(string label in new[]{"Częstotliwość","Amplituda","Offset","Faza"})
+		{
+			TextBlock fieldLabel=LogicalChildren<TextBlock>(channel1)
+				.Single(textBlock=>textBlock.Text == label);
+			if(fieldLabel.Foreground is not SolidColorBrush fieldForeground ||
+				fieldForeground.Color != Colors.White)
+			{
+				throw new Exception($"Etykieta {label} nie ma standardowego białego tekstu");
+			}
+		}
 		RenderTargetBitmap customBitmap=new(350,749,96,96,PixelFormats.Pbgra32);
 		customBitmap.Render(window);
 		PngBitmapEncoder customEncoder=new();
@@ -660,7 +676,6 @@ Test("Interfejs zachowuje kompaktowy rozmiar i pełne pola klikalne",()=>
 		{
 			customEncoder.Save(stream);
 		}
-		waveformTabs.SelectedIndex=0;
 
 		if(LogicalChildren<FrameworkElement>(window).Any(element=>
 			element.GetType().FullName ==
