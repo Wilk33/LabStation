@@ -15,17 +15,25 @@
 			HorizontalAlignment="Right"
 			VerticalAlignment="Top"
 			Click="OutputClick"
-			Content="OFF" />
-		<ScrollViewer
+			Content="OFF"
+			Foreground="{StaticResource LabStationTextBrush}" />
+		<TabControl
+			x:Name="WaveformTabs"
 			Grid.Row="1"
-			VerticalScrollBarVisibility="Auto"
-			HorizontalScrollBarVisibility="Disabled">
-			<StackPanel>
-			<TextBlock
-				Margin="0,0,0,3"
-				Foreground="{StaticResource LabStationTextBrush}"
-				FontSize="11"
-				Text="Przebieg" />
+			Style="{StaticResource LabStationChannelTabControlStyle}">
+			<TabControl.ItemsPanel>
+				<ItemsPanelTemplate>
+					<UniformGrid Rows="1" Columns="2" />
+				</ItemsPanelTemplate>
+			</TabControl.ItemsPanel>
+			<TabItem
+				Header="Przebieg"
+				Style="{StaticResource LabStationChannelTabItemStyle}"
+				Tag="#FF50E1E6">
+				<ScrollViewer
+					HorizontalScrollBarVisibility="Disabled"
+					VerticalScrollBarVisibility="Auto">
+					<StackPanel Margin="8">
 			<ComboBox
 				x:Name="WaveformSelector"
 				Margin="0,0,0,7"
@@ -155,7 +163,45 @@
 					</ComboBox>
 				</StackPanel>
 			</Grid>
-			</StackPanel>
-		</ScrollViewer>
+					</StackPanel>
+				</ScrollViewer>
+			</TabItem>
+			<TabItem
+				Header="Własny"
+				Style="{StaticResource LabStationChannelTabItemStyle}"
+				Tag="#FF50E1E6">
+				<Grid Margin="8">
+					<Grid.RowDefinitions>
+						<RowDefinition Height="Auto" />
+						<RowDefinition Height="Auto" />
+						<RowDefinition Height="*" />
+					</Grid.RowDefinitions>
+					<Grid>
+						<Grid.ColumnDefinitions>
+							<ColumnDefinition Width="*" />
+							<ColumnDefinition Width="Auto" />
+						</Grid.ColumnDefinitions>
+						<TextBox
+							x:Name="CustomWaveformPathEditor"
+							VerticalContentAlignment="Center" />
+						<Button
+							x:Name="BrowseCustomWaveformButton"
+							Grid.Column="1"
+							Margin="6,0,0,0"
+							Click="BrowseCustomWaveformClick"
+							ToolTip="Wybierz plik">
+							<TextBlock Text="📁" />
+						</Button>
+					</Grid>
+					<Button
+						x:Name="LoadCustomWaveformButton"
+						Grid.Row="1"
+						Margin="0,8,0,0"
+						HorizontalAlignment="Right"
+						Click="LoadCustomWaveformClick"
+						Content="Wczytaj" />
+				</Grid>
+			</TabItem>
+		</TabControl>
 	</Grid>
 </UserControl>

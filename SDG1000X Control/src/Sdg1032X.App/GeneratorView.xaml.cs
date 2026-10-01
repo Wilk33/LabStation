@@ -266,12 +266,6 @@ public partial class GeneratorView : UserControl,IAsyncDisposable
 		ConnectionButton.Content=connected ? "Online" : "Offline";
 		ConnectionButton.IsEnabled=!connecting && !closing;
 		HostEditor.IsEnabled=!connected && !connecting && !closing;
-		ConnectionButton.Background=connected
-			? new SolidColorBrush(Color.FromRgb(22,135,70))
-			: (Brush)FindResource("LabStationInputBrush");
-		ConnectionButton.Foreground=connected
-			? Brushes.White
-			: Brushes.Black;
 		CommandStateChanged?.Invoke(this,EventArgs.Empty);
 	}
 

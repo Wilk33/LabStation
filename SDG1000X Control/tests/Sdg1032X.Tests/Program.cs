@@ -207,6 +207,58 @@ Test("Plik własnego przebiegu wymaga par próbek i bezpiecznej nazwy",()=>
 	throw new Exception("Nieparzysta liczba bajtów przebiegu została zaakceptowana");
 });
 
+Test("Plik EasyWave CSV zachowuje parametry i koduje próbki SDG1000X",()=>
+{
+	string path=Path.Combine(
+		Path.GetTempPath(),
+		"LabStation-EasyWave-"+Guid.NewGuid().ToString("N")+".csv");
+	try
+	{
+		File.WriteAllText(
+			path,
+			"data length,3\n"+
+			"frequency,2500\n"+
+			"amp,4\n"+
+			"offset,1\n"+
+			"phase,90\n"+
+			",\n,\n,\n,\n,\n,\n,\n"+
+			"xpos,value\n"+
+			"0,-1\n"+
+			"0.0001,1\n"+
+			"0.0002,3\n");
+		ArbitraryWaveformData waveform=ArbitraryWaveformData.FromFile(path);
+		Equal(3,waveform.SampleCount);
+		byte[] expected=[0x00,0xE0,0x00,0x00,0xFF,0x1F];
+		if(!expected.SequenceEqual(waveform.Data))
+		{
+			throw new Exception("Próbki CSV nie zostały zakodowane jako 14-bit little-endian 2's complement");
+		}
+	}
+	finally
+	{
+		File.Delete(path);
+	}
+});
+
+Test("Plik EasyWave CSV odrzuca niezgodną deklarowaną liczbę próbek",()=>
+{
+	string path=Path.Combine(
+		Path.GetTempPath(),
+		"LabStation-EasyWave-invalid-"+Guid.NewGuid().ToString("N")+".csv");
+	try
+	{
+		File.WriteAllText(
+			path,
+			"data length,3\nfrequency,1000\namp,2\noffset,0\nphase,0\n"+
+			",\n,\n,\n,\n,\n,\n,\nxpos,value\n0,-1\n1,1\n");
+		Reject(()=>ArbitraryWaveformData.FromFile(path));
+	}
+	finally
+	{
+		File.Delete(path);
+	}
+});
+
 Test("Własny przebieg jest wysyłany binarnie i wybierany po nazwie",()=>
 {
 	using RecordingRawTransport transport=new();
@@ -396,8 +448,8 @@ Test("Metadane aplikacji zachowują autora, wersję i licencję",()=>
 	Equal("Mateusz Skipor",ProductInformation.AuthorName);
 	Equal("Inżynier technik elektroniki",ProductInformation.AuthorProfession);
 	Equal("mskiporsklep@op.pl",ProductInformation.AuthorEmail);
-	Equal("0.2.1",ProductInformation.Version);
-	Equal("Siglent SDG1000X Control v0.2.1",ProductInformation.GetWindowTitle());
+	Equal("0.2.2",ProductInformation.Version);
+	Equal("Siglent SDG1000X Control v0.2.2",ProductInformation.GetWindowTitle());
 	string license=ProductInformation.LoadLicenseText();
 	if(!license.Contains("PolyForm Noncommercial License 1.0.0",StringComparison.Ordinal))
 	{
@@ -472,6 +524,11 @@ Test("Interfejs zachowuje kompaktowy rozmiar i pełne pola klikalne",()=>
 		TextBlock ipLabel=LogicalChildren<TextBlock>(window)
 			.Single(textBlock=>textBlock.Name == "IpLabel");
 		Equal("IP:",ipLabel.Text);
+		if(ipLabel.Foreground is not SolidColorBrush ipForeground ||
+			ipForeground.Color != Colors.White)
+		{
+			throw new Exception("Etykieta IP nie ma białego tekstu");
+		}
 		if(host.Padding.Top>2 || host.Padding.Bottom>2)
 		{
 			throw new Exception("Pole IP ma zbyt duży pionowy margines wewnętrzny");
@@ -482,17 +539,50 @@ Test("Interfejs zachowuje kompaktowy rozmiar i pełne pola klikalne",()=>
 		{
 			throw new Exception("Przycisk połączenia nie ma wspólnego kompaktowego rozmiaru");
 		}
+		if(connection.Foreground is not SolidColorBrush connectionForeground ||
+			connectionForeground.Color != Colors.White)
+		{
+			throw new Exception("Przycisk Offline nie ma białego tekstu");
+		}
 		Button output=LogicalChildren<Button>(window)
 			.First(button=>button.Name == "OutputButton");
 		Equal("OFF",output.Content);
+		if(output.Foreground is not SolidColorBrush outputForeground ||
+			outputForeground.Color != Colors.White)
+		{
+			throw new Exception("Przycisk OFF nie ma białego tekstu");
+		}
+		Color outputBackground=((SolidColorBrush)output.Background).Color;
+		ChannelControl channel1=LogicalChildren<ChannelControl>(window)
+			.Single(control=>control.Name == "Channel1");
+		channel1.ApplySnapshot(new ChannelSnapshot
+		{
+			Channel=1,
+			Waveform=BasicWaveform.Sine,
+			OutputEnabled=true,
+			Load=OutputLoad.HighImpedance,
+			Polarity=OutputPolarity.Normal
+		});
+		Equal("ON",output.Content);
+		Equal(outputBackground,((SolidColorBrush)output.Background).Color);
+		if(output.Foreground is not SolidColorBrush outputOnForeground ||
+			outputOnForeground.Color != Colors.White)
+		{
+			throw new Exception("Przycisk ON zmienił kolor tekstu");
+		}
 		TextBlock status=LogicalChildren<TextBlock>(window)
 			.Single(textBlock=>textBlock.Name == "StatusText");
 		Equal("Status: OFFLINE",status.Text);
 
 		TabControl tabs=LogicalChildren<TabControl>(window)
 			.Single(tabControl=>tabControl.Name == "ChannelTabs");
-		TabItem[] tabItems=LogicalChildren<TabItem>(tabs).ToArray();
+		TabItem[] tabItems=tabs.Items.OfType<TabItem>().ToArray();
 		Equal(2,tabItems.Length);
+		if(tabs.ActualWidth<300 || tabItems.Any(tabItem=>tabItem.ActualWidth<140))
+		{
+			throw new Exception(
+				$"Nagłówki CH1/CH2 nie mają szerokości okna: {tabs.ActualWidth:G}; {tabItems[0].ActualWidth:G}, {tabItems[1].ActualWidth:G}");
+		}
 		if(Math.Abs(tabItems[0].ActualWidth-tabItems[1].ActualWidth)>1)
 		{
 			throw new Exception("Zakładki kanałów nie zajmują równych połówek");
@@ -500,6 +590,11 @@ Test("Interfejs zachowuje kompaktowy rozmiar i pełne pola klikalne",()=>
 		if(tabItems.Any(tabItem=>tabItem.ActualWidth<tabs.ActualWidth*0.45))
 		{
 			throw new Exception("Zakładki kanałów nie wypełniają szerokości panelu");
+		}
+		if(tabItems.Any(tabItem=>tabItem.ActualHeight<24))
+		{
+			throw new Exception(
+				$"Nagłówki CH1/CH2 nie są widoczne: {tabItems[0].ActualHeight:G}, {tabItems[1].ActualHeight:G}");
 		}
 		if(tabItems[0].Foreground is not SolidColorBrush activeForeground ||
 			activeForeground.Color != Colors.Black)
@@ -516,6 +611,56 @@ Test("Interfejs zachowuje kompaktowy rozmiar i pełne pola klikalne",()=>
 		{
 			throw new Exception("Aktywna zakładka nadal ma białe tło");
 		}
+
+		TabControl waveformTabs=LogicalChildren<TabControl>(channel1)
+			.Single(tabControl=>tabControl.Name == "WaveformTabs");
+		string[] waveformTabNames=waveformTabs.Items
+			.OfType<TabItem>()
+			.Select(tabItem=>tabItem.Header?.ToString() ?? "")
+			.ToArray();
+		if(!waveformTabNames.SequenceEqual(["Przebieg","Własny"]))
+		{
+			throw new Exception("Brak osobnej zakładki Własny");
+		}
+		if(waveformTabs.Items.OfType<TabItem>().Any(tabItem=>tabItem.ActualHeight<20))
+		{
+			throw new Exception("Nagłówki Przebieg/Własny nie są widoczne");
+		}
+		ComboBox waveformSelector=LogicalChildren<ComboBox>(channel1)
+			.Single(comboBox=>comboBox.Name == "WaveformSelector");
+		if(waveformSelector.Items.Cast<WaveformChoice>()
+			.Any(choice=>choice.Value == BasicWaveform.Arbitrary))
+		{
+			throw new Exception("Własny nadal jest pozycją listy przebiegów");
+		}
+		TextBox customPath=LogicalChildren<TextBox>(channel1)
+			.Single(textBox=>textBox.Name == "CustomWaveformPathEditor");
+		Button browseCustom=LogicalChildren<Button>(channel1)
+			.Single(button=>button.Name == "BrowseCustomWaveformButton");
+		Button loadCustom=LogicalChildren<Button>(channel1)
+			.Single(button=>button.Name == "LoadCustomWaveformButton");
+		Equal("",customPath.Text);
+		Equal("Wczytaj",loadCustom.Content);
+		if(browseCustom.Content is not TextBlock folderIcon ||
+			string.IsNullOrWhiteSpace(folderIcon.Text))
+		{
+			throw new Exception("Przycisk wyboru pliku nie ma ikony katalogu");
+		}
+		waveformTabs.SelectedIndex=1;
+		window.Dispatcher.Invoke(()=>{},DispatcherPriority.ApplicationIdle);
+		RenderTargetBitmap customBitmap=new(350,749,96,96,PixelFormats.Pbgra32);
+		customBitmap.Render(window);
+		PngBitmapEncoder customEncoder=new();
+		customEncoder.Frames.Add(BitmapFrame.Create(customBitmap));
+		using(FileStream stream=File.Create(Path.Combine(
+			"SDG1000X Control",
+			"artifacts",
+			"qa",
+			"generator-custom-ui.png")))
+		{
+			customEncoder.Save(stream);
+		}
+		waveformTabs.SelectedIndex=0;
 
 		if(LogicalChildren<FrameworkElement>(window).Any(element=>
 			element.GetType().FullName ==
@@ -628,13 +773,20 @@ Test("Skan wpisuje adres Generatora i Auto connect nawiązuje połączenie",()=>
 			scanner,
 			_=>new GeneratorDeviceTransport(),
 			settings);
+		Button connection=LogicalChildren<Button>(view)
+			.Single(button=>button.Name == "ConnectionButton");
+		Color disconnectedBackground=((SolidColorBrush)connection.Background).Color;
 		await view.ScanNetworkAsync();
 		TextBox host=LogicalChildren<TextBox>(view)
 			.Single(textBox=>textBox.Name == "HostEditor");
-		Button connection=LogicalChildren<Button>(view)
-			.Single(button=>button.Name == "ConnectionButton");
 		Equal("192.168.200.132",host.Text);
 		Equal("Online",connection.Content);
+		Equal(disconnectedBackground,((SolidColorBrush)connection.Background).Color);
+		if(connection.Foreground is not SolidColorBrush onlineForeground ||
+			onlineForeground.Color != Colors.White)
+		{
+			throw new Exception("Przycisk Online zmienił kolor tekstu");
+		}
 		Equal(false,host.IsEnabled);
 		Equal(
 			new GeneratorSettings("192.168.200.132",true),

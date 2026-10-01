@@ -1,6 +1,6 @@
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;
 using LabStation.UI.Controls;
 using Microsoft.Win32;
 using Sdg1032X.Core;
@@ -43,8 +43,7 @@ public partial class ChannelControl : UserControl
 			new WaveformChoice("Rampa",BasicWaveform.Ramp),
 			new WaveformChoice("Impuls",BasicWaveform.Pulse),
 			new WaveformChoice("Szum",BasicWaveform.Noise),
-			new WaveformChoice("DC",BasicWaveform.Dc),
-			new WaveformChoice("Własny",BasicWaveform.Arbitrary)
+			new WaveformChoice("DC",BasicWaveform.Dc)
 		};
 		WaveformSelector.SelectedIndex=0;
 		LoadSelector.SelectedIndex=0;
@@ -72,8 +71,7 @@ public partial class ChannelControl : UserControl
 		try
 		{
 			confirmedWaveform=snapshot.Waveform;
-			WaveformSelector.SelectedItem=((WaveformChoice[])WaveformSelector.ItemsSource)
-				.Single(choice=>choice.Value == snapshot.Waveform);
+			SelectWaveform(snapshot.Waveform);
 			frequencyHz=snapshot.FrequencyHz;
 			amplitudeVpp=snapshot.AmplitudeVpp;
 			FrequencyEditor.Value=snapshot.FrequencyHz;
@@ -91,7 +89,6 @@ public partial class ChannelControl : UserControl
 			ShowLoadSelection(confirmedLoad,confirmedLoadOhms);
 			PolaritySelector.SelectedIndex=snapshot.Polarity == OutputPolarity.Normal ? 0 : 1;
 			SetOutputState(snapshot.OutputEnabled);
-			UpdateFieldVisibility(snapshot.Waveform);
 		}
 		finally
 		{
@@ -108,11 +105,6 @@ public partial class ChannelControl : UserControl
 		UpdateFieldVisibility(choice.Value);
 		if(updating || sessionProvider() is not GeneratorSession session)
 		{
-			return;
-		}
-		if(choice.Value == BasicWaveform.Arbitrary)
-		{
-			await LoadArbitraryWaveformAsync(session);
 			return;
 		}
 		try
@@ -134,24 +126,41 @@ public partial class ChannelControl : UserControl
 		}
 	}
 
-	private async Task LoadArbitraryWaveformAsync(
-		GeneratorSession session)
+	private void BrowseCustomWaveformClick(object sender,RoutedEventArgs eventArgs)
 	{
 		OpenFileDialog dialog=new()
 		{
-			Filter="Przebieg binarny SIGLENT (*.bin)|*.bin",
+			Filter="Obsługiwane pliki (*.csv;*.bin)|*.csv;*.bin|EasyWave CSV (*.csv)|*.csv|Przebieg binarny SIGLENT (*.bin)|*.bin",
 			CheckFileExists=true,
 			Multiselect=false
 		};
-		if(dialog.ShowDialog(Window.GetWindow(this)) != true)
+		if(dialog.ShowDialog(Window.GetWindow(this)) == true)
 		{
-			SelectWaveform(confirmedWaveform);
+			CustomWaveformPathEditor.Text=dialog.FileName;
+		}
+	}
+
+	private async void LoadCustomWaveformClick(object sender,RoutedEventArgs eventArgs)
+	{
+		if(sessionProvider() is not GeneratorSession session)
+		{
 			return;
 		}
+		await LoadArbitraryWaveformAsync(session,CustomWaveformPathEditor.Text.Trim());
+	}
+
+	private async Task LoadArbitraryWaveformAsync(
+		GeneratorSession session,
+		string path)
+	{
 		try
 		{
+			if(string.IsNullOrWhiteSpace(path))
+			{
+				throw new InvalidDataException("Wybierz plik przebiegu CSV lub BIN.");
+			}
 			ArbitraryWaveformData waveform=await Task.Run(
-				()=>ArbitraryWaveformData.FromFile(dialog.FileName));
+				()=>ArbitraryWaveformData.FromFile(path));
 			await session.UploadArbitraryWaveformAsync(
 				channel,
 				waveform,
@@ -160,6 +169,7 @@ public partial class ChannelControl : UserControl
 				OffsetEditor.Value,
 				PhaseEditor.Value);
 			confirmedWaveform=BasicWaveform.Arbitrary;
+			WaveformTabs.SelectedIndex=1;
 			showStatus(
 				$"CH{channel}: wczytano {waveform.Name}, {waveform.SampleCount:N0} próbek.",
 				false);
@@ -167,7 +177,6 @@ public partial class ChannelControl : UserControl
 		}
 		catch(Exception exception)
 		{
-			SelectWaveform(confirmedWaveform);
 			showStatus(exception.Message,true);
 		}
 	}
@@ -178,6 +187,12 @@ public partial class ChannelControl : UserControl
 		updating=true;
 		try
 		{
+			if(waveform == BasicWaveform.Arbitrary)
+			{
+				WaveformTabs.SelectedIndex=1;
+				return;
+			}
+			WaveformTabs.SelectedIndex=0;
 			WaveformSelector.SelectedItem=
 				((WaveformChoice[])WaveformSelector.ItemsSource)
 				.Single(choice=>choice.Value == waveform);
@@ -409,10 +424,6 @@ public partial class ChannelControl : UserControl
 	{
 		outputEnabled=enabled;
 		OutputButton.Content=enabled ? "ON" : "OFF";
-		OutputButton.Background=enabled
-			? new SolidColorBrush(Color.FromRgb(22,135,70))
-			: (Brush)FindResource("LabStationInputBrush");
-		OutputButton.Foreground=enabled ? Brushes.White : Brushes.Black;
 		OutputStateChanged?.Invoke(this,enabled);
 		RaiseSummaryChanged();
 	}

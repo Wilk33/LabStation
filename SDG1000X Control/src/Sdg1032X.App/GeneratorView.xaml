@@ -21,6 +21,7 @@
 				Margin="0,0,6,0"
 				VerticalAlignment="Center"
 				FontSize="16"
+				Foreground="{StaticResource LabStationTextBrush}"
 				Text="IP:" />
 			<TextBox
 				x:Name="HostEditor"
@@ -32,7 +33,8 @@
 				Grid.Column="2"
 				Margin="8,3,4,3"
 				Click="ConnectionClick"
-				Content="Offline" />
+				Content="Offline"
+				Foreground="{StaticResource LabStationTextBrush}" />
 		</Grid>
 		<TabControl
 			x:Name="ChannelTabs"

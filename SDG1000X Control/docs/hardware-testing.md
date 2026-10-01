@@ -47,3 +47,17 @@ Test nie obejmował włączania wyjść, zmiany typu przebiegu, amplitudy, offse
 - operacja korzystała wyłącznie z VXI-11 i zapytania `*IDN?`,
 - test nie odczytywał nastaw kanałów i nie wysyłał żadnego polecenia zmieniającego stan,
 - przesyłanie własnego przebiegu pozostało zweryfikowane testem protokołu z lokalnym serwerem VXI-11 i nie było wykonywane na fizycznym generatorze.
+
+## Walidacja wersji 0.2.2
+
+1 października 2026 r. wykonano testy programowe bez zapisu do fizycznego generatora:
+
+- przyciski `Online`/`Offline` oraz `ON`/`OFF` zachowują ten sam kolor tła i biały tekst niezależnie od stanu,
+- etykieta `IP:` ma biały tekst,
+- `Własny` jest osobną zakładką kanału z polem ścieżki, wyborem pliku i przyciskiem `Wczytaj`,
+- parser odczytuje rzeczywisty układ EasyWave CSV udostępniony przez SIGLENT,
+- liczba próbek jest porównywana z polem `data length`,
+- wartości napięcia są przeliczane na 14-bitowe próbki little-endian 2's complement,
+- transfer `WVDT` i wybór `ARWV` są nadal sprawdzane przez transport testowy.
+
+Nie wysyłano pliku CSV ani BIN do fizycznego generatora, ponieważ byłoby to polecenie zmieniające stan urządzenia i wymaga osobnego bezpiecznego testu z potwierdzonymi wyjściami OFF oraz znanym obciążeniem.
