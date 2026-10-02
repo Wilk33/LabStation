@@ -7,14 +7,14 @@ LabStation to zestaw pięciu niezależnych aplikacji do obsługi przyrządów la
 - `KA3005P` - Korad KA3005P v0.2.7
 - `SDS1000CML Viewer` - Siglent SDS1000CML Viewer v0.7.2
 - `SDG1000X Control` - Siglent SDG1000X Control v0.2.5
-- `SDM3000 Viewer` - Siglent SDM3000 Viewer
+- `SDM3000 Viewer` - Siglent SDM3000 Viewer v0.1.0
 - `SDL1000X Control` - Siglent SDL1000X Control
 
 Każda aplikacja jest osobnym plikiem EXE. W przyszłym programie LabStation odpowiadające im panele będą niezależne komunikacyjnie, lecz na stałe rozmieszczone w jednym oknie.
 
 ## Stan
 
-Gotowe aplikacje znajdują się w katalogach `KA3005P`, `SDS1000CML Viewer` i `SDG1000X Control`. Wszystkie korzystają z WPF, wspólnego języka wizualnego i paneli `UserControl` przeznaczonych do bezpośredniego użycia w przyszłym oknie LabStation. Samodzielne pliki EXE są cienkimi powłokami tych paneli.
+Gotowe aplikacje znajdują się w katalogach `KA3005P`, `SDS1000CML Viewer`, `SDG1000X Control` i `SDM3000 Viewer`. Wszystkie korzystają z WPF, wspólnego języka wizualnego i paneli `UserControl` przeznaczonych do bezpośredniego użycia w przyszłym oknie LabStation. Samodzielne pliki EXE są cienkimi powłokami tych paneli.
 
 Wspólne elementy interfejsu znajdują się w `Shared/LabStation.UI`. Biblioteka zawiera motyw, przyciski, standard przycisków kursorów, pola tekstowe, listy rozwijane, menu i paski narzędzi, edytor liczbowy ze strzałkami, lampki stanu, wspólny wykres z powiększaniem i kursorami, obsługę motywu systemowego oraz uniwersalne menu i okna Autor/Licencja.
 
@@ -32,4 +32,5 @@ Tryby demonstracyjne nie są częścią projektu. Programy łączą się wyłąc
 dotnet test .\KA3005P\Korad.KA3005P.sln -c Release
 & '.\SDS1000CML Viewer\build.ps1'
 & '.\SDG1000X Control\build.ps1'
+& '.\SDM3000 Viewer\build.ps1'
 ```

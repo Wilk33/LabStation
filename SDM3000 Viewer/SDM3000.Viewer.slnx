@@ -1,0 +1,7 @@
+<Solution>
+	<Project Path="../Shared/LabStation.Instruments/LabStation.Instruments.csproj" />
+	<Project Path="../Shared/LabStation.UI/LabStation.UI.csproj" />
+	<Project Path="src/Sdm3000.Core/Sdm3000.Core.csproj" />
+	<Project Path="src/Sdm3000.App/Sdm3000.App.csproj" />
+	<Project Path="tests/Sdm3000.Tests/Sdm3000.Tests.csproj" />
+</Solution>

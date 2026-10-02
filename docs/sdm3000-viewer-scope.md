@@ -1,6 +1,6 @@
 # Zakres panelu Siglent SDM3000 Viewer
 
-Stan dokumentu: przygotowanie implementacji panelu obserwacyjnego dla SDM3055.
+Stan dokumentu: zaimplementowane wydanie 0.1.0 panelu obserwacyjnego dla SDM3055.
 
 ## Cel
 
@@ -104,16 +104,15 @@ Szczególnie "MEASure...?" i "READ?" nie mogą być klasyfikowane jako bezpieczn
 - stan przeciążenia lub otwartego obwodu,
 - Status: z białym tekstem, czerwonym wyłącznie przy błędzie.
 
-### Trend lokalny
+### Widok wartości
 
-- TimeSeriesPlot ze wspólnej biblioteki,
-- historia tworzona okresowo z "DATA:LAST?",
-- powiększanie osi,
-- kursory w standardzie LabStation,
-- wybór limitu czasu i liczby próbek na poziomie aplikacji,
-- eksport CSV.
+- poziome okno o małej wysokości,
+- duży bieżący wynik z jednostką i nazwą wielkości,
+- brak wykresu i brak ręcznego wyboru funkcji,
+- funkcja oraz zakres są automatycznie odczytywane z miernika,
+- minimum, maksimum, średnia, peak-to-peak i odchylenie standardowe są liczone lokalnie dla kolejnych odczytów bieżącej funkcji.
 
-Panel nie będzie udawał odczytu panelowego Trend Chart, ponieważ Programming Guide nie dokumentuje bezpośredniego odczytu tej gotowej serii.
+Lokalne peak-to-peak oznacza różnicę maksimum i minimum serii odczytów. Nie jest oscyloskopowym Vpp sygnału wejściowego.
 
 ### Statystyki
 
@@ -184,9 +183,10 @@ Cykl podglądu powinien być operacją tła o niższym priorytecie. Jeżeli trwa
 - "*IDN?",
 - "DATA:LAST?",
 - "DATA:POINts?",
-- główny odczyt i wykres lokalny,
+- główny odczyt bez wykresu,
+- automatyczne dopasowanie nazw, jednostek i statystyk do funkcji,
+- lokalne statystyki serii,
 - parsowanie przeciążenia,
-- eksport CSV,
 - odczyt konfiguracji,
 - test rzeczywistego urządzenia wyłącznie zapytaniami bez zmiany stanu.
 

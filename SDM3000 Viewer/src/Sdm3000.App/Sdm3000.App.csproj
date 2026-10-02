@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<UseWPF>true</UseWPF>
+		<AssemblyName>Siglent.SDM3000.Viewer</AssemblyName>
+		<RootNamespace>Sdm3000.App</RootNamespace>
+		<Product>SIGLENT SDM3000 Viewer</Product>
+		<Description>Odczyt multimetru SIGLENT SDM3000 przez LAN/VXI-11</Description>
+		<PackageLicenseExpression>PolyForm-Noncommercial-1.0.0</PackageLicenseExpression>
+		<ApplicationIcon>../../Siglent_SDM3055.ico</ApplicationIcon>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
+		<RuntimeIdentifier>win-x64</RuntimeIdentifier>
+		<SelfContained>true</SelfContained>
+		<PublishSingleFile>true</PublishSingleFile>
+		<IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+		<EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+		<DebugType>embedded</DebugType>
+	</PropertyGroup>
+	<ItemGroup>
+		<ProjectReference Include="../Sdm3000.Core/Sdm3000.Core.csproj" />
+		<ProjectReference Include="../../../Shared/LabStation.Instruments/LabStation.Instruments.csproj" />
+		<ProjectReference Include="../../../Shared/LabStation.UI/LabStation.UI.csproj" />
+		<Resource Include="../../Siglent_SDM3055.ico" Link="Assets/Siglent_SDM3055.ico" />
+		<Content Include="../../README.md" Link="README.md" CopyToPublishDirectory="PreserveNewest" />
+		<EmbeddedResource Include="../../LICENSE" LogicalName="Sdm3000.LICENSE" />
+		<Content Include="../../LICENSE" Link="LICENSE" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+		<Content Include="../../THIRD-PARTY-NOTICES.md" Link="THIRD-PARTY-NOTICES.md" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+	</ItemGroup>
+</Project>

@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<AssemblyName>Siglent.SDM3000.Core</AssemblyName>
+		<RootNamespace>Sdm3000.Core</RootNamespace>
+	</PropertyGroup>
+	<ItemGroup>
+		<ProjectReference Include="../../../Shared/LabStation.Instruments/LabStation.Instruments.csproj" />
+	</ItemGroup>
+</Project>

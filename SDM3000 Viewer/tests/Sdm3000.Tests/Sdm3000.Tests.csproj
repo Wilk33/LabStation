@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<UseWPF>true</UseWPF>
+		<RuntimeIdentifier>win-x64</RuntimeIdentifier>
+		<SelfContained>true</SelfContained>
+	</PropertyGroup>
+	<ItemGroup>
+		<ProjectReference Include="../../src/Sdm3000.Core/Sdm3000.Core.csproj" />
+		<ProjectReference Include="../../src/Sdm3000.App/Sdm3000.App.csproj" />
+	</ItemGroup>
+</Project>

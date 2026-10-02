@@ -54,3 +54,15 @@ jobs:
       - name: Test and build Siglent SDG1000X Control
         working-directory: SDG1000X Control
         run: .\build.ps1
+
+  multimeter:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Test and build Siglent SDM3000 Viewer
+        working-directory: SDM3000 Viewer
+        run: .\build.ps1
