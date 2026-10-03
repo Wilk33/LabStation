@@ -5,6 +5,25 @@ namespace Sdm3000.Core;
 
 public static partial class MultimeterProtocol
 {
+	public static string ConfigureCommand(MeasurementFunction function)
+	{
+		return function switch
+		{
+			MeasurementFunction.VoltageAc=>"CONFigure:VOLTage:AC",
+			MeasurementFunction.VoltageDc=>"CONFigure:VOLTage:DC",
+			MeasurementFunction.CurrentAc=>"CONFigure:CURRent:AC",
+			MeasurementFunction.CurrentDc=>"CONFigure:CURRent:DC",
+			MeasurementFunction.Resistance2Wire=>"CONFigure:RESistance",
+			MeasurementFunction.Capacitance=>"CONFigure:CAPacitance",
+			MeasurementFunction.Diode=>"CONFigure:DIODe",
+			MeasurementFunction.Continuity=>"CONFigure:CONTinuity",
+			_=>throw new ArgumentOutOfRangeException(
+				nameof(function),
+				function,
+				"Ta funkcja nie jest dostępna z panelu pomiarowego.")
+		};
+	}
+
 	private const double OverloadThreshold=9e36;
 
 	public static MeasurementConfiguration ParseConfiguration(string response)

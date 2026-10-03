@@ -83,6 +83,8 @@ public partial class ChannelControl : UserControl
 			DutyEditor.Value=snapshot.DutyPercent;
 			SymmetryEditor.Value=snapshot.SymmetryPercent;
 			PulseWidthEditor.Value=snapshot.PulseWidthSeconds;
+			RiseTimeEditor.Value=snapshot.RiseTimeSeconds;
+			DelayEditor.Value=snapshot.DelaySeconds;
 			NoiseDeviationEditor.Value=snapshot.NoiseStandardDeviation;
 			NoiseMeanEditor.Value=snapshot.NoiseMean;
 			DcLevelEditor.Value=snapshot.OffsetVolts;
@@ -107,10 +109,6 @@ public partial class ChannelControl : UserControl
 		UpdateFieldVisibility(choice.Value);
 		UpdateCustomWaveformVisibility(choice.Value);
 		if(updating || sessionProvider() is not GeneratorSession session)
-		{
-			return;
-		}
-		if(choice.Value == BasicWaveform.Arbitrary)
 		{
 			return;
 		}
@@ -223,11 +221,13 @@ public partial class ChannelControl : UserControl
 		SetEditorStep(FrequencyEditor,0.001,multiplier);
 		SetEditorStep(AmplitudeEditor,0.001,multiplier);
 		SetEditorStep(OffsetEditor,0.001,multiplier);
-		SetEditorStep(PhaseEditor,0.1,multiplier);
-		SetEditorStep(DutyEditor,0.1,multiplier);
+		SetEditorStep(PhaseEditor,0.0001,multiplier);
+		SetEditorStep(DutyEditor,0.001,multiplier);
 		SetEditorStep(SymmetryEditor,0.1,multiplier);
 		SetEditorStep(PulseWidthEditor,0.001,multiplier);
-		SetEditorStep(NoiseDeviationEditor,0.001,multiplier);
+		SetEditorStep(RiseTimeEditor,0.1,multiplier);
+		SetEditorStep(DelayEditor,0.000001,multiplier);
+		SetEditorStep(NoiseDeviationEditor,0.0001,multiplier);
 		SetEditorStep(NoiseMeanEditor,0.001,multiplier);
 		SetEditorStep(DcLevelEditor,0.001,multiplier);
 	}
@@ -268,6 +268,16 @@ public partial class ChannelControl : UserControl
 	private void PulseWidthCommitted(object sender,NumericValueCommittedEventArgs eventArgs)
 	{
 		Commit(GeneratorParameter.PulseWidth,eventArgs.Value);
+	}
+
+	private void RiseTimeCommitted(object sender,NumericValueCommittedEventArgs eventArgs)
+	{
+		Commit(GeneratorParameter.RiseTime,eventArgs.Value);
+	}
+
+	private void DelayCommitted(object sender,NumericValueCommittedEventArgs eventArgs)
+	{
+		Commit(GeneratorParameter.Delay,eventArgs.Value);
 	}
 
 	private void NoiseDeviationCommitted(object sender,NumericValueCommittedEventArgs eventArgs)
@@ -482,6 +492,8 @@ public partial class ChannelControl : UserControl
 		DutyEditor.Visibility=Visible(waveform == BasicWaveform.Square);
 		SymmetryEditor.Visibility=Visible(waveform == BasicWaveform.Ramp);
 		PulseWidthEditor.Visibility=Visible(waveform == BasicWaveform.Pulse);
+		RiseTimeEditor.Visibility=Visible(waveform == BasicWaveform.Pulse);
+		DelayEditor.Visibility=Visible(waveform == BasicWaveform.Pulse);
 		NoiseDeviationEditor.Visibility=Visible(waveform == BasicWaveform.Noise);
 		NoiseMeanEditor.Visibility=Visible(waveform == BasicWaveform.Noise);
 		DcLevelEditor.Visibility=Visible(waveform == BasicWaveform.Dc);
@@ -508,6 +520,8 @@ public partial class ChannelControl : UserControl
 			GeneratorParameter.Duty=>"wypełnienie",
 			GeneratorParameter.Symmetry=>"symetria",
 			GeneratorParameter.PulseWidth=>"szerokość impulsu",
+			GeneratorParameter.RiseTime=>"zbocze narastające",
+			GeneratorParameter.Delay=>"opóźnienie",
 			GeneratorParameter.NoiseStandardDeviation=>"odchylenie",
 			GeneratorParameter.NoiseMean=>"średnia",
 			_=>parameter.ToString()

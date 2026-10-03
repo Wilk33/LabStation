@@ -5,17 +5,17 @@ namespace Sdm3000.Core;
 
 public sealed class MultimeterSession : IAsyncDisposable
 {
-	private readonly Func<IInstrumentTransport> transportFactory;
+	private readonly SiglentMultimeterClient client;
 	private readonly MeasurementAccumulator accumulator=new();
 	private readonly SemaphoreSlim ioGate=new(1,1);
 	private readonly CancellationTokenSource cancellation=new();
 	private bool disposed;
 
 	private MultimeterSession(
-		Func<IInstrumentTransport> transportFactory,
+		SiglentMultimeterClient client,
 		ScpiIdentity identity)
 	{
-		this.transportFactory=transportFactory;
+		this.client=client;
 		Identity=identity;
 	}
 
@@ -33,9 +33,17 @@ public sealed class MultimeterSession : IAsyncDisposable
 		return await Task.Run(() =>
 		{
 			IInstrumentTransport transport=transportFactory();
-			using SiglentMultimeterClient client=new(transport);
-			ScpiIdentity identity=client.Initialize();
-			return new MultimeterSession(transportFactory,identity);
+			SiglentMultimeterClient client=new(transport);
+			try
+			{
+				ScpiIdentity identity=client.Initialize();
+				return new MultimeterSession(client,identity);
+			}
+			catch
+			{
+				client.Dispose();
+				throw;
+			}
 		});
 	}
 
@@ -45,12 +53,23 @@ public sealed class MultimeterSession : IAsyncDisposable
 		await ioGate.WaitAsync(cancellation.Token);
 		try
 		{
-			return await Task.Run(()=>
-			{
-				IInstrumentTransport transport=transportFactory();
-				using SiglentMultimeterClient client=new(transport);
-				return client.ReadSnapshot(accumulator);
-			},cancellation.Token);
+			return await Task.Run(
+				()=>client.ReadSnapshot(accumulator),cancellation.Token);
+		}
+		finally
+		{
+			ioGate.Release();
+		}
+	}
+
+	public async Task ConfigureAsync(MeasurementFunction function)
+	{
+		ObjectDisposedException.ThrowIf(disposed,this);
+		await ioGate.WaitAsync(cancellation.Token);
+		try
+		{
+			await Task.Run(
+				()=>client.Configure(function),cancellation.Token);
 		}
 		finally
 		{
@@ -69,6 +88,7 @@ public sealed class MultimeterSession : IAsyncDisposable
 		await ioGate.WaitAsync();
 		try
 		{
+			client.Dispose();
 		}
 		finally
 		{

@@ -1,10 +1,10 @@
-# Siglent SDG1000X Control v0.2.7
+# Siglent SDG1000X Control v0.2.8
 
 Wąska aplikacja Windows do podstawowego sterowania dwukanałowym generatorem SIGLENT SDG1032X przez LAN/VXI-11. Główna powierzchnia `GeneratorView` jest panelem wielokrotnego użytku, a samodzielne EXE jest jego cienką powłoką.
 
 ## Najważniejsze założenia
 
-- Okno ma stały rozmiar 350 x 749 px i wysokość dopasowaną do natywnego okna aplikacji oscyloskopu.
+- Okno ma stały rozmiar 350 x 675 px. W trybach prostokąta i rampy status znajduje się bezpośrednio pod selektorem mnożnika, bez pionowego paska przewijania.
 - CH1 i CH2 są dostępne na dwóch zakładkach zajmujących po połowie szerokości, więc widoczny jest jeden kanał jednocześnie.
 - Aktywna zakładka ma kolor kanału i czarny tekst, a nieaktywna biały tekst.
 - Przyciski połączenia i wyjścia nie zmieniają koloru wraz ze stanem. Stan jest podawany wyłącznie tekstem `Online`/`Offline` oraz `ON`/`OFF`.
@@ -34,7 +34,7 @@ Przebiegi:
 - DC,
 - `Arbitralne` z pliku EasyWave CSV albo binarnego pliku SIGLENT.
 
-`Arbitralne` pozostaje pozycją listy `Przebieg`. Po wybraniu tej pozycji bezpośrednio pod listą pojawiają się pole ścieżki, przycisk z ikoną katalogu i przycisk `Wczytaj`.
+`Arbitralne` pozostaje pozycją listy `Przebieg`. Po wybraniu tej pozycji aplikacja natychmiast wysyła `BSWV WVTP,ARB`, dzięki czemu cykliczny odczyt nie przywraca poprzedniego typu przebiegu przed wgraniem pliku. Bezpośrednio pod listą pojawiają się pole ścieżki, przycisk z ikoną katalogu i przycisk `Wczytaj`.
 
 Obsługiwane są dwa formaty:
 
@@ -48,11 +48,13 @@ Parametry:
 - częstotliwość,
 - amplituda,
 - offset,
-- faza,
-- wypełnienie prostokąta,
-- symetria rampy,
+- faza z krokiem 0,0001°,
+- wypełnienie prostokąta z krokiem 0,001%,
+- symetria rampy z krokiem 0,1%,
 - szerokość impulsu,
-- odchylenie standardowe i średnia szumu,
+- zbocze narastające impulsu z krokiem 0,1 ns,
+- opóźnienie impulsu z krokiem 0,000001 s,
+- odchylenie standardowe szumu z krokiem 0,0001 V i średnia szumu,
 - poziom DC,
 - obciążenie Hi-Z lub 50 Ω,
 - polaryzacja normalna lub odwrócona,
@@ -70,7 +72,7 @@ Aplikacja używa VXI-11 przez LAN, tej samej metody połączenia co referencyjna
 4. Akceptowany jest model SIGLENT SDG1032X.
 5. Ustawienia obu kanałów zostaną odczytane automatycznie.
 
-Podczas aktywnego połączenia pełne ustawienia CH1 i CH2 są ponownie odczytywane co 5 sekund. Zmiana wykonana z panelu generatora pojawia się dzięki temu w aplikacji bez ponownego łączenia. Ochrona wpisywanego tekstu działa tylko podczas edycji pola i nie blokuje późniejszych odświeżeń całego kanału. Pojedynczy błąd odczytu nie zatrzymuje kolejnych cykli.
+Podczas aktywnego połączenia pełne ustawienia CH1 i CH2 są ponownie odczytywane co 1 sekundę. Zmiana wykonana z panelu generatora pojawia się dzięki temu w aplikacji bez ponownego łączenia. Ochrona wpisywanego tekstu działa tylko podczas edycji pola i nie blokuje późniejszych odświeżeń całego kanału. Pojedynczy błąd odczytu nie zatrzymuje kolejnych cykli.
 
 Opcja `Narzędzia -> Auto connect` zapisuje się razem z adresem. Przy uruchomieniu łączy aplikację z niepustym zapisanym adresem. Po skanowaniu automatycznie łączy z odnalezionym generatorem, jeśli opcja jest zaznaczona.
 
@@ -88,9 +90,9 @@ Wymagany jest .NET 10 SDK dla Windows.
 
 ## Status weryfikacji
 
-Podstawowy zestaw testów automatycznych nie łączy się z fizycznym urządzeniem. Zakres ograniczonej walidacji wcześniejszej wersji 0.1.2 na rzeczywistym generatorze oraz pełna procedura testowa są opisane w [docs/hardware-testing.md](docs/hardware-testing.md). Wersja 0.2.7 została zweryfikowana programowo, włącznie z parserem rzeczywistego układu pliku EasyWave CSV, kodowaniem próbek, selektorem mnożnika, jego stanem hover, ograniczaniem kroków do zakresu nastaw oraz odpornym na przejściowy błąd cyklem odczytu ustawień obu kanałów co 5 sekund.
+Podstawowy zestaw testów automatycznych nie łączy się z fizycznym urządzeniem. Zakres walidacji sprzętowej oraz pełna procedura testowa są opisane w [docs/hardware-testing.md](docs/hardware-testing.md). Wersja 0.2.8 przeszła 29/29 testów, włącznie z parserem rzeczywistego układu pliku EasyWave CSV, kodowaniem próbek, precyzją nowych nastaw impulsu i szumu, przełączeniem na ARB przed wgraniem pliku oraz odpornym na przejściowy błąd cyklem odczytu obu kanałów co 1 sekundę.
 
-Na fizycznym SDG1032X sprawdzono również zmianę nastawy niezależną od aplikacji. Przy wyłączonych wyjściach panel rozpoczął od 4000 Hz, drugie połączenie ustawiło 4111 Hz i 4222 Hz, a kontrolka UI przyjęła obie wartości po kolejnych cyklach 5 sekund. Test przywrócił 4000 Hz i potwierdził stan `OUTPUT=OFF`. Wysyłanie przebiegu arbitralnego nie zostało potwierdzone na fizycznym generatorze w ramach tego wydania.
+Na fizycznym SDG1032X test wybrał CH2 z przebiegiem sinusoidalnym i wyłączonym wyjściem. Kontrolka UI rozpoczęła od 1000 Hz, przyjęła zewnętrzne zmiany do 1111 Hz i 1222 Hz po kolejnych cyklach, a następnie test przywrócił 1000 Hz i potwierdził `OUTPUT=OFF`. Wysyłanie pliku przebiegu arbitralnego nie zostało wykonane na fizycznym generatorze w ramach tego wydania.
 
 ## Autor i licencja
 

@@ -1,23 +1,23 @@
 # Zakres panelu Siglent SDM3000 Control
 
-Stan dokumentu: zaimplementowane i sprawdzone na fizycznym SDM3055 wydanie 0.1.2.
+Stan dokumentu: zaimplementowane i sprawdzone programowo oraz na fizycznym SDM3055 wydanie 0.2.0.
 
 ## Cel
 
-Aplikacja automatycznie rozpoznaje funkcję pomiarową ustawioną na multimetrze i pokazuje bieżącą wartość bez ręcznego wyboru trybu. Nie przełącza funkcji, zakresu, NPLC, filtrów, limitów ani konfiguracji sieci.
+Aplikacja utrzymuje jedną sesję VXI-11, ciągle inicjuje świeże pomiary i pokazuje bieżącą wartość. Osiem przycisków pozwala wybrać napięcie AC/DC, prąd AC/DC, rezystancję, pojemność, diodę lub ciągłość. Aplikacja nie zmienia zakresu, NPLC, filtrów, limitów ani konfiguracji sieci.
 
-Test sprzętowy wykazał, że po nawiązaniu sesji VXI-11 miernik przechodzi w Remote i zmienia Auto trig na Stopped. W tym stanie pasywne `DATA:LAST?` nie zapewnia świeżych wyników. Dlatego aplikacja świadomie używa `READ?` i jest kontrolerem pojedynczych pomiarów, a nie pasywnym viewerem.
+Test sprzętowy wykazał, że po nawiązaniu sesji VXI-11 miernik przechodzi w Remote i zmienia Auto trig na Stopped. W tym stanie pasywne `DATA:LAST?` nie zapewnia świeżych wyników. Dlatego aplikacja świadomie używa `READ?` i jest kontrolerem ciągłych pomiarów, a nie pasywnym viewerem.
 
 ## Cykl pomiarowy
 
-Każdy cykl wykonuje:
+Po połączeniu aplikacja wykonuje:
 
-1. krótkie połączenie VXI-11,
+1. jedno połączenie VXI-11 utrzymywane przez całą sesję,
 2. `CONFigure?` w celu rozpoznania funkcji i zakresu,
 3. `READ?` w celu rozpoczęcia i odebrania świeżego pomiaru,
 4. `DATA:POINts?` w celu odczytania liczby punktów pamięci,
-5. `device_local`,
-6. zamknięcie transportu.
+5. powtórzenie odczytu po około 100 ms,
+6. `device_local` i zamknięcie transportu dopiero przy rozłączeniu.
 
 `READ?` rozpoczyna sekwencję pomiarową i czyści sprzętową pamięć odczytów. Jest to zaakceptowany skutek działania aplikacji. Lokalna historia, statystyki i eksport CSV pozostają niezależne od pamięci urządzenia.
 
@@ -29,11 +29,11 @@ Urządzenie pod adresem `192.168.200.131` zwróciło:
 - model: SDM3055,
 - firmware: `1.02.01.29R1`.
 
-Trzy kolejne pomiary wykonane ścieżką produkcyjną `READ?` zwróciły:
+Trzy kolejne pomiary wykonane ścieżką produkcyjną `READ?` w jednej trwałej sesji zwróciły:
 
-- 11,29985 mV,
-- 11,32701 mV,
-- 11,32656 mV.
+- 11,30298 mV,
+- 11,30100 mV,
+- 11,30511 mV.
 
 W osobnym kontrolowanym teście zmiana napięcia zasilacza Korad z 10 V na 11 V dała odpowiednio około 9,992 V i 10,991 V z SDM. Wcześniejszy test `DATA:LAST?` pozostawał na tej samej starej wartości, co potwierdziło konieczność jawnego inicjowania pomiaru.
 
@@ -52,26 +52,26 @@ Lista zmian nie wymienia Remote, Stopped, Auto Trigger, `device_local`, VXI-11 a
 
 ## Zachowanie Local i Remote
 
-Transport wykonuje procedurę `device_local` przed zamknięciem połączenia. Na tym egzemplarzu i firmware nie powoduje to widocznego wyjścia z Remote. Fizyczne naciśnięcie Shift wyłącza Remote tylko do następnego polecenia wysłanego przez aplikację.
+Transport wykonuje procedurę `device_local` przy końcowym rozłączeniu. Na tym egzemplarzu i firmware nie powoduje to widocznego wyjścia z Remote. Fizyczne naciśnięcie Shift wyłącza Remote tylko do następnego polecenia wysłanego przez aplikację.
 
 Z tego powodu aplikacja:
 
 - nie twierdzi, że programowo przywraca panel lokalny,
-- otwiera połączenie tylko na czas pojedynczej operacji,
+- utrzymuje jedno połączenie przez cały czas sesji,
 - pokazuje świeże pomiary przez `READ?`,
-- nie wysyła poleceń zmieniających wybraną funkcję i zakres.
+- zmienia funkcję tylko po użyciu jednego z ośmiu przycisków, ale nie zmienia zakresu.
 
 ## Interfejs
 
-- poziome, nierozciągalne okno 920 x 280 px,
+- poziome, nierozciągalne okno 920 x 318 px,
 - pole IP 150 px i standardowy przycisk Offline/Online,
 - menu Narzędzia z pozycjami Skanuj sieć i Auto connect,
-- automatyczna identyfikacja funkcji,
+- automatyczna identyfikacja funkcji oraz osiem przycisków jej wyboru,
 - duży wynik z właściwą nazwą i jednostką,
 - lokalne minimum, maksimum, średnia, peak-to-peak i odchylenie standardowe,
 - menu Zapisz jako z eksportem CSV,
 - Status z białym tekstem, czerwonym tylko przy błędzie,
-- brak przycisków ręcznego wyboru funkcji.
+- przyciski `V AC`, `V DC`, `A AC`, `A DC`, `Ω`, `F`, `Diod` i `Sig`.
 
 ## Obsługiwane funkcje
 
@@ -96,7 +96,7 @@ Elementy wspólne:
 Elementy własne SDM:
 
 - `SiglentMultimeterClient` - identyfikacja modelu i polecenia SDM,
-- `MultimeterSession` - krótkie sesje i lokalny akumulator pomiarów,
+- `MultimeterSession` - jedna serializowana sesja, konfiguracja funkcji i lokalny akumulator pomiarów,
 - parser konfiguracji, wyników i przeciążenia,
 - profile nazw oraz jednostek pomiarowych,
 - eksport lokalnej historii do CSV.

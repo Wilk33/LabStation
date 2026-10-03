@@ -16,21 +16,14 @@ public sealed class SiglentMultimeterClient : IDisposable
 
 	public ScpiIdentity Initialize()
 	{
-		try
+		ScpiIdentity identity=connection.Identify();
+		if(!IsSupported(identity))
 		{
-			ScpiIdentity identity=connection.Identify();
-			if(!IsSupported(identity))
-			{
-				throw new InvalidDataException(
-					"Ta wersja aplikacji obsługuje multimetry SIGLENT SDM3000. Odpowiedź: "+
-					string.Join(',',identity.Manufacturer,identity.Model,identity.SerialNumber,identity.Firmware));
-			}
-			return identity;
+			throw new InvalidDataException(
+				"Ta wersja aplikacji obsługuje multimetry SIGLENT SDM3000. Odpowiedź: "+
+				string.Join(',',identity.Manufacturer,identity.Model,identity.SerialNumber,identity.Firmware));
 		}
-		finally
-		{
-			localControl?.ReturnToLocal();
-		}
+		return identity;
 	}
 
 	public static bool IsSupported(ScpiIdentity identity)
@@ -46,20 +39,18 @@ public sealed class SiglentMultimeterClient : IDisposable
 	public MeasurementSnapshot ReadSnapshot(MeasurementAccumulator accumulator)
 	{
 		ArgumentNullException.ThrowIfNull(accumulator);
-		try
-		{
-			MeasurementConfiguration configuration=MultimeterProtocol.ParseConfiguration(
-				connection.QueryText("CONFigure?"));
-			MeasurementReading reading=MultimeterProtocol.ParseReading(
-				connection.QueryText("READ?"));
-			long storedPoints=MultimeterProtocol.ParsePointCount(
-				connection.QueryText("DATA:POINts?"));
-			return accumulator.Accept(configuration,reading,storedPoints);
-		}
-		finally
-		{
-			localControl?.ReturnToLocal();
-		}
+		MeasurementConfiguration configuration=MultimeterProtocol.ParseConfiguration(
+			connection.QueryText("CONFigure?"));
+		MeasurementReading reading=MultimeterProtocol.ParseReading(
+			connection.QueryText("READ?"));
+		long storedPoints=MultimeterProtocol.ParsePointCount(
+			connection.QueryText("DATA:POINts?"));
+		return accumulator.Accept(configuration,reading,storedPoints);
+	}
+
+	public void Configure(MeasurementFunction function)
+	{
+		connection.Write(MultimeterProtocol.ConfigureCommand(function));
 	}
 
 	public void Dispose()

@@ -42,6 +42,7 @@ public static class SiglentProtocol
 			BasicWaveform.Pulse=>"PULSE",
 			BasicWaveform.Noise=>"NOISE",
 			BasicWaveform.Dc=>"DC",
+			BasicWaveform.Arbitrary=>"ARB",
 			_=>throw new ArgumentOutOfRangeException(nameof(waveform))
 		};
 	}
@@ -68,11 +69,13 @@ public static class SiglentProtocol
 			GeneratorParameter.Duty=>"DUTY",
 			GeneratorParameter.Symmetry=>"SYM",
 			GeneratorParameter.PulseWidth=>"WIDTH",
+			GeneratorParameter.RiseTime=>"RISE",
+			GeneratorParameter.Delay=>"DLY",
 			GeneratorParameter.NoiseStandardDeviation=>"STDEV",
 			GeneratorParameter.NoiseMean=>"MEAN",
 			_=>throw new ArgumentOutOfRangeException(nameof(parameter))
 		};
-		return $"C{channel}:BSWV {code},{value.ToString("G17",CultureInfo.InvariantCulture)}";
+		return $"C{channel}:BSWV {code},{Format(value)}";
 	}
 
 	public static string LoadCommand(int channel,OutputLoad load)
@@ -177,6 +180,8 @@ public static class SiglentProtocol
 			DutyPercent=Number(wave,"DUTY"),
 			SymmetryPercent=Number(wave,"SYM"),
 			PulseWidthSeconds=Number(wave,"WIDTH"),
+			RiseTimeSeconds=Number(wave,"RISE"),
+			DelaySeconds=Number(wave,"DLY"),
 			NoiseStandardDeviation=Number(wave,"STDEV"),
 			NoiseMean=Number(wave,"MEAN"),
 			OutputEnabled=outputState.Equals("ON",StringComparison.OrdinalIgnoreCase),
@@ -189,7 +194,7 @@ public static class SiglentProtocol
 	}
 
 	private static string Format(double value)=>
-		value.ToString("G17",CultureInfo.InvariantCulture);
+		value.ToString("R",CultureInfo.InvariantCulture);
 
 	private static (OutputLoad Load,double? Ohms) ParseLoad(Dictionary<string,string> state)
 	{
@@ -253,7 +258,7 @@ public static class SiglentProtocol
 	{
 		Match match=Regex.Match(
 			text.Trim(),
-			@"^([+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[Ee][+-]?\d+)?)([GMKkmunpµ]?)([A-Za-z%]*)$");
+			@"^([+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[Ee][+-]?\d+)?)([GMKkmuUnNpPµ]?)([A-Za-z%]*)$");
 		if(!match.Success ||
 			!double.TryParse(match.Groups[1].Value,NumberStyles.Float,CultureInfo.InvariantCulture,out double number))
 		{
@@ -268,9 +273,9 @@ public static class SiglentProtocol
 			"M"=>1e6,
 			"K" or "k"=>1e3,
 			"m"=>1e-3,
-			"u" or "µ"=>1e-6,
-			"n"=>1e-9,
-			"p"=>1e-12,
+			"u" or "U" or "µ"=>1e-6,
+			"n" or "N"=>1e-9,
+			"p" or "P"=>1e-12,
 			_=>1
 		};
 		double result=number*multiplier;

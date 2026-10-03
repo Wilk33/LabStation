@@ -176,6 +176,18 @@ Test("Rozpoznaje funkcje pomiarowe zwracane przez SDM3055",()=>
 	}
 });
 
+Test("Buduje polecenia konfiguracji ośmiu funkcji dostępnych w aplikacji",()=>
+{
+	Equal("CONFigure:VOLTage:AC",MultimeterProtocol.ConfigureCommand(MeasurementFunction.VoltageAc));
+	Equal("CONFigure:VOLTage:DC",MultimeterProtocol.ConfigureCommand(MeasurementFunction.VoltageDc));
+	Equal("CONFigure:CURRent:AC",MultimeterProtocol.ConfigureCommand(MeasurementFunction.CurrentAc));
+	Equal("CONFigure:CURRent:DC",MultimeterProtocol.ConfigureCommand(MeasurementFunction.CurrentDc));
+	Equal("CONFigure:RESistance",MultimeterProtocol.ConfigureCommand(MeasurementFunction.Resistance2Wire));
+	Equal("CONFigure:CAPacitance",MultimeterProtocol.ConfigureCommand(MeasurementFunction.Capacitance));
+	Equal("CONFigure:DIODe",MultimeterProtocol.ConfigureCommand(MeasurementFunction.Diode));
+	Equal("CONFigure:CONTinuity",MultimeterProtocol.ConfigureCommand(MeasurementFunction.Continuity));
+});
+
 Test("Dobiera główną nazwę i jednostkę bez wyboru trybu w UI",()=>
 {
 	Equal(new MeasurementProfile("Napięcie DC","V DC","Vdc","V"),
@@ -251,14 +263,14 @@ Test("Klient inicjuje świeży pomiar poleceniem READ",()=>
 	EqualStrings(
 		["*IDN?","CONFigure?","READ?","DATA:POINts?"],
 		transport.Queries.ToArray());
-	Equal(2,transport.LocalRequests);
+	Equal(0,transport.LocalRequests);
 	if(transport.Writes.Count != 0)
 	{
 		throw new Exception("Klient wysłał polecenie zmieniające stan miernika");
 	}
 });
 
-Test("Klient oddaje panel lokalny także po błędzie odczytu",()=>
+Test("Klient utrzymuje sesję zdalną także po błędzie odczytu",()=>
 {
 	using RecordingTransport transport=new();
 	using SiglentMultimeterClient client=new(transport);
@@ -272,7 +284,7 @@ Test("Klient oddaje panel lokalny także po błędzie odczytu",()=>
 	catch(IOException)
 	{
 	}
-	Equal(2,transport.LocalRequests);
+	Equal(0,transport.LocalRequests);
 });
 
 Test("Eksport CSV zachowuje czas, funkcję, wartość i przeciążenie",()=>
@@ -325,7 +337,7 @@ Test("Formatuje wynik miernika z prefiksem inżynierskim",()=>
 	Equal("-",MeasurementFormatter.FormatRange(null,"V"));
 });
 
-Test("Sesja zwalnia transport po identyfikacji i każdym odczycie",()=>
+Test("Sesja zachowuje jeden transport dla konfiguracji i kolejnych odczytów",()=>
 {
 	List<RecordingTransport> transports=[];
 	MultimeterSession session=MultimeterSession.CreateAsync(()=>
@@ -340,26 +352,28 @@ Test("Sesja zwalnia transport po identyfikacji i każdym odczycie",()=>
 	{
 		Equal("SDM3055",session.Identity.Model);
 		Equal(1,transports.Count);
-		Equal(true,transports[0].Disposed);
+		Equal(false,transports[0].Disposed);
+		session.ConfigureAsync(MeasurementFunction.CurrentDc)
+			.GetAwaiter()
+			.GetResult();
+		EqualStrings(["CONFigure:CURRent:DC"],transports[0].Writes.ToArray());
 		MeasurementSnapshot snapshot=session.ReadAsync()
 			.GetAwaiter()
 			.GetResult();
 		Equal(MeasurementFunction.VoltageAc,snapshot.Configuration.Function);
 		Equal(1L,snapshot.Statistics.Count);
-		Equal(2,transports.Count);
-		Equal(true,transports[1].Disposed);
-		if(transports.SelectMany(transport=>transport.Writes).Any())
-		{
-			throw new Exception("Sesja wysłała zapis do miernika");
-		}
+		Equal(1,transports.Count);
+		Equal(false,transports[0].Disposed);
 	}
 	finally
 	{
 		session.DisposeAsync().AsTask().GetAwaiter().GetResult();
 	}
+	Equal(true,transports[0].Disposed);
+	Equal(1,transports[0].LocalRequests);
 });
 
-Test("Okno SDM jest poziome, stałe i nie zawiera wyboru funkcji",()=>
+Test("Okno SDM jest poziome, stałe i udostępnia osiem funkcji pomiarowych",()=>
 {
 	RunSta(()=>
 	{
@@ -370,12 +384,19 @@ Test("Okno SDM jest poziome, stałe i nie zawiera wyboru funkcji",()=>
 				"pack://application:,,,/LabStation.UI;component/Themes/LabStationTheme.xaml")
 		});
 		MainWindow window=new();
-		Equal("0.1.2",AppInformation.Version);
-		Equal("Siglent SDM3000 Control v0.1.2",AppInformation.DisplayName);
-		Equal("Siglent SDM3000 Control v0.1.2",window.Title);
+		window.WindowStartupLocation=WindowStartupLocation.Manual;
+		window.Left=-10000;
+		window.Top=-10000;
+		window.ShowActivated=false;
+		window.Show();
+		window.Dispatcher.Invoke(()=>{});
+
+		Equal("0.2.0",AppInformation.Version);
+		Equal("Siglent SDM3000 Control v0.2.0",AppInformation.DisplayName);
+		Equal("Siglent SDM3000 Control v0.2.0",window.Title);
 		Equal("Siglent.SDM3000.Control",typeof(MainWindow).Assembly.GetName().Name);
 		Equal(920d,window.Width);
-		Equal(280d,window.Height);
+		Equal(318d,window.Height);
 		Equal(ResizeMode.NoResize,window.ResizeMode);
 		if(window.Width <= window.Height*2)
 		{
@@ -385,11 +406,14 @@ Test("Okno SDM jest poziome, stałe i nie zawiera wyboru funkcji",()=>
 			.Single(textBox=>textBox.Name == "HostEditor");
 		Equal("192.168.200.131",address.Text);
 		Equal(150d,address.Width);
-		string[] prohibited=["V AC","V DC","A AC","A DC","Ω","F","Diod","Sig"];
-		if(LogicalChildren<Button>(window).Any(button=>
-			prohibited.Contains(button.Content?.ToString())))
+		string[] functions=["V AC","V DC","A AC","A DC","Ω","F","Diod","Sig"];
+		string[] actualFunctions=LogicalChildren<Button>(window)
+			.Where(button=>functions.Contains(button.Content?.ToString()))
+			.Select(button=>button.Content?.ToString() ?? "")
+			.ToArray();
+		if(!functions.SequenceEqual(actualFunctions))
 		{
-			throw new Exception("Interfejs zawiera przycisk ręcznego wyboru funkcji");
+			throw new Exception("Interfejs nie zawiera pełnego wyboru funkcji pomiarowych");
 		}
 		string[] statistics=LogicalChildren<TextBlock>(window)
 			.Where(text=>text.Name.StartsWith("Statistic",StringComparison.Ordinal))

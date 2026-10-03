@@ -39,7 +39,7 @@ public partial class MultimeterView : UserControl,IAsyncDisposable
 			new JsonMultimeterSettingsStore(
 				SettingsPath,
 				new("192.168.200.131",false)),
-			TimeSpan.FromSeconds(1))
+			TimeSpan.FromMilliseconds(100))
 	{
 	}
 
@@ -135,6 +135,35 @@ public partial class MultimeterView : UserControl,IAsyncDisposable
 			await DisconnectAsync();
 		}
 	}
+	private async void FunctionClick(object sender,RoutedEventArgs eventArgs)
+	{
+		if(sender is not Button button ||
+			button.Tag is not string tag ||
+			!Enum.TryParse(tag,out MeasurementFunction function) ||
+			session is not MultimeterSession connected)
+		{
+			return;
+		}
+		FunctionButtons.IsEnabled=false;
+		try
+		{
+			await connected.ConfigureAsync(function);
+			MeasurementSnapshot snapshot=await connected.ReadAsync();
+			if(session == connected && !closing)
+			{
+				ApplySnapshot(snapshot);
+				ShowStatus("ONLINE",false);
+			}
+		}
+		catch(Exception exception)
+		{
+			ShowStatus("BŁĄD KONFIGURACJI - "+exception.Message,true);
+		}
+		finally
+		{
+			UpdateEnabled();
+		}
+	}
 
 	private async Task ConnectAsync()
 	{
@@ -197,30 +226,40 @@ public partial class MultimeterView : UserControl,IAsyncDisposable
 
 	private async Task PollAsync(MultimeterSession connected,CancellationToken cancellationToken)
 	{
-		try
+		bool communicationError=false;
+		while(!cancellationToken.IsCancellationRequested)
 		{
-			while(!cancellationToken.IsCancellationRequested)
+			try
 			{
-				await Task.Delay(refreshInterval,cancellationToken);
 				MeasurementSnapshot snapshot=await connected.ReadAsync();
 				if(cancellationToken.IsCancellationRequested)
 				{
 					return;
 				}
-				await Dispatcher.InvokeAsync(()=>ApplySnapshot(snapshot));
-			}
-		}
-		catch(OperationCanceledException) when(cancellationToken.IsCancellationRequested)
-		{
-		}
-		catch(Exception exception)
-		{
-			if(!Dispatcher.HasShutdownStarted && !closing)
-			{
 				await Dispatcher.InvokeAsync(()=>
 				{
-					ShowStatus("BŁĄD KOMUNIKACJI - "+exception.Message,true);
+					ApplySnapshot(snapshot);
+					if(communicationError)
+					{
+						ShowStatus("ONLINE",false);
+						communicationError=false;
+					}
 				});
+				await Task.Delay(refreshInterval,cancellationToken);
+			}
+			catch(OperationCanceledException) when(cancellationToken.IsCancellationRequested)
+			{
+				return;
+			}
+			catch(Exception exception)
+			{
+				communicationError=true;
+				if(!Dispatcher.HasShutdownStarted && !closing)
+				{
+					await Dispatcher.InvokeAsync(()=>
+						ShowStatus("BŁĄD KOMUNIKACJI - "+exception.Message,true));
+				}
+				await Task.Delay(refreshInterval,cancellationToken);
 			}
 		}
 	}
@@ -342,6 +381,7 @@ public partial class MultimeterView : UserControl,IAsyncDisposable
 		ConnectionButton.Content=connected ? "Online" : "Offline";
 		ConnectionButton.IsEnabled=!connecting && !closing;
 		HostEditor.IsEnabled=!connected && !connecting && !closing;
+		FunctionButtons.IsEnabled=connected && !connecting && !closing;
 		CommandStateChanged?.Invoke(this,EventArgs.Empty);
 	}
 

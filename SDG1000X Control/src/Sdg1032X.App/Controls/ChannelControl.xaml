@@ -21,7 +21,7 @@
 			Grid.Row="1"
 			HorizontalScrollBarVisibility="Disabled"
 			VerticalScrollBarVisibility="Auto">
-			<StackPanel Margin="8">
+			<StackPanel Margin="8,8,8,0">
 			<TextBlock
 				x:Name="WaveformLabel"
 				Margin="0,0,0,3"
@@ -97,19 +97,19 @@
 				x:Name="PhaseEditor"
 				Label="Faza"
 				Unit="°"
-				Step="0.1"
+				Step="0.0001"
 				Minimum="0"
 				Maximum="360"
-				DecimalPlaces="1"
+				DecimalPlaces="4"
 				ValueCommitted="PhaseCommitted" />
 			<sharedControls:NumericValueEditor
 				x:Name="DutyEditor"
 				Label="Wypełnienie"
 				Unit="%"
-				Step="0.1"
+				Step="0.001"
 				Minimum="0"
 				Maximum="100"
-				DecimalPlaces="1"
+				DecimalPlaces="3"
 				ValueCommitted="DutyCommitted" />
 			<sharedControls:NumericValueEditor
 				x:Name="SymmetryEditor"
@@ -131,13 +131,32 @@
 				DecimalPlaces="3"
 				ValueCommitted="PulseWidthCommitted" />
 			<sharedControls:NumericValueEditor
+				x:Name="RiseTimeEditor"
+				Label="Rise Edge"
+				Unit="ns"
+				Scale="0.000000001"
+				Step="0.0000000001"
+				Minimum="0"
+				Maximum="1000"
+				DecimalPlaces="1"
+				ValueCommitted="RiseTimeCommitted" />
+			<sharedControls:NumericValueEditor
+				x:Name="DelayEditor"
+				Label="Delay"
+				Unit="s"
+				Step="0.000001"
+				Minimum="0"
+				Maximum="1000"
+				DecimalPlaces="6"
+				ValueCommitted="DelayCommitted" />
+			<sharedControls:NumericValueEditor
 				x:Name="NoiseDeviationEditor"
 				Label="Odchylenie standardowe"
 				Unit="V"
-				Step="0.001"
+				Step="0.0001"
 				Minimum="0"
 				Maximum="20"
-				DecimalPlaces="3"
+				DecimalPlaces="4"
 				ValueCommitted="NoiseDeviationCommitted" />
 			<sharedControls:NumericValueEditor
 				x:Name="NoiseMeanEditor"

@@ -7,6 +7,7 @@
 	<Grid>
 		<Grid.RowDefinitions>
 			<RowDefinition Height="36" />
+			<RowDefinition Height="38" />
 			<RowDefinition Height="*" />
 			<RowDefinition Height="25" />
 		</Grid.RowDefinitions>
@@ -31,7 +32,18 @@
 				Text="" />
 		</StackPanel>
 
-		<Grid Grid.Row="1">
+		<UniformGrid x:Name="FunctionButtons" Grid.Row="1" Margin="6,3" Columns="8">
+			<Button x:Name="VoltageAcButton" Margin="2,0" Click="FunctionClick" Content="V AC" Tag="VoltageAc" />
+			<Button x:Name="VoltageDcButton" Margin="2,0" Click="FunctionClick" Content="V DC" Tag="VoltageDc" />
+			<Button x:Name="CurrentAcButton" Margin="2,0" Click="FunctionClick" Content="A AC" Tag="CurrentAc" />
+			<Button x:Name="CurrentDcButton" Margin="2,0" Click="FunctionClick" Content="A DC" Tag="CurrentDc" />
+			<Button x:Name="ResistanceButton" Margin="2,0" Click="FunctionClick" Content="Ω" Tag="Resistance2Wire" />
+			<Button x:Name="CapacitanceButton" Margin="2,0" Click="FunctionClick" Content="F" Tag="Capacitance" />
+			<Button x:Name="DiodeButton" Margin="2,0" Click="FunctionClick" Content="Diod" Tag="Diode" />
+			<Button x:Name="ContinuityButton" Margin="2,0" Click="FunctionClick" Content="Sig" Tag="Continuity" />
+		</UniformGrid>
+
+		<Grid Grid.Row="2">
 			<Grid.ColumnDefinitions>
 				<ColumnDefinition Width="330" />
 				<ColumnDefinition Width="*" />
@@ -91,7 +103,7 @@
 			</Border>
 		</Grid>
 
-		<Grid Grid.Row="2" Margin="8,0,8,3">
+		<Grid Grid.Row="3" Margin="8,0,8,3">
 			<Grid.ColumnDefinitions>
 				<ColumnDefinition Width="*" />
 				<ColumnDefinition Width="Auto" />

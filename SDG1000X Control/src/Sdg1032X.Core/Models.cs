@@ -23,6 +23,8 @@ public enum GeneratorParameter
 	Duty,
 	Symmetry,
 	PulseWidth,
+	RiseTime,
+	Delay,
 	NoiseStandardDeviation,
 	NoiseMean
 }
@@ -51,6 +53,8 @@ public sealed record ChannelSnapshot
 	public double DutyPercent { get; init; }
 	public double SymmetryPercent { get; init; }
 	public double PulseWidthSeconds { get; init; }
+	public double RiseTimeSeconds { get; init; }
+	public double DelaySeconds { get; init; }
 	public double NoiseStandardDeviation { get; init; }
 	public double NoiseMean { get; init; }
 	public bool OutputEnabled { get; init; }

@@ -30,6 +30,7 @@ if(args.Length > 0 && args[0] == "--hardware-ui-refresh")
 		Sdg1032X.App.App application=new();
 		application.InitializeComponent();
 		ChannelSnapshot original;
+		int testedChannel;
 		await using(GeneratorSession inspection=await GeneratorSession.ConnectAsync(address))
 		{
 			ChannelSnapshot[] channels=await Task.WhenAll(
@@ -40,7 +41,12 @@ if(args.Length > 0 && args[0] == "--hardware-ui-refresh")
 				throw new InvalidOperationException(
 					"Test przerwany: co najmniej jedno wyjście Generatora jest włączone.");
 			}
-			original=channels[0];
+			original=channels.FirstOrDefault(channel=>
+				channel.Waveform is not BasicWaveform.Noise and not BasicWaveform.Dc &&
+				channel.FrequencyHz > 0)
+				?? throw new InvalidOperationException(
+					"Test przerwany: żaden kanał nie ma przebiegu z częstotliwością.");
+			testedChannel=original.Channel;
 		}
 
 		double first=original.FrequencyHz+111;
@@ -55,27 +61,27 @@ if(args.Length > 0 && args[0] == "--hardware-ui-refresh")
 					new("SIGLENT","SDG1032X","HARDWARE","1.0"))),
 				host=>new Vxi11Transport(host),
 				new MemoryGeneratorSettingsStore(new(address,true)),
-				TimeSpan.FromSeconds(5));
+				TimeSpan.FromSeconds(1));
 			await view.ScanNetworkAsync();
 			window=new()
 			{
 				Content=view
 			};
 			window.Show();
-			ChannelControl channel1=LogicalChildren<ChannelControl>(view)
-				.Single(control=>control.Name == "Channel1");
-			NumericValueEditor frequency=LogicalChildren<NumericValueEditor>(channel1)
+			ChannelControl testedControl=LogicalChildren<ChannelControl>(view)
+				.Single(control=>control.Name == $"Channel{testedChannel}");
+			NumericValueEditor frequency=LogicalChildren<NumericValueEditor>(testedControl)
 				.Single(editor=>editor.Name == "FrequencyEditor");
 			frequency.Focus();
 			Console.WriteLine($"UI_INITIAL={frequency.Value:G17}");
 
-			WriteHardwareFrequency(address,first);
-			await Task.Delay(TimeSpan.FromSeconds(6));
+			WriteHardwareFrequency(address,testedChannel,first);
+			await Task.Delay(TimeSpan.FromSeconds(2));
 			Console.WriteLine($"UI_AFTER_EXTERNAL_1={frequency.Value:G17}");
 			Close(first,frequency.Value,0.001);
 
-			WriteHardwareFrequency(address,second);
-			await Task.Delay(TimeSpan.FromSeconds(6));
+			WriteHardwareFrequency(address,testedChannel,second);
+			await Task.Delay(TimeSpan.FromSeconds(2));
 			Console.WriteLine($"UI_AFTER_EXTERNAL_2={frequency.Value:G17}");
 			Close(second,frequency.Value,0.001);
 		}
@@ -86,13 +92,13 @@ if(args.Length > 0 && args[0] == "--hardware-ui-refresh")
 				await view.DisposeAsync();
 			}
 			window?.Close();
-			WriteHardwareFrequency(address,original.FrequencyHz);
+			WriteHardwareFrequency(address,testedChannel,original.FrequencyHz);
 			await using GeneratorSession verification=await GeneratorSession.ConnectAsync(address);
-			ChannelSnapshot restored=await verification.ReadChannelAsync(1);
+			ChannelSnapshot restored=await verification.ReadChannelAsync(testedChannel);
 			if(restored.OutputEnabled)
 			{
 				throw new InvalidOperationException(
-					"Po teście wyjście CH1 nie jest wyłączone.");
+					$"Po teście wyjście CH{testedChannel} nie jest wyłączone.");
 			}
 			Close(original.FrequencyHz,restored.FrequencyHz,0.001);
 			Console.WriteLine(
@@ -131,7 +137,7 @@ if(args.Length > 0 && args[0] == "--hardware-refresh")
 			}
 			if(cycle<3)
 			{
-				Thread.Sleep(TimeSpan.FromSeconds(5));
+				Thread.Sleep(TimeSpan.FromSeconds(1));
 			}
 		}
 	}
@@ -206,19 +212,19 @@ void Reject(Action action)
 	throw new Exception("Nieprawidłowe dane zostały zaakceptowane");
 }
 
-void WriteHardwareFrequency(string address,double frequencyHz)
+void WriteHardwareFrequency(string address,int channel,double frequencyHz)
 {
 	using SiglentGeneratorClient client=new(new Vxi11Transport(address));
 	client.Initialize();
-	ChannelSnapshot snapshot=client.ReadChannel(1);
+	ChannelSnapshot snapshot=client.ReadChannel(channel);
 	if(snapshot.OutputEnabled)
 	{
 		throw new InvalidOperationException(
-			"Zmiana nastawy przerwana: wyjście CH1 jest włączone.");
+			$"Zmiana nastawy przerwana: wyjście CH{channel} jest włączone.");
 	}
 	client.Write(
 		SiglentProtocol.ParameterCommand(
-			1,
+			channel,
 			GeneratorParameter.Frequency,
 			frequencyHz));
 }
@@ -320,6 +326,7 @@ Test("Lista przebiegów obejmuje sześć podstawowych typów i własny",()=>
 	Equal("PULSE",SiglentProtocol.WaveformCode(BasicWaveform.Pulse));
 	Equal("NOISE",SiglentProtocol.WaveformCode(BasicWaveform.Noise));
 	Equal("DC",SiglentProtocol.WaveformCode(BasicWaveform.Dc));
+	Equal("ARB",SiglentProtocol.WaveformCode(BasicWaveform.Arbitrary));
 	ChannelSnapshot arbitrary=SiglentProtocol.ParseSnapshot(
 		1,
 		"C1:BSWV WVTP,ARB,FRQ,1KHZ,AMP,2V,OFST,0V,PHSE,0",
@@ -420,7 +427,10 @@ Test("Polecenia SCPI używają kanału i formatu niezależnego od kultury",()=>
 {
 	CultureInfo.CurrentCulture=new("pl-PL");
 	Equal("C1:BSWV WVTP,SINE",SiglentProtocol.WaveformCommand(1,BasicWaveform.Sine));
+	Equal("C1:BSWV WVTP,ARB",SiglentProtocol.WaveformCommand(1,BasicWaveform.Arbitrary));
 	Equal("C2:BSWV FRQ,1234.5",SiglentProtocol.ParameterCommand(2,GeneratorParameter.Frequency,1234.5));
+	Equal("C1:BSWV RISE,1E-10",SiglentProtocol.ParameterCommand(1,GeneratorParameter.RiseTime,0.0000000001));
+	Equal("C2:BSWV DLY,1E-06",SiglentProtocol.ParameterCommand(2,GeneratorParameter.Delay,0.000001));
 	Equal("C1:OUTP LOAD,HZ",SiglentProtocol.LoadCommand(1,OutputLoad.HighImpedance));
 	Equal("C2:OUTP PLRT,INVT",SiglentProtocol.PolarityCommand(2,OutputPolarity.Inverted));
 	Equal("C1:OUTP OFF",SiglentProtocol.OutputCommand(1,false));
@@ -441,6 +451,16 @@ Test("Parser odczytuje podstawowy przebieg i stan wyjścia",()=>
 	Equal(true,value.OutputEnabled);
 	Equal(OutputLoad.HighImpedance,value.Load);
 	Equal(OutputPolarity.Normal,value.Polarity);
+});
+
+Test("Parser odczytuje zbocze narastające i opóźnienie impulsu",()=>
+{
+	ChannelSnapshot value=SiglentProtocol.ParseSnapshot(
+		1,
+		"C1:BSWV WVTP,PULSE,FRQ,1KHZ,AMP,3V,OFST,0V,WIDTH,10US,RISE,100PS,DLY,1US",
+		"C1:OUTP OFF,LOAD,HZ,PLRT,NOR");
+	Close(0.0000000001,value.RiseTimeSeconds,1e-15);
+	Close(0.000001,value.DelaySeconds,1e-12);
 });
 
 Test("Parser odczytuje parametry szumu",()=>
@@ -587,8 +607,8 @@ Test("Metadane aplikacji zachowują autora, wersję i licencję",()=>
 	Equal("Mateusz Skipor",ProductInformation.AuthorName);
 	Equal("Inżynier technik elektroniki",ProductInformation.AuthorProfession);
 	Equal("mskiporsklep@op.pl",ProductInformation.AuthorEmail);
-	Equal("0.2.7",ProductInformation.Version);
-	Equal("Siglent SDG1000X Control v0.2.7",ProductInformation.GetWindowTitle());
+	Equal("0.2.8",ProductInformation.Version);
+	Equal("Siglent SDG1000X Control v0.2.8",ProductInformation.GetWindowTitle());
 	Equal("Siglent.SDG1000X.Control",typeof(MainWindow).Assembly.GetName().Name);
 	string license=ProductInformation.LoadLicenseText();
 	if(!license.Contains("PolyForm Noncommercial License 1.0.0",StringComparison.Ordinal))
@@ -631,13 +651,13 @@ Test("Interfejs zachowuje kompaktowy rozmiar i pełne pola klikalne",()=>
 		window.ShowActivated=false;
 		window.Show();
 		window.Dispatcher.Invoke(()=>{},DispatcherPriority.ApplicationIdle);
-		window.Measure(new Size(350,749));
-		window.Arrange(new Rect(0,0,350,749));
+		window.Measure(new Size(350,675));
+		window.Arrange(new Rect(0,0,350,675));
 		window.ApplyTemplate();
 
-		Equal(749d,window.Height);
+		Equal(675d,window.Height);
 		Directory.CreateDirectory(Path.Combine("SDG1000X Control","artifacts","qa"));
-		RenderTargetBitmap bitmap=new(350,749,96,96,PixelFormats.Pbgra32);
+		RenderTargetBitmap bitmap=new(350,675,96,96,PixelFormats.Pbgra32);
 		bitmap.Render(window);
 		PngBitmapEncoder encoder=new();
 		encoder.Frames.Add(BitmapFrame.Create(bitmap));
@@ -825,7 +845,7 @@ Test("Interfejs zachowuje kompaktowy rozmiar i pełne pola klikalne",()=>
 				throw new Exception($"Etykieta {label} nie ma standardowego białego tekstu");
 			}
 		}
-		RenderTargetBitmap customBitmap=new(350,749,96,96,PixelFormats.Pbgra32);
+		RenderTargetBitmap customBitmap=new(350,675,96,96,PixelFormats.Pbgra32);
 		customBitmap.Render(window);
 		PngBitmapEncoder customEncoder=new();
 		customEncoder.Frames.Add(BitmapFrame.Create(customBitmap));
@@ -837,6 +857,54 @@ Test("Interfejs zachowuje kompaktowy rozmiar i pełne pola klikalne",()=>
 		{
 			customEncoder.Save(stream);
 		}
+		WaveformChoice pulseChoice=waveformSelector.Items
+			.Cast<WaveformChoice>()
+			.Single(choice=>choice.Value == BasicWaveform.Pulse);
+		waveformSelector.SelectedItem=pulseChoice;
+		window.Dispatcher.Invoke(()=>{},DispatcherPriority.ApplicationIdle);
+		RenderTargetBitmap pulseBitmap=new(350,675,96,96,PixelFormats.Pbgra32);
+		pulseBitmap.Render(window);
+		PngBitmapEncoder pulseEncoder=new();
+		pulseEncoder.Frames.Add(BitmapFrame.Create(pulseBitmap));
+		using(FileStream stream=File.Create(Path.Combine(
+			"SDG1000X Control",
+			"artifacts",
+			"qa",
+			"generator-pulse-ui.png")))
+		{
+			pulseEncoder.Save(stream);
+		}
+
+		WaveformChoice squareChoice=waveformSelector.Items
+			.Cast<WaveformChoice>()
+			.Single(choice=>choice.Value == BasicWaveform.Square);
+		waveformSelector.SelectedItem=squareChoice;
+		window.Dispatcher.Invoke(()=>{},DispatcherPriority.ApplicationIdle);
+		RenderTargetBitmap squareBitmap=new(350,675,96,96,PixelFormats.Pbgra32);
+		squareBitmap.Render(window);
+		PngBitmapEncoder squareEncoder=new();
+		squareEncoder.Frames.Add(BitmapFrame.Create(squareBitmap));
+		using(FileStream stream=File.Create(Path.Combine(
+			"SDG1000X Control",
+			"artifacts",
+			"qa",
+			"generator-square-ui.png")))
+		{
+			squareEncoder.Save(stream);
+		}
+
+		ScrollViewer channelScroller=LogicalChildren<ScrollViewer>(channel1).Single();
+		Equal(Visibility.Collapsed,channelScroller.ComputedVerticalScrollBarVisibility);
+		FrameworkElement squareStepSelector=LogicalChildren<FrameworkElement>(channel1)
+			.Single(element=>element.Name == "StepMultiplierSelector");
+		double selectorBottom=squareStepSelector.TranslatePoint(
+			new Point(0,squareStepSelector.ActualHeight),window).Y;
+		double statusTop=status.TranslatePoint(new Point(0,0),window).Y;
+		if(statusTop-selectorBottom is < 0 or > 35)
+		{
+			throw new Exception("Status nie znajduje się bezpośrednio pod mnożnikami w trybie Prostokąt");
+		}
+
 
 		if(LogicalChildren<FrameworkElement>(window).Any(element=>
 			element.GetType().FullName ==
@@ -899,11 +967,29 @@ Test("Interfejs zachowuje kompaktowy rozmiar i pełne pola klikalne",()=>
 			.Single(editor=>editor.Name == "DutyEditor");
 		NumericValueEditor pulseWidthEditor=LogicalChildren<NumericValueEditor>(channel1)
 			.Single(editor=>editor.Name == "PulseWidthEditor");
+		NumericValueEditor riseTimeEditor=LogicalChildren<NumericValueEditor>(channel1)
+			.Single(editor=>editor.Name == "RiseTimeEditor");
+		NumericValueEditor delayEditor=LogicalChildren<NumericValueEditor>(channel1)
+			.Single(editor=>editor.Name == "DelayEditor");
+		NumericValueEditor symmetryEditor=LogicalChildren<NumericValueEditor>(channel1)
+			.Single(editor=>editor.Name == "SymmetryEditor");
+		NumericValueEditor noiseDeviationEditor=LogicalChildren<NumericValueEditor>(channel1)
+			.Single(editor=>editor.Name == "NoiseDeviationEditor");
 		Equal(0.001,frequencyEditor.Step);
 		Equal(0.001,amplitudeEditor.Step);
-		Equal(0.1,phaseEditor.Step);
-		Equal(0.1,dutyEditor.Step);
+		Equal(0.001,phaseEditor.Step);
+		Equal(0.001,dutyEditor.Step);
+		Equal(0.1,symmetryEditor.Step);
 		Equal(0.000000001,pulseWidthEditor.Step);
+		Close(0.0000000001,riseTimeEditor.Step,1e-20);
+		Equal(0.001,delayEditor.Step);
+		Equal(0.001,noiseDeviationEditor.Step);
+		Equal(4,phaseEditor.DecimalPlaces);
+		Equal(3,dutyEditor.DecimalPlaces);
+		Equal(1,symmetryEditor.DecimalPlaces);
+		Equal(1,riseTimeEditor.DecimalPlaces);
+		Equal(6,delayEditor.DecimalPlaces);
+		Equal(4,noiseDeviationEditor.DecimalPlaces);
 		inactiveStep.RaiseEvent(new MouseEventArgs(Mouse.PrimaryDevice,0)
 		{
 			RoutedEvent=Mouse.MouseEnterEvent
@@ -941,7 +1027,11 @@ Test("Interfejs zachowuje kompaktowy rozmiar i pełne pola klikalne",()=>
 		Button microStep=stepButtons.Single(button=>Equals(button.Content,"u"));
 		microStep.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
 		Equal(0.001,frequencyEditor.Step);
-		Equal(0.1,dutyEditor.Step);
+		Equal(0.001,dutyEditor.Step);
+		Equal(0.0001,phaseEditor.Step);
+		Close(0.0000000001,riseTimeEditor.Step,1e-20);
+		Equal(0.000001,delayEditor.Step);
+		Equal(0.0001,noiseDeviationEditor.Step);
 		MenuItem tools=LogicalChildren<MenuItem>(window)
 			.Single(item=>Equals(item.Header,"Narzędzia"));
 		string[] toolItems=LogicalChildren<MenuItem>(tools)
@@ -1099,7 +1189,7 @@ Test("Generator cyklicznie odczytuje nastawy zmienione z panelu urządzenia",()=
 	});
 });
 
-Test("Generator domyślnie odczytuje oba kanały co pięć sekund",()=>
+Test("Generator domyślnie odczytuje oba kanały co sekundę",()=>
 {
 	RunStaAsync(async()=>
 	{
@@ -1111,7 +1201,7 @@ Test("Generator domyślnie odczytuje oba kanały co pięć sekund",()=>
 			"refreshInterval",
 			BindingFlags.Instance|BindingFlags.NonPublic)
 			?? throw new Exception("Brak interwału odświeżania Generatora");
-		Equal(TimeSpan.FromSeconds(5),(TimeSpan)intervalField.GetValue(view)!);
+		Equal(TimeSpan.FromSeconds(1),(TimeSpan)intervalField.GetValue(view)!);
 		await view.DisposeAsync();
 	});
 });
@@ -1142,6 +1232,37 @@ Test("Generator wznawia cykliczny odczyt po przejściowym błędzie",()=>
 		await view.DisposeAsync();
 	});
 });
+Test("Wybór przebiegu arbitralnego przełącza Generator przed wgraniem pliku",()=>
+{
+	RunStaAsync(async()=>
+	{
+		GeneratorDeviceTransport transport=new();
+		GeneratorView view=new(
+			new StubScanner(new(
+				"192.168.200.132",
+				new("SIGLENT","SDG1032X","123456","1.0"))),
+			_=>transport,
+			new MemoryGeneratorSettingsStore(new("",true)),
+			TimeSpan.FromMilliseconds(25));
+		await view.ScanNetworkAsync();
+		ChannelControl channel1=LogicalChildren<ChannelControl>(view)
+			.Single(control=>control.Name == "Channel1");
+		ComboBox selector=LogicalChildren<ComboBox>(channel1)
+			.Single(comboBox=>comboBox.Name == "WaveformSelector");
+		WaveformChoice arbitrary=selector.Items
+			.Cast<WaveformChoice>()
+			.Single(choice=>choice.Value == BasicWaveform.Arbitrary);
+		selector.SelectedItem=arbitrary;
+		await Task.Delay(150);
+		if(!transport.Writes.Contains("C1:BSWV WVTP,ARB"))
+		{
+			throw new Exception("Wybór Arbitralne nie przełączył Generatora na ARB");
+		}
+		Equal(BasicWaveform.Arbitrary,((WaveformChoice)selector.SelectedItem).Value);
+		await view.DisposeAsync();
+	});
+});
+
 
 Console.WriteLine($"Wynik: {passed} zaliczonych, {failed} niezaliczonych");
 return failed == 0 ? 0 : 1;
@@ -1217,8 +1338,16 @@ sealed class MemoryGeneratorSettingsStore(GeneratorSettings value) : IGeneratorS
 
 sealed class GeneratorDeviceTransport : IInstrumentTransport
 {
+	private string channel1Waveform="SINE";
+	public List<string> Writes { get; }=[];
+
 	public void Write(string command)
 	{
+		Writes.Add(command);
+		if(command == "C1:BSWV WVTP,ARB")
+		{
+			channel1Waveform="ARB";
+		}
 	}
 
 	public byte[] Query(string command)
@@ -1226,7 +1355,7 @@ sealed class GeneratorDeviceTransport : IInstrumentTransport
 		string response=command switch
 		{
 			"*IDN?"=>"SIGLENT,SDG1032X,123456,1.0",
-			"C1:BSWV?"=>"C1:BSWV WVTP,SINE,FRQ,3000HZ,AMP,4V,OFST,0V,PHSE,0",
+			"C1:BSWV?"=>"C1:BSWV WVTP,"+channel1Waveform+",FRQ,3000HZ,AMP,4V,OFST,0V,PHSE,0",
 			"C2:BSWV?"=>"C2:BSWV WVTP,SINE,FRQ,2000HZ,AMP,3V,OFST,0V,PHSE,0",
 			"C1:OUTP?"=>"C1:OUTP OFF,LOAD,HZ,PLRT,NOR",
 			"C2:OUTP?"=>"C2:OUTP OFF,LOAD,HZ,PLRT,NOR",

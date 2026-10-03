@@ -1,38 +1,38 @@
-# Siglent SDM3000 Control
+# Siglent SDM3000 Control v0.2.0
 
-Samodzielna aplikacja Windows oraz panel wielokrotnego użytku do wykonywania i prezentowania pomiarów multimetru SIGLENT SDM3055 przez LAN/VXI-11. Wydanie 0.1.2 nie przełącza funkcji ani zakresu, ale aktywnie inicjuje pojedynczy pomiar poleceniem `READ?`.
+Samodzielna aplikacja Windows oraz panel wielokrotnego użytku do ciągłego wykonywania i prezentowania pomiarów multimetru SIGLENT SDM3055 przez LAN/VXI-11. Wydanie 0.2.0 utrzymuje jedną sesję zdalną, inicjuje pomiary poleceniem `READ?` i pozwala wybrać podstawową funkcję pomiarową z aplikacji.
 
 Domyślny adres urządzenia w tej instalacji: `192.168.200.131`.
 
 Szczegółowy zakres i wyniki testów sprzętowych opisuje dokument [Zakres panelu SDM3000](../docs/sdm3000-viewer-scope.md).
 
-## Funkcje 0.1.2
+## Funkcje 0.2.0
 
 - wspólny styl LabStation oraz niezależny panel `UserControl`,
-- krótkie połączenia LAN/VXI-11 przez `Shared/LabStation.Instruments`,
+- jedna trwała sesja LAN/VXI-11 przez `Shared/LabStation.Instruments`,
 - skan sieci i zapamiętywana opcja `Auto connect`,
 - identyfikacja modelu przez `*IDN?`,
 - odczyt funkcji i zakresu przez `CONFigure?`,
-- inicjowanie świeżego pomiaru przez `READ?`,
+- ciągłe inicjowanie świeżych pomiarów przez `READ?` co około 100 ms,
 - odczyt liczby danych w pamięci przez `DATA:POINts?`,
-- automatyczne rozpoznawanie funkcji i zakresu bez przełączników trybu pomiarowego w aplikacji,
+- osiem przycisków wyboru funkcji: `V AC`, `V DC`, `A AC`, `A DC`, `Ω`, `F`, `Diod` i `Sig`,
 - obsługa napięcia i prądu AC/DC, rezystancji 2W/4W, pojemności, diody, ciągłości, częstotliwości, okresu i temperatury,
 - duży bieżący wynik z nazwą właściwą dla funkcji, między innymi `Vrms`, `Irms`, `Vdc`, `Idc`, `R`, `C` i `Vf`,
 - lokalne minimum, maksimum, średnia, peak-to-peak serii, odchylenie standardowe i licznik próbek,
 - zapis zebranych odczytów do pliku CSV,
-- zamykanie transportu po identyfikacji i po każdym cyklu pomiarowym,
+- serializacja konfiguracji i odczytów w obrębie jednej sesji, bez ponownego łączenia w każdym cyklu,
 - jawne przedstawienie przeciążenia lub otwartego obwodu zamiast liczby około 9,9E37.
 
 Peak-to-peak w tym panelu jest różnicą maksimum i minimum kolejnych odczytów multimetru. Nie jest to oscyloskopowe Vpp przebiegu wejściowego.
 
 ## Interfejs
 
-- stałe, poziome okno 920 x 280 px z aktywną minimalizacją,
+- stałe, poziome okno 920 x 318 px z aktywną minimalizacją,
 - pole IP o szerokości 150 px i standardowy przycisk Offline/Online,
 - wspólne menu `Narzędzia` z `Skanuj sieć` i `Auto connect`,
 - menu `Zapisz jako` z eksportem CSV,
 - wspólne menu `O aplikacji` z oknami Autor i Licencja,
-- brak wyboru trybu pomiarowego - funkcja jest odczytywana z fizycznego miernika,
+- osiem równych przycisków funkcji pomiarowej pomiędzy paskiem połączenia a blokami wyników,
 - biały zwykły status i czerwony status błędu.
 
 ## Skutki polecenia READ
@@ -44,9 +44,9 @@ Zastosowanie `READ?` ma dwa jawne skutki:
 - aplikacja jest kontrolerem pomiaru, a nie pasywnym viewerem,
 - pamięć odczytów w urządzeniu jest czyszczona przez rozpoczęcie nowej sekwencji pomiarowej.
 
-Historia i statystyki aplikacji są przechowywane lokalnie w trakcie sesji i mogą zostać zapisane do CSV. Aplikacja nadal nie zmienia funkcji, zakresu, NPLC, filtrów, limitów, ustawień sieci ani konfiguracji wyzwalania.
+Historia i statystyki aplikacji są przechowywane lokalnie w trakcie sesji i mogą zostać zapisane do CSV. Przyciski funkcji wysyłają odpowiednie polecenie `CONFigure`. Aplikacja nie zmienia zakresu, NPLC, filtrów, limitów, ustawień sieci ani konfiguracji wyzwalania.
 
-Transport wysyła `device_local` i zamyka połączenie po każdym cyklu. Test fizycznego urządzenia wykazał jednak, że firmware może pozostawić panel w stanie Remote aż do naciśnięcia Shift na urządzeniu. Aplikacja nie obiecuje programowego wyjścia z tego stanu.
+Transport pozostaje otwarty przez całą sesję i wysyła `device_local` dopiero przy końcowym rozłączeniu. Test fizycznego urządzenia wykazał jednak, że firmware może pozostawić panel w stanie Remote aż do naciśnięcia Shift na urządzeniu. Aplikacja nie obiecuje programowego wyjścia z tego stanu.
 
 ## Budowanie
 
@@ -56,6 +56,13 @@ Transport wysyła `device_local` i zamyka połączenie po każdym cyklu. Test fi
 ```
 
 Publikacja samodzielna dla Windows x64 trafia do `artifacts/final/win-x64`. W tym katalogu znajduje się `Siglent.SDM3000.Control.exe` wraz z licencją, informacjami o zależnościach i README.
+
+## Status weryfikacji
+
+Wersja 0.2.0 przeszła 14/14 testów automatycznych, obejmujących mapowanie ośmiu poleceń `CONFigure`, zachowanie jednej sesji, kolejne `READ?`, serializację operacji oraz układ WPF.
+
+Na fizycznym SDM3055 z firmware `1.02.01.29R1` jedna sesja zwróciła trzy kolejne świeże pomiary `V DC`: 11,30298 mV, 11,30100 mV i 11,30511 mV. Test nie zmieniał funkcji pomiarowej. Przyciski funkcji zostały zweryfikowane programowo, ale ich działanie na fizycznym mierniku pozostaje do ręcznego sprawdzenia podczas użytkowania aplikacji.
+
 
 ## Zasoby
 

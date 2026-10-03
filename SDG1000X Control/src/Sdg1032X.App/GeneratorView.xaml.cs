@@ -38,7 +38,7 @@ public partial class GeneratorView : UserControl,IAsyncDisposable
 			new JsonGeneratorSettingsStore(
 				SettingsPath,
 				new("192.168.200.132",false)),
-			TimeSpan.FromSeconds(5))
+			TimeSpan.FromSeconds(1))
 	{
 	}
 
@@ -54,7 +54,7 @@ public partial class GeneratorView : UserControl,IAsyncDisposable
 			throw new ArgumentNullException(nameof(transportFactory));
 		this.settingsStore=settingsStore ??
 			throw new ArgumentNullException(nameof(settingsStore));
-		this.refreshInterval=refreshInterval ?? TimeSpan.FromSeconds(5);
+		this.refreshInterval=refreshInterval ?? TimeSpan.FromSeconds(1);
 		if(this.refreshInterval <= TimeSpan.Zero)
 		{
 			throw new ArgumentOutOfRangeException(nameof(refreshInterval));
