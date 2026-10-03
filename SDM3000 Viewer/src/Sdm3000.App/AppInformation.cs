@@ -25,7 +25,7 @@ public static class AppInformation
 		}
 	}
 
-	public static string DisplayName=>"Siglent SDM3000 Viewer v"+Version;
+	public static string DisplayName=>"Siglent SDM3000 Control v"+Version;
 
 	public static ApplicationPresentation Presentation { get; }=new(
 		DisplayName,
@@ -34,7 +34,7 @@ public static class AppInformation
 		AuthorEmail,
 		LoadLicenseText(),
 		BitmapFrame.Create(new Uri(
-			"pack://application:,,,/Siglent.SDM3000.Viewer;component/Assets/Siglent_SDM3055.ico")));
+			"pack://application:,,,/Siglent.SDM3000.Control;component/Assets/Siglent_SDM3055.ico")));
 
 	public static string LoadLicenseText()
 	{

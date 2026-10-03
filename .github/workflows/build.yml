@@ -63,6 +63,6 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
-      - name: Test and build Siglent SDM3000 Viewer
+      - name: Test and build Siglent SDM3000 Control
         working-directory: SDM3000 Viewer
         run: .\build.ps1

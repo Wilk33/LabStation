@@ -2,10 +2,10 @@
 	<PropertyGroup>
 		<OutputType>WinExe</OutputType>
 		<UseWPF>true</UseWPF>
-		<AssemblyName>Siglent.SDM3000.Viewer</AssemblyName>
+		<AssemblyName>Siglent.SDM3000.Control</AssemblyName>
 		<RootNamespace>Sdm3000.App</RootNamespace>
-		<Product>SIGLENT SDM3000 Viewer</Product>
-		<Description>Odczyt multimetru SIGLENT SDM3000 przez LAN/VXI-11</Description>
+		<Product>SIGLENT SDM3000 Control</Product>
+		<Description>Pomiar multimetrem SIGLENT SDM3000 przez LAN/VXI-11</Description>
 		<PackageLicenseExpression>PolyForm-Noncommercial-1.0.0</PackageLicenseExpression>
 		<ApplicationIcon>../../Siglent_SDM3055.ico</ApplicationIcon>
 	</PropertyGroup>

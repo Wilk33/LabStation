@@ -51,7 +51,7 @@ public sealed class SiglentMultimeterClient : IDisposable
 			MeasurementConfiguration configuration=MultimeterProtocol.ParseConfiguration(
 				connection.QueryText("CONFigure?"));
 			MeasurementReading reading=MultimeterProtocol.ParseReading(
-				connection.QueryText("DATA:LAST?"));
+				connection.QueryText("READ?"));
 			long storedPoints=MultimeterProtocol.ParsePointCount(
 				connection.QueryText("DATA:POINts?"));
 			return accumulator.Accept(configuration,reading,storedPoints);

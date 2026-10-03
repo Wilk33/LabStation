@@ -22,7 +22,7 @@ if($Publish)
 	$output=Join-Path $root 'artifacts/final/win-x64'
 	[xml]$buildProperties=Get-Content -Raw (Join-Path $root 'Directory.Build.props')
 	$version=([string]$buildProperties.Project.PropertyGroup.Version).Trim()
-	$archive=Join-Path $root "artifacts/final/Siglent-SDM3000-Viewer-v$version-win-x64.zip"
+	$archive=Join-Path $root "artifacts/final/Siglent-SDM3000-Control-v$version-win-x64.zip"
 	if(Test-Path -LiteralPath $output)
 	{
 		Remove-Item -LiteralPath $output -Recurse -Force

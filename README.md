@@ -4,10 +4,10 @@ LabStation to zestaw pięciu niezależnych aplikacji do obsługi przyrządów la
 
 ## Aplikacje
 
-- `KA3005P` - Korad KA3005P v0.2.7
-- `SDS1000CML Viewer` - Siglent SDS1000CML Viewer v0.7.2
-- `SDG1000X Control` - Siglent SDG1000X Control v0.2.5
-- `SDM3000 Viewer` - Siglent SDM3000 Viewer v0.1.0
+- `KA3005P` - Korad KA3005P v0.2.8
+- `SDS1000CML Viewer` - Siglent SDS1000CML Viewer v0.7.3
+- `SDG1000X Control` - Siglent SDG1000X Control v0.2.7
+- `SDM3000 Viewer` - Siglent SDM3000 Control v0.1.2
 - `SDL1000X Control` - Siglent SDL1000X Control
 
 Każda aplikacja jest osobnym plikiem EXE. W przyszłym programie LabStation odpowiadające im panele będą niezależne komunikacyjnie, lecz na stałe rozmieszczone w jednym oknie.

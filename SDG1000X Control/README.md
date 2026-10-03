@@ -1,4 +1,4 @@
-# Siglent SDG1000X Control v0.2.6
+# Siglent SDG1000X Control v0.2.7
 
 Wąska aplikacja Windows do podstawowego sterowania dwukanałowym generatorem SIGLENT SDG1032X przez LAN/VXI-11. Główna powierzchnia `GeneratorView` jest panelem wielokrotnego użytku, a samodzielne EXE jest jego cienką powłoką.
 
@@ -70,6 +70,8 @@ Aplikacja używa VXI-11 przez LAN, tej samej metody połączenia co referencyjna
 4. Akceptowany jest model SIGLENT SDG1032X.
 5. Ustawienia obu kanałów zostaną odczytane automatycznie.
 
+Podczas aktywnego połączenia pełne ustawienia CH1 i CH2 są ponownie odczytywane co 5 sekund. Zmiana wykonana z panelu generatora pojawia się dzięki temu w aplikacji bez ponownego łączenia. Ochrona wpisywanego tekstu działa tylko podczas edycji pola i nie blokuje późniejszych odświeżeń całego kanału. Pojedynczy błąd odczytu nie zatrzymuje kolejnych cykli.
+
 Opcja `Narzędzia -> Auto connect` zapisuje się razem z adresem. Przy uruchomieniu łączy aplikację z niepustym zapisanym adresem. Po skanowaniu automatycznie łączy z odnalezionym generatorem, jeśli opcja jest zaznaczona.
 
 Transport VXI-11, podstawowe operacje SCPI oraz kolejka `latest-wins` pochodzą ze wspólnej biblioteki `Shared/LabStation.Instruments`. Polecenia kanałów, parsery generatora i reguły wyjść pozostają lokalne.
@@ -86,7 +88,9 @@ Wymagany jest .NET 10 SDK dla Windows.
 
 ## Status weryfikacji
 
-Testy automatyczne nie łączą się z fizycznym urządzeniem i nie zmieniają jego stanu. Zakres ograniczonej walidacji wcześniejszej wersji 0.1.2 na rzeczywistym generatorze oraz pełna procedura testowa są opisane w [docs/hardware-testing.md](docs/hardware-testing.md). Wersja 0.2.6 została zweryfikowana programowo, włącznie z parserem rzeczywistego układu pliku EasyWave CSV, kodowaniem próbek, selektorem mnożnika, jego stanem hover, ograniczaniem kroków do zakresu nastaw oraz cyklicznym odczytem ustawień obu kanałów. Skanowanie sieci jest dodatkowo sprawdzane na rzeczywistym urządzeniu wyłącznie przez odczyt `*IDN?`. Wysyłanie przebiegu arbitralnego nie zostało potwierdzone na fizycznym generatorze w ramach tego wydania.
+Podstawowy zestaw testów automatycznych nie łączy się z fizycznym urządzeniem. Zakres ograniczonej walidacji wcześniejszej wersji 0.1.2 na rzeczywistym generatorze oraz pełna procedura testowa są opisane w [docs/hardware-testing.md](docs/hardware-testing.md). Wersja 0.2.7 została zweryfikowana programowo, włącznie z parserem rzeczywistego układu pliku EasyWave CSV, kodowaniem próbek, selektorem mnożnika, jego stanem hover, ograniczaniem kroków do zakresu nastaw oraz odpornym na przejściowy błąd cyklem odczytu ustawień obu kanałów co 5 sekund.
+
+Na fizycznym SDG1032X sprawdzono również zmianę nastawy niezależną od aplikacji. Przy wyłączonych wyjściach panel rozpoczął od 4000 Hz, drugie połączenie ustawiło 4111 Hz i 4222 Hz, a kontrolka UI przyjęła obie wartości po kolejnych cyklach 5 sekund. Test przywrócił 4000 Hz i potwierdził stan `OUTPUT=OFF`. Wysyłanie przebiegu arbitralnego nie zostało potwierdzone na fizycznym generatorze w ramach tego wydania.
 
 ## Autor i licencja
 

@@ -4,10 +4,10 @@
 	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
 	xmlns:local="clr-namespace:Sdm3000.App"
 	xmlns:sharedControls="clr-namespace:LabStation.UI.Controls;assembly=LabStation.UI"
-	Title="Siglent SDM3000 Viewer"
+	Title="Siglent SDM3000 Control"
 	Width="920"
 	Height="280"
-	Icon="/Siglent.SDM3000.Viewer;component/Assets/Siglent_SDM3055.ico"
+	Icon="/Siglent.SDM3000.Control;component/Assets/Siglent_SDM3055.ico"
 	ResizeMode="NoResize"
 	WindowStartupLocation="CenterScreen">
 	<DockPanel>

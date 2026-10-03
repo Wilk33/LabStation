@@ -5,17 +5,17 @@ namespace Sdm3000.Core;
 
 public sealed class MultimeterSession : IAsyncDisposable
 {
-	private readonly SiglentMultimeterClient client;
+	private readonly Func<IInstrumentTransport> transportFactory;
 	private readonly MeasurementAccumulator accumulator=new();
 	private readonly SemaphoreSlim ioGate=new(1,1);
 	private readonly CancellationTokenSource cancellation=new();
 	private bool disposed;
 
 	private MultimeterSession(
-		SiglentMultimeterClient client,
+		Func<IInstrumentTransport> transportFactory,
 		ScpiIdentity identity)
 	{
-		this.client=client;
+		this.transportFactory=transportFactory;
 		Identity=identity;
 	}
 
@@ -33,17 +33,9 @@ public sealed class MultimeterSession : IAsyncDisposable
 		return await Task.Run(() =>
 		{
 			IInstrumentTransport transport=transportFactory();
-			try
-			{
-				SiglentMultimeterClient client=new(transport);
-				ScpiIdentity identity=client.Initialize();
-				return new MultimeterSession(client,identity);
-			}
-			catch
-			{
-				transport.Dispose();
-				throw;
-			}
+			using SiglentMultimeterClient client=new(transport);
+			ScpiIdentity identity=client.Initialize();
+			return new MultimeterSession(transportFactory,identity);
 		});
 	}
 
@@ -53,9 +45,12 @@ public sealed class MultimeterSession : IAsyncDisposable
 		await ioGate.WaitAsync(cancellation.Token);
 		try
 		{
-			return await Task.Run(
-				()=>client.ReadSnapshot(accumulator),
-				cancellation.Token);
+			return await Task.Run(()=>
+			{
+				IInstrumentTransport transport=transportFactory();
+				using SiglentMultimeterClient client=new(transport);
+				return client.ReadSnapshot(accumulator);
+			},cancellation.Token);
 		}
 		finally
 		{
@@ -74,7 +69,6 @@ public sealed class MultimeterSession : IAsyncDisposable
 		await ioGate.WaitAsync();
 		try
 		{
-			client.Dispose();
 		}
 		finally
 		{

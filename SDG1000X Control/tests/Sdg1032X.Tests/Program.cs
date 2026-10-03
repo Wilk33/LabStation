@@ -22,6 +22,126 @@ using Sdg1032X.Core;
 int failed=0;
 int passed=0;
 
+if(args.Length > 0 && args[0] == "--hardware-ui-refresh")
+{
+	string address=args.Length > 1 ? args[1] : "192.168.200.132";
+	RunStaAsync(async()=>
+	{
+		Sdg1032X.App.App application=new();
+		application.InitializeComponent();
+		ChannelSnapshot original;
+		await using(GeneratorSession inspection=await GeneratorSession.ConnectAsync(address))
+		{
+			ChannelSnapshot[] channels=await Task.WhenAll(
+				inspection.ReadChannelAsync(1),
+				inspection.ReadChannelAsync(2));
+			if(channels.Any(channel=>channel.OutputEnabled))
+			{
+				throw new InvalidOperationException(
+					"Test przerwany: co najmniej jedno wyjście Generatora jest włączone.");
+			}
+			original=channels[0];
+		}
+
+		double first=original.FrequencyHz+111;
+		double second=original.FrequencyHz+222;
+		GeneratorView? view=null;
+		Window? window=null;
+		try
+		{
+			view=new GeneratorView(
+				new StubScanner(new(
+					address,
+					new("SIGLENT","SDG1032X","HARDWARE","1.0"))),
+				host=>new Vxi11Transport(host),
+				new MemoryGeneratorSettingsStore(new(address,true)),
+				TimeSpan.FromSeconds(5));
+			await view.ScanNetworkAsync();
+			window=new()
+			{
+				Content=view
+			};
+			window.Show();
+			ChannelControl channel1=LogicalChildren<ChannelControl>(view)
+				.Single(control=>control.Name == "Channel1");
+			NumericValueEditor frequency=LogicalChildren<NumericValueEditor>(channel1)
+				.Single(editor=>editor.Name == "FrequencyEditor");
+			frequency.Focus();
+			Console.WriteLine($"UI_INITIAL={frequency.Value:G17}");
+
+			WriteHardwareFrequency(address,first);
+			await Task.Delay(TimeSpan.FromSeconds(6));
+			Console.WriteLine($"UI_AFTER_EXTERNAL_1={frequency.Value:G17}");
+			Close(first,frequency.Value,0.001);
+
+			WriteHardwareFrequency(address,second);
+			await Task.Delay(TimeSpan.FromSeconds(6));
+			Console.WriteLine($"UI_AFTER_EXTERNAL_2={frequency.Value:G17}");
+			Close(second,frequency.Value,0.001);
+		}
+		finally
+		{
+			if(view is not null)
+			{
+				await view.DisposeAsync();
+			}
+			window?.Close();
+			WriteHardwareFrequency(address,original.FrequencyHz);
+			await using GeneratorSession verification=await GeneratorSession.ConnectAsync(address);
+			ChannelSnapshot restored=await verification.ReadChannelAsync(1);
+			if(restored.OutputEnabled)
+			{
+				throw new InvalidOperationException(
+					"Po teście wyjście CH1 nie jest wyłączone.");
+			}
+			Close(original.FrequencyHz,restored.FrequencyHz,0.001);
+			Console.WriteLine(
+				$"RESTORED={restored.FrequencyHz:G17} OUTPUT=OFF");
+		}
+	});
+	return 0;
+}
+
+if(args.Length > 0 && args[0] == "--hardware-refresh")
+{
+	string address=args.Length > 1 ? args[1] : "192.168.200.132";
+	GeneratorSession hardware=GeneratorSession.ConnectAsync(address)
+		.GetAwaiter()
+		.GetResult();
+	try
+	{
+		Console.WriteLine("IDN="+hardware.Identity);
+		for(int cycle=1;cycle<=3;cycle++)
+		{
+			ChannelSnapshot[] channels=Task.WhenAll(
+				hardware.ReadChannelAsync(1),
+				hardware.ReadChannelAsync(2))
+				.GetAwaiter()
+				.GetResult();
+			foreach(ChannelSnapshot channel in channels)
+			{
+				Console.WriteLine(
+					$"CYCLE={cycle} CH={channel.Channel} "+
+					$"WAVE={channel.Waveform} "+
+					$"FREQ={channel.FrequencyHz:G17} "+
+					$"AMP={channel.AmplitudeVpp:G17} "+
+					$"OFFSET={channel.OffsetVolts:G17} "+
+					$"PHASE={channel.PhaseDegrees:G17} "+
+					$"OUTPUT={(channel.OutputEnabled ? "ON" : "OFF")}");
+			}
+			if(cycle<3)
+			{
+				Thread.Sleep(TimeSpan.FromSeconds(5));
+			}
+		}
+	}
+	finally
+	{
+		hardware.DisposeAsync().AsTask().GetAwaiter().GetResult();
+	}
+	return 0;
+}
+
 if(args.SequenceEqual(["--scan-hardware"]))
 {
 	using CancellationTokenSource timeout=new(TimeSpan.FromSeconds(45));
@@ -84,6 +204,23 @@ void Reject(Action action)
 		return;
 	}
 	throw new Exception("Nieprawidłowe dane zostały zaakceptowane");
+}
+
+void WriteHardwareFrequency(string address,double frequencyHz)
+{
+	using SiglentGeneratorClient client=new(new Vxi11Transport(address));
+	client.Initialize();
+	ChannelSnapshot snapshot=client.ReadChannel(1);
+	if(snapshot.OutputEnabled)
+	{
+		throw new InvalidOperationException(
+			"Zmiana nastawy przerwana: wyjście CH1 jest włączone.");
+	}
+	client.Write(
+		SiglentProtocol.ParameterCommand(
+			1,
+			GeneratorParameter.Frequency,
+			frequencyHz));
 }
 
 void RunSta(Action action)
@@ -450,8 +587,8 @@ Test("Metadane aplikacji zachowują autora, wersję i licencję",()=>
 	Equal("Mateusz Skipor",ProductInformation.AuthorName);
 	Equal("Inżynier technik elektroniki",ProductInformation.AuthorProfession);
 	Equal("mskiporsklep@op.pl",ProductInformation.AuthorEmail);
-	Equal("0.2.6",ProductInformation.Version);
-	Equal("Siglent SDG1000X Control v0.2.6",ProductInformation.GetWindowTitle());
+	Equal("0.2.7",ProductInformation.Version);
+	Equal("Siglent SDG1000X Control v0.2.7",ProductInformation.GetWindowTitle());
 	Equal("Siglent.SDG1000X.Control",typeof(MainWindow).Assembly.GetName().Name);
 	string license=ProductInformation.LoadLicenseText();
 	if(!license.Contains("PolyForm Noncommercial License 1.0.0",StringComparison.Ordinal))
@@ -940,16 +1077,67 @@ Test("Generator cyklicznie odczytuje nastawy zmienione z panelu urządzenia",()=
 			_=>transport,
 			new MemoryGeneratorSettingsStore(new("",true)),
 			TimeSpan.FromMilliseconds(25));
+		Window window=new()
+		{
+			Content=view
+		};
+		window.Show();
 		await view.ScanNetworkAsync();
-		await Task.Delay(120);
 		ChannelControl channel1=LogicalChildren<ChannelControl>(view)
 			.Single(control=>control.Name == "Channel1");
 		NumericValueEditor frequency=LogicalChildren<NumericValueEditor>(channel1)
 			.Single(editor=>editor.Name == "FrequencyEditor");
+		frequency.Focus();
+		await Task.Delay(120);
 		Equal(5000d,frequency.Value);
 		if(transport.Channel1Queries<2)
 		{
 			throw new Exception("Generator nie wykonał cyklicznego odczytu CH1");
+		}
+		await view.DisposeAsync();
+		window.Close();
+	});
+});
+
+Test("Generator domyślnie odczytuje oba kanały co pięć sekund",()=>
+{
+	RunStaAsync(async()=>
+	{
+		GeneratorView view=new(
+			new StubScanner(null),
+			_=>new GeneratorDeviceTransport(),
+			new MemoryGeneratorSettingsStore(new("",false)));
+		FieldInfo intervalField=typeof(GeneratorView).GetField(
+			"refreshInterval",
+			BindingFlags.Instance|BindingFlags.NonPublic)
+			?? throw new Exception("Brak interwału odświeżania Generatora");
+		Equal(TimeSpan.FromSeconds(5),(TimeSpan)intervalField.GetValue(view)!);
+		await view.DisposeAsync();
+	});
+});
+
+Test("Generator wznawia cykliczny odczyt po przejściowym błędzie",()=>
+{
+	RunStaAsync(async()=>
+	{
+		RecoveringGeneratorTransport transport=new();
+		GeneratorView view=new(
+			new StubScanner(new(
+				"192.168.200.132",
+				new("SIGLENT","SDG1032X","123456","1.0"))),
+			_=>transport,
+			new MemoryGeneratorSettingsStore(new("",true)),
+			TimeSpan.FromMilliseconds(25));
+		await view.ScanNetworkAsync();
+		await Task.Delay(180);
+		ChannelControl channel1=LogicalChildren<ChannelControl>(view)
+			.Single(control=>control.Name == "Channel1");
+		NumericValueEditor frequency=LogicalChildren<NumericValueEditor>(channel1)
+			.Single(editor=>editor.Name == "FrequencyEditor");
+		Equal(7000d,frequency.Value);
+		if(transport.Channel1Queries<3)
+		{
+			throw new Exception("Generator nie wznowił odczytu po przejściowym błędzie");
 		}
 		await view.DisposeAsync();
 	});
@@ -1066,6 +1254,41 @@ sealed class MutatingGeneratorTransport : IInstrumentTransport
 		{
 			"*IDN?"=>"SIGLENT,SDG1032X,123456,1.0",
 			"C1:BSWV?"=>"C1:BSWV WVTP,SINE,FRQ,"+(++Channel1Queries == 1 ? "3000HZ" : "5000HZ")+",AMP,4V,OFST,0V,PHSE,0",
+			"C2:BSWV?"=>"C2:BSWV WVTP,SINE,FRQ,2000HZ,AMP,3V,OFST,0V,PHSE,0",
+			"C1:OUTP?"=>"C1:OUTP OFF,LOAD,HZ,PLRT,NOR",
+			"C2:OUTP?"=>"C2:OUTP OFF,LOAD,HZ,PLRT,NOR",
+			_=>throw new InvalidOperationException(command)
+		};
+		return Encoding.ASCII.GetBytes(response);
+	}
+
+	public void Dispose()
+	{
+	}
+}
+
+sealed class RecoveringGeneratorTransport : IInstrumentTransport
+{
+	public int Channel1Queries { get;private set; }
+
+	public void Write(string command)
+	{
+	}
+
+	public byte[] Query(string command)
+	{
+		if(command == "C1:BSWV?")
+		{
+			Channel1Queries++;
+			if(Channel1Queries == 2)
+			{
+				throw new IOException("Przejściowy błąd testowy");
+			}
+		}
+		string response=command switch
+		{
+			"*IDN?"=>"SIGLENT,SDG1032X,123456,1.0",
+			"C1:BSWV?"=>"C1:BSWV WVTP,SINE,FRQ,"+(Channel1Queries >= 3 ? "7000HZ" : "3000HZ")+",AMP,4V,OFST,0V,PHSE,0",
 			"C2:BSWV?"=>"C2:BSWV WVTP,SINE,FRQ,2000HZ,AMP,3V,OFST,0V,PHSE,0",
 			"C1:OUTP?"=>"C1:OUTP OFF,LOAD,HZ,PLRT,NOR",
 			"C2:OUTP?"=>"C2:OUTP OFF,LOAD,HZ,PLRT,NOR",

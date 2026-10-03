@@ -74,7 +74,7 @@ internal static class Program
 
 	private static void AssertApplicationIdentity(MainWindow window)
 	{
-		if(window.Title != "Siglent SDS1000CML Viewer v0.7.2")
+		if(window.Title != "Siglent SDS1000CML Viewer v0.7.3")
 		{
 			throw new Exception("Unexpected main-window title: "+window.Title);
 		}
@@ -621,7 +621,7 @@ internal static class Program
 			"\n",
 			Descendants<TextBlock>(author).Select(text=>text.Text));
 		if(author.Title !=
-			"Autor - Siglent SDS1000CML Viewer v0.7.2" ||
+			"Autor - Siglent SDS1000CML Viewer v0.7.3" ||
 			!authorText.Contains("Mateusz Skipor",StringComparison.Ordinal) ||
 			!authorText.Contains(
 				"Inżynier technik elektroniki",
@@ -646,7 +646,7 @@ internal static class Program
 		Pump();
 		TextBox licenseText=Descendants<TextBox>(license).Single();
 		if(license.Title !=
-			"Licencja - Siglent SDS1000CML Viewer v0.7.2" ||
+			"Licencja - Siglent SDS1000CML Viewer v0.7.3" ||
 			!licenseText.IsReadOnly ||
 			!licenseText.Text.Contains(
 				"PolyForm Noncommercial License 1.0.0",

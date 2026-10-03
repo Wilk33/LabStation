@@ -1,6 +1,7 @@
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using LabStation.Instruments.Discovery;
 using LabStation.Instruments.Transport;
@@ -37,7 +38,7 @@ public partial class GeneratorView : UserControl,IAsyncDisposable
 			new JsonGeneratorSettingsStore(
 				SettingsPath,
 				new("192.168.200.132",false)),
-			TimeSpan.FromSeconds(2))
+			TimeSpan.FromSeconds(5))
 	{
 	}
 
@@ -53,7 +54,7 @@ public partial class GeneratorView : UserControl,IAsyncDisposable
 			throw new ArgumentNullException(nameof(transportFactory));
 		this.settingsStore=settingsStore ??
 			throw new ArgumentNullException(nameof(settingsStore));
-		this.refreshInterval=refreshInterval ?? TimeSpan.FromSeconds(2);
+		this.refreshInterval=refreshInterval ?? TimeSpan.FromSeconds(5);
 		if(this.refreshInterval <= TimeSpan.Zero)
 		{
 			throw new ArgumentOutOfRangeException(nameof(refreshInterval));
@@ -205,41 +206,57 @@ public partial class GeneratorView : UserControl,IAsyncDisposable
 		GeneratorSession connected,
 		CancellationToken cancellationToken)
 	{
+		bool communicationError=false;
 		try
 		{
 			while(!cancellationToken.IsCancellationRequested)
 			{
 				await Task.Delay(refreshInterval,cancellationToken).ConfigureAwait(false);
-				ChannelSnapshot[] snapshots=await Task.WhenAll(
-					connected.ReadChannelAsync(1),
-					connected.ReadChannelAsync(2)).ConfigureAwait(false);
-				if(cancellationToken.IsCancellationRequested)
+				try
+				{
+					ChannelSnapshot[] snapshots=await Task.WhenAll(
+						connected.ReadChannelAsync(1),
+						connected.ReadChannelAsync(2)).ConfigureAwait(false);
+					if(cancellationToken.IsCancellationRequested)
+					{
+						return;
+					}
+					await Dispatcher.InvokeAsync(()=>
+					{
+						if(!Channel1.IsKeyboardFocusWithin ||
+							Keyboard.FocusedElement is not TextBox)
+						{
+							Channel1.ApplySnapshot(snapshots[0]);
+						}
+						if(!Channel2.IsKeyboardFocusWithin ||
+							Keyboard.FocusedElement is not TextBox)
+						{
+							Channel2.ApplySnapshot(snapshots[1]);
+						}
+						if(communicationError)
+						{
+							ShowStatus("ONLINE",false);
+							communicationError=false;
+						}
+					});
+				}
+				catch(OperationCanceledException) when(cancellationToken.IsCancellationRequested)
 				{
 					return;
 				}
-				await Dispatcher.InvokeAsync(()=>
+				catch(Exception exception)
 				{
-					if(!Channel1.IsKeyboardFocusWithin)
+					communicationError=true;
+					if(!Dispatcher.HasShutdownStarted && !closing)
 					{
-						Channel1.ApplySnapshot(snapshots[0]);
+						await Dispatcher.InvokeAsync(()=>
+							ShowStatus("BŁĄD KOMUNIKACJI - "+exception.Message,true));
 					}
-					if(!Channel2.IsKeyboardFocusWithin)
-					{
-						Channel2.ApplySnapshot(snapshots[1]);
-					}
-				});
+				}
 			}
 		}
 		catch(OperationCanceledException) when(cancellationToken.IsCancellationRequested)
 		{
-		}
-		catch(Exception exception)
-		{
-			if(!Dispatcher.HasShutdownStarted && !closing)
-			{
-				await Dispatcher.InvokeAsync(()=>
-					ShowStatus("BŁĄD KOMUNIKACJI - "+exception.Message,true));
-			}
 		}
 	}
 

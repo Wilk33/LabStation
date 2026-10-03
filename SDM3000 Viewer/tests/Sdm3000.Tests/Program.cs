@@ -35,6 +35,7 @@ if(args.Length > 0 && args[0] == "--hardware-read")
 			Console.WriteLine(
 				"READ="+profile.ShortName+" "+
 				MeasurementFormatter.FormatValue(snapshot.Reading,profile.Unit)+
+				" RAW="+(snapshot.Reading.Value?.ToString("G17") ?? snapshot.Reading.State.ToString())+
 				" RANGE="+MeasurementFormatter.FormatRange(snapshot.Configuration.Range,profile.Unit)+
 				" POINTS="+snapshot.StoredPoints);
 			Thread.Sleep(500);
@@ -237,7 +238,7 @@ Test("Zmiana funkcji rozpoczyna osobną serię statystyk",()=>
 	Close(100,changed.Statistics.Average!.Value);
 });
 
-Test("Klient używa wyłącznie pasywnych zapytań odczytowych",()=>
+Test("Klient inicjuje świeży pomiar poleceniem READ",()=>
 {
 	using RecordingTransport transport=new();
 	using SiglentMultimeterClient client=new(transport);
@@ -248,7 +249,7 @@ Test("Klient używa wyłącznie pasywnych zapytań odczytowych",()=>
 	Close(1.2345,snapshot.Reading.Value!.Value);
 	Equal(17L,snapshot.StoredPoints);
 	EqualStrings(
-		["*IDN?","CONFigure?","DATA:LAST?","DATA:POINts?"],
+		["*IDN?","CONFigure?","READ?","DATA:POINts?"],
 		transport.Queries.ToArray());
 	Equal(2,transport.LocalRequests);
 	if(transport.Writes.Count != 0)
@@ -262,7 +263,7 @@ Test("Klient oddaje panel lokalny także po błędzie odczytu",()=>
 	using RecordingTransport transport=new();
 	using SiglentMultimeterClient client=new(transport);
 	client.Initialize();
-	transport.FailOnQuery="DATA:LAST?";
+	transport.FailOnQuery="READ?";
 	try
 	{
 		client.ReadSnapshot(new MeasurementAccumulator());
@@ -324,21 +325,30 @@ Test("Formatuje wynik miernika z prefiksem inżynierskim",()=>
 	Equal("-",MeasurementFormatter.FormatRange(null,"V"));
 });
 
-Test("Sesja szereguje odczyt i udostępnia tożsamość miernika",()=>
+Test("Sesja zwalnia transport po identyfikacji i każdym odczycie",()=>
 {
-	RecordingTransport transport=new();
-	MultimeterSession session=MultimeterSession.CreateAsync(()=>transport)
+	List<RecordingTransport> transports=[];
+	MultimeterSession session=MultimeterSession.CreateAsync(()=>
+	{
+		RecordingTransport transport=new();
+		transports.Add(transport);
+		return transport;
+	})
 		.GetAwaiter()
 		.GetResult();
 	try
 	{
 		Equal("SDM3055",session.Identity.Model);
+		Equal(1,transports.Count);
+		Equal(true,transports[0].Disposed);
 		MeasurementSnapshot snapshot=session.ReadAsync()
 			.GetAwaiter()
 			.GetResult();
 		Equal(MeasurementFunction.VoltageAc,snapshot.Configuration.Function);
 		Equal(1L,snapshot.Statistics.Count);
-		if(transport.Writes.Count != 0)
+		Equal(2,transports.Count);
+		Equal(true,transports[1].Disposed);
+		if(transports.SelectMany(transport=>transport.Writes).Any())
 		{
 			throw new Exception("Sesja wysłała zapis do miernika");
 		}
@@ -360,7 +370,10 @@ Test("Okno SDM jest poziome, stałe i nie zawiera wyboru funkcji",()=>
 				"pack://application:,,,/LabStation.UI;component/Themes/LabStationTheme.xaml")
 		});
 		MainWindow window=new();
-		Equal("0.1.1",AppInformation.Version);
+		Equal("0.1.2",AppInformation.Version);
+		Equal("Siglent SDM3000 Control v0.1.2",AppInformation.DisplayName);
+		Equal("Siglent SDM3000 Control v0.1.2",window.Title);
+		Equal("Siglent.SDM3000.Control",typeof(MainWindow).Assembly.GetName().Name);
 		Equal(920d,window.Width);
 		Equal(280d,window.Height);
 		Equal(ResizeMode.NoResize,window.ResizeMode);
@@ -469,6 +482,7 @@ sealed class RecordingTransport : IInstrumentTransport,ILocalControlTransport
 	public List<string> Writes { get; }=[];
 	public int LocalRequests { get;private set; }
 	public string? FailOnQuery { get;set; }
+	public bool Disposed { get;private set; }
 
 	public void Write(string command)
 	{
@@ -486,7 +500,7 @@ sealed class RecordingTransport : IInstrumentTransport,ILocalControlTransport
 		{
 			"*IDN?"=>"SIGLENT,SDM3055,123456,1.01",
 			"CONFigure?"=>"VOLT:AC 2.000000E+02",
-			"DATA:LAST?"=>"1.234500E+00",
+			"READ?"=>"1.234500E+00",
 			"DATA:POINts?"=>"17",
 			_=>throw new InvalidOperationException(command)
 		};
@@ -495,6 +509,7 @@ sealed class RecordingTransport : IInstrumentTransport,ILocalControlTransport
 
 	public void Dispose()
 	{
+		Disposed=true;
 	}
 
 	public void ReturnToLocal()

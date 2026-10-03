@@ -1,5 +1,9 @@
 # Zmiany
 
+## 0.7.3 - 2026-10-03
+
+- Zastąpiono jednoklatkową ikonę wielorozmiarowym ICO z osobnymi klatkami 16, 32 i 256 px.
+
 ## 0.7.2 - 2026-10-01
 
 - Nieaktywny przycisk kursora ma biały tekst, aktywny czarny, a podczas najechania tekst jest biały.
