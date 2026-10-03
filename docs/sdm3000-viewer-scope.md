@@ -1,6 +1,6 @@
 # Zakres panelu Siglent SDM3000 Viewer
 
-Stan dokumentu: zaimplementowane wydanie 0.1.0 panelu obserwacyjnego dla SDM3055.
+Stan dokumentu: zaimplementowane wydanie 0.1.1 panelu obserwacyjnego dla SDM3055.
 
 ## Cel
 
@@ -177,6 +177,17 @@ Cykl podglądu powinien być operacją tła o niższym priorytecie. Jeżeli trwa
 
 ## Proponowane etapy
 
+### 0.1.1 - panel lokalny i eksport
+
+- wspólny transport VXI-11 udostępnia procedurę `device_local` i wywołuje ją również przed zamknięciem łącza,
+- klient SDM oddaje panel do sterowania lokalnego po identyfikacji, po każdym pakiecie odczytowym i po błędzie,
+- cykl podglądu wykonuje się co 1 sekundę,
+- zebrane odczyty można zapisać do CSV z czasem, funkcją, wartością, jednostką, zakresem, stanem i liczbą punktów pamięci,
+- okno ma 920 x 280 px, białe teksty na ciemnych blokach i brak przerwy pomiędzy blokami wyniku oraz statystyk,
+- kontener ICO jest kwadratowy i zachowuje proporcje przekazanej grafiki.
+
+Walidacja protokołu i testy programowe potwierdzają wywołanie `device_local`, również po błędzie odczytu. Test na fizycznym mierniku 2026-10-03 nie doszedł do skutku, ponieważ `192.168.200.131` był nieosiągalny i port TCP 111 nie odpowiadał. Fizyczne potwierdzenie, że panel pozostaje aktywny podczas cyklicznego podglądu, jest nadal wymagane.
+
 ### 0.1.0 - bezpieczny podgląd
 
 - połączenie, skan i Auto connect,
@@ -225,3 +236,4 @@ Test nie używa "MEASure...?", "READ?", "INITiate", poleceń ustawiających ani 
 - SDM3055 User Manual EN03B: https://siglentna.com/wp-content/uploads/dlm_uploads/2023/10/SDM3055_UserManual-EN03B.pdf
 - Centrum dokumentów DMM: https://siglentna.com/resources/documents/digital-multimeter/
 - Strona produktu SDM3055: https://www.siglent.com/in/products-overview/sdm3055/
+- VXIbus Consortium - specyfikacja VXI-11: https://www.vxibus.org/specifications.html

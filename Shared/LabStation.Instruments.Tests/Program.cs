@@ -119,6 +119,14 @@ Test("VXI-11 zapisuje surowe dane bez terminatora tekstowego",()=>
 	}
 });
 
+Test("VXI-11 oddaje panel urządzenia do sterowania lokalnego",()=>
+{
+	using LoopbackVxi11Server server=new();
+	using Vxi11Transport transport=new("127.0.0.1",server.MapperPort);
+	((ILocalControlTransport)transport).ReturnToLocal();
+	Equal(true,server.LocalRequested);
+});
+
 Test("Socket SCPI odczytuje tekst i blok binarny",()=>
 {
 	using LoopbackScpiServer server=new();
@@ -254,6 +262,7 @@ sealed class LoopbackVxi11Server : IDisposable
 	public int MapperPort { get; }
 	public string LastCommand=>Encoding.ASCII.GetString(written.ToArray());
 	public byte[] WrittenBytes=>written.ToArray();
+	public bool LocalRequested { get;private set; }
 
 	public void Dispose()
 	{
@@ -330,6 +339,14 @@ sealed class LoopbackVxi11Server : IDisposable
 						writer.Put(last ? 4u : 1u);
 						writer.PutBytes(last ? [42,0,1] : [0,10,13,255]);
 					},true);
+					break;
+				case 17:
+					call.Get();
+					call.Get();
+					call.Get();
+					call.Get();
+					LocalRequested=true;
+					SendReply(network,id,writer=>writer.Put(0),false);
 					break;
 				case 23:
 					call.Get();

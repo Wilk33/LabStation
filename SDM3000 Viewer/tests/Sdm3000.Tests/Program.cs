@@ -250,9 +250,55 @@ Test("Klient używa wyłącznie pasywnych zapytań odczytowych",()=>
 	EqualStrings(
 		["*IDN?","CONFigure?","DATA:LAST?","DATA:POINts?"],
 		transport.Queries.ToArray());
+	Equal(2,transport.LocalRequests);
 	if(transport.Writes.Count != 0)
 	{
 		throw new Exception("Klient wysłał polecenie zmieniające stan miernika");
+	}
+});
+
+Test("Klient oddaje panel lokalny także po błędzie odczytu",()=>
+{
+	using RecordingTransport transport=new();
+	using SiglentMultimeterClient client=new(transport);
+	client.Initialize();
+	transport.FailOnQuery="DATA:LAST?";
+	try
+	{
+		client.ReadSnapshot(new MeasurementAccumulator());
+		throw new Exception("Oczekiwano błędu odczytu");
+	}
+	catch(IOException)
+	{
+	}
+	Equal(2,transport.LocalRequests);
+});
+
+Test("Eksport CSV zachowuje czas, funkcję, wartość i przeciążenie",()=>
+{
+	MeasurementSnapshot[] snapshots=
+	[
+		new(
+			new(MeasurementFunction.VoltageDc,0.2),
+			new(ReadingState.Value,0.01149789),
+			43,
+			new(1,0.01149789,0.01149789,0.01149789,0,0),
+			new DateTimeOffset(2026,10,3,12,34,56,TimeSpan.FromHours(2))),
+		new(
+			new(MeasurementFunction.Diode,null),
+			new(ReadingState.Overload,null),
+			44,
+			new(1,null,null,null,null,null),
+			new DateTimeOffset(2026,10,3,12,34,57,TimeSpan.FromHours(2)))
+	];
+	using StringWriter writer=new();
+	MeasurementCsvWriter.Write(writer,snapshots);
+	string csv=writer.ToString();
+	if(!csv.Contains("Czas;Funkcja;Etykieta;Wartosc;Jednostka;Zakres;Stan;PunktyPamieci") ||
+		!csv.Contains("2026-10-03T12:34:56.0000000+02:00;VoltageDc;Vdc;0.01149789;V;0.2;VALUE;43") ||
+		!csv.Contains("Diode;Vf;;V;;OVERLOAD;44"))
+	{
+		throw new Exception("Eksport CSV nie zawiera oczekiwanych danych");
 	}
 });
 
@@ -314,8 +360,9 @@ Test("Okno SDM jest poziome, stałe i nie zawiera wyboru funkcji",()=>
 				"pack://application:,,,/LabStation.UI;component/Themes/LabStationTheme.xaml")
 		});
 		MainWindow window=new();
-		Equal(1040d,window.Width);
-		Equal(310d,window.Height);
+		Equal("0.1.1",AppInformation.Version);
+		Equal(920d,window.Width);
+		Equal(280d,window.Height);
 		Equal(ResizeMode.NoResize,window.ResizeMode);
 		if(window.Width <= window.Height*2)
 		{
@@ -343,6 +390,22 @@ Test("Okno SDM jest poziome, stałe i nie zawiera wyboru funkcji",()=>
 		{
 			throw new Exception("Standardowy status nie jest biały");
 		}
+		foreach(string name in new[]{"FunctionNameText","PrimaryValueText","MinimumText","MaximumText","AverageText","PeakToPeakText","DeviationText"})
+		{
+			TextBlock text=LogicalChildren<TextBlock>(window).Single(item=>item.Name == name);
+			if(text.Foreground is not SolidColorBrush textForeground || textForeground.Color != Colors.White)
+			{
+				throw new Exception("Tekst "+name+" nie jest biały");
+			}
+		}
+		MenuItem save=LogicalChildren<MenuItem>(window)
+			.Single(item=>Equals(item.Header,"Zapisz jako"));
+		Equal("CSV",LogicalChildren<MenuItem>(save).Single().Header);
+		BitmapDecoder icon=BitmapDecoder.Create(
+			new Uri(Path.GetFullPath(Path.Combine("SDM3000 Viewer","Siglent_SDM3055.ico"))),
+			BitmapCreateOptions.PreservePixelFormat,
+			BitmapCacheOption.OnLoad);
+		Equal(icon.Frames[0].PixelWidth,icon.Frames[0].PixelHeight);
 		window.Measure(new Size(window.Width,window.Height));
 		window.Arrange(new Rect(0,0,window.Width,window.Height));
 		window.UpdateLayout();
@@ -397,10 +460,12 @@ Test("Ustawienia SDM zachowują adres i Auto connect",()=>
 Console.WriteLine($"Wynik: {passed} zaliczonych, {failed} niezaliczonych");
 return failed == 0 ? 0 : 1;
 
-sealed class RecordingTransport : IInstrumentTransport
+sealed class RecordingTransport : IInstrumentTransport,ILocalControlTransport
 {
 	public List<string> Queries { get; }=[];
 	public List<string> Writes { get; }=[];
+	public int LocalRequests { get;private set; }
+	public string? FailOnQuery { get;set; }
 
 	public void Write(string command)
 	{
@@ -410,6 +475,10 @@ sealed class RecordingTransport : IInstrumentTransport
 	public byte[] Query(string command)
 	{
 		Queries.Add(command);
+		if(command == FailOnQuery)
+		{
+			throw new IOException("Błąd testowy");
+		}
 		string response=command switch
 		{
 			"*IDN?"=>"SIGLENT,SDM3055,123456,1.01",
@@ -423,5 +492,10 @@ sealed class RecordingTransport : IInstrumentTransport
 
 	public void Dispose()
 	{
+	}
+
+	public void ReturnToLocal()
+	{
+		LocalRequests++;
 	}
 }

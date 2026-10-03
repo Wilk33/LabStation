@@ -450,8 +450,8 @@ Test("Metadane aplikacji zachowują autora, wersję i licencję",()=>
 	Equal("Mateusz Skipor",ProductInformation.AuthorName);
 	Equal("Inżynier technik elektroniki",ProductInformation.AuthorProfession);
 	Equal("mskiporsklep@op.pl",ProductInformation.AuthorEmail);
-	Equal("0.2.5",ProductInformation.Version);
-	Equal("Siglent SDG1000X Control v0.2.5",ProductInformation.GetWindowTitle());
+	Equal("0.2.6",ProductInformation.Version);
+	Equal("Siglent SDG1000X Control v0.2.6",ProductInformation.GetWindowTitle());
 	Equal("Siglent.SDG1000X.Control",typeof(MainWindow).Assembly.GetName().Name);
 	string license=ProductInformation.LoadLicenseText();
 	if(!license.Contains("PolyForm Noncommercial License 1.0.0",StringComparison.Ordinal))
@@ -928,6 +928,33 @@ Test("Skan wpisuje adres Generatora i Auto connect nawiązuje połączenie",()=>
 	});
 });
 
+Test("Generator cyklicznie odczytuje nastawy zmienione z panelu urządzenia",()=>
+{
+	RunStaAsync(async()=>
+	{
+		MutatingGeneratorTransport transport=new();
+		GeneratorView view=new(
+			new StubScanner(new(
+				"192.168.200.132",
+				new("SIGLENT","SDG1032X","123456","1.0"))),
+			_=>transport,
+			new MemoryGeneratorSettingsStore(new("",true)),
+			TimeSpan.FromMilliseconds(25));
+		await view.ScanNetworkAsync();
+		await Task.Delay(120);
+		ChannelControl channel1=LogicalChildren<ChannelControl>(view)
+			.Single(control=>control.Name == "Channel1");
+		NumericValueEditor frequency=LogicalChildren<NumericValueEditor>(channel1)
+			.Single(editor=>editor.Name == "FrequencyEditor");
+		Equal(5000d,frequency.Value);
+		if(transport.Channel1Queries<2)
+		{
+			throw new Exception("Generator nie wykonał cyklicznego odczytu CH1");
+		}
+		await view.DisposeAsync();
+	});
+});
+
 Console.WriteLine($"Wynik: {passed} zaliczonych, {failed} niezaliczonych");
 return failed == 0 ? 0 : 1;
 
@@ -1012,6 +1039,33 @@ sealed class GeneratorDeviceTransport : IInstrumentTransport
 		{
 			"*IDN?"=>"SIGLENT,SDG1032X,123456,1.0",
 			"C1:BSWV?"=>"C1:BSWV WVTP,SINE,FRQ,3000HZ,AMP,4V,OFST,0V,PHSE,0",
+			"C2:BSWV?"=>"C2:BSWV WVTP,SINE,FRQ,2000HZ,AMP,3V,OFST,0V,PHSE,0",
+			"C1:OUTP?"=>"C1:OUTP OFF,LOAD,HZ,PLRT,NOR",
+			"C2:OUTP?"=>"C2:OUTP OFF,LOAD,HZ,PLRT,NOR",
+			_=>throw new InvalidOperationException(command)
+		};
+		return Encoding.ASCII.GetBytes(response);
+	}
+
+	public void Dispose()
+	{
+	}
+}
+
+sealed class MutatingGeneratorTransport : IInstrumentTransport
+{
+	public int Channel1Queries { get;private set; }
+
+	public void Write(string command)
+	{
+	}
+
+	public byte[] Query(string command)
+	{
+		string response=command switch
+		{
+			"*IDN?"=>"SIGLENT,SDG1032X,123456,1.0",
+			"C1:BSWV?"=>"C1:BSWV WVTP,SINE,FRQ,"+(++Channel1Queries == 1 ? "3000HZ" : "5000HZ")+",AMP,4V,OFST,0V,PHSE,0",
 			"C2:BSWV?"=>"C2:BSWV WVTP,SINE,FRQ,2000HZ,AMP,3V,OFST,0V,PHSE,0",
 			"C1:OUTP?"=>"C1:OUTP OFF,LOAD,HZ,PLRT,NOR",
 			"C2:OUTP?"=>"C2:OUTP OFF,LOAD,HZ,PLRT,NOR",

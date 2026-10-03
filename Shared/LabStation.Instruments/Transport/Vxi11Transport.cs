@@ -2,7 +2,7 @@ using System.Text;
 
 namespace LabStation.Instruments.Transport;
 
-public sealed class Vxi11Transport : IInstrumentTransport,IRawInstrumentTransport
+public sealed class Vxi11Transport : IInstrumentTransport,IRawInstrumentTransport,ILocalControlTransport
 {
 	private const uint Program=395183;
 	private readonly object gate=new();
@@ -131,6 +131,15 @@ public sealed class Vxi11Transport : IInstrumentTransport,IRawInstrumentTranspor
 		}
 	}
 
+	public void ReturnToLocal()
+	{
+		lock(gate)
+		{
+			ObjectDisposedException.ThrowIf(disposed,this);
+			ReturnToLocalCore();
+		}
+	}
+
 	public void Dispose()
 	{
 		lock(gate)
@@ -142,6 +151,13 @@ public sealed class Vxi11Transport : IInstrumentTransport,IRawInstrumentTranspor
 			disposed=true;
 			try
 			{
+				ReturnToLocalCore();
+			}
+			catch(Exception)
+			{
+			}
+			try
+			{
 				core.Call(Program,1,23,xdr=>xdr.Put(link));
 			}
 			catch(Exception)
@@ -149,6 +165,18 @@ public sealed class Vxi11Transport : IInstrumentTransport,IRawInstrumentTranspor
 			}
 			core.Dispose();
 		}
+	}
+
+	private void ReturnToLocalCore()
+	{
+		Xdr reply=core.Call(Program,1,17,xdr=>
+		{
+			xdr.Put(link);
+			xdr.Put(0);
+			xdr.Put(ToMilliseconds(options.IoTimeout));
+			xdr.Put(ToMilliseconds(options.IoTimeout));
+		});
+		Check(reply.Get());
 	}
 
 	private void WriteCore(byte[] data)

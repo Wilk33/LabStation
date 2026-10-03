@@ -13,8 +13,11 @@ public partial class GeneratorView : UserControl,IAsyncDisposable
 	private readonly IInstrumentNetworkScanner networkScanner;
 	private readonly Func<string,IInstrumentTransport> transportFactory;
 	private readonly IGeneratorSettingsStore settingsStore;
+	private readonly TimeSpan refreshInterval;
 	private GeneratorSession? session;
 	private CancellationTokenSource? scanCancellation;
+	private CancellationTokenSource? refreshCancellation;
+	private Task? refreshTask;
 	private bool connecting;
 	private bool closing;
 	private bool disposed;
@@ -33,14 +36,16 @@ public partial class GeneratorView : UserControl,IAsyncDisposable
 			host=>new Vxi11Transport(host),
 			new JsonGeneratorSettingsStore(
 				SettingsPath,
-				new("192.168.200.132",false)))
+				new("192.168.200.132",false)),
+			TimeSpan.FromSeconds(2))
 	{
 	}
 
 	public GeneratorView(
 		IInstrumentNetworkScanner networkScanner,
 		Func<string,IInstrumentTransport> transportFactory,
-		IGeneratorSettingsStore settingsStore)
+		IGeneratorSettingsStore settingsStore,
+		TimeSpan? refreshInterval=null)
 	{
 		this.networkScanner=networkScanner ??
 			throw new ArgumentNullException(nameof(networkScanner));
@@ -48,6 +53,11 @@ public partial class GeneratorView : UserControl,IAsyncDisposable
 			throw new ArgumentNullException(nameof(transportFactory));
 		this.settingsStore=settingsStore ??
 			throw new ArgumentNullException(nameof(settingsStore));
+		this.refreshInterval=refreshInterval ?? TimeSpan.FromSeconds(2);
+		if(this.refreshInterval <= TimeSpan.Zero)
+		{
+			throw new ArgumentOutOfRangeException(nameof(refreshInterval));
+		}
 		InitializeComponent();
 		Channel1.Configure(1,()=>session,ShowStatus);
 		Channel2.Configure(2,()=>session,ShowStatus);
@@ -149,6 +159,7 @@ public partial class GeneratorView : UserControl,IAsyncDisposable
 				SetControlsEnabled(true);
 				SaveSettings();
 				ShowStatus("ONLINE",false);
+				StartRefreshing(connected);
 			}
 			catch
 			{
@@ -171,6 +182,7 @@ public partial class GeneratorView : UserControl,IAsyncDisposable
 	{
 		GeneratorSession? current=session;
 		session=null;
+		await StopRefreshingAsync();
 		SetControlsEnabled(false);
 		UpdateEnabled();
 		if(current is not null)
@@ -179,6 +191,74 @@ public partial class GeneratorView : UserControl,IAsyncDisposable
 		}
 		ShowStatus("OFFLINE",false);
 		UpdateEnabled();
+	}
+
+	private void StartRefreshing(GeneratorSession connected)
+	{
+		refreshCancellation?.Cancel();
+		refreshCancellation?.Dispose();
+		refreshCancellation=new CancellationTokenSource();
+		refreshTask=RefreshLoopAsync(connected,refreshCancellation.Token);
+	}
+
+	private async Task RefreshLoopAsync(
+		GeneratorSession connected,
+		CancellationToken cancellationToken)
+	{
+		try
+		{
+			while(!cancellationToken.IsCancellationRequested)
+			{
+				await Task.Delay(refreshInterval,cancellationToken).ConfigureAwait(false);
+				ChannelSnapshot[] snapshots=await Task.WhenAll(
+					connected.ReadChannelAsync(1),
+					connected.ReadChannelAsync(2)).ConfigureAwait(false);
+				if(cancellationToken.IsCancellationRequested)
+				{
+					return;
+				}
+				await Dispatcher.InvokeAsync(()=>
+				{
+					if(!Channel1.IsKeyboardFocusWithin)
+					{
+						Channel1.ApplySnapshot(snapshots[0]);
+					}
+					if(!Channel2.IsKeyboardFocusWithin)
+					{
+						Channel2.ApplySnapshot(snapshots[1]);
+					}
+				});
+			}
+		}
+		catch(OperationCanceledException) when(cancellationToken.IsCancellationRequested)
+		{
+		}
+		catch(Exception exception)
+		{
+			if(!Dispatcher.HasShutdownStarted && !closing)
+			{
+				await Dispatcher.InvokeAsync(()=>
+					ShowStatus("BŁĄD KOMUNIKACJI - "+exception.Message,true));
+			}
+		}
+	}
+
+	private async Task StopRefreshingAsync()
+	{
+		refreshCancellation?.Cancel();
+		if(refreshTask is not null)
+		{
+			try
+			{
+				await refreshTask;
+			}
+			catch(OperationCanceledException)
+			{
+			}
+		}
+		refreshTask=null;
+		refreshCancellation?.Dispose();
+		refreshCancellation=null;
 	}
 
 	public async Task ScanNetworkAsync()
@@ -302,6 +382,7 @@ public partial class GeneratorView : UserControl,IAsyncDisposable
 		{
 			await Task.Delay(50);
 		}
+		await StopRefreshingAsync();
 		GeneratorSession? current=session;
 		session=null;
 		if(current is not null)

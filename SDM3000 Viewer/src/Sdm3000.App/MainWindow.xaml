@@ -5,8 +5,8 @@
 	xmlns:local="clr-namespace:Sdm3000.App"
 	xmlns:sharedControls="clr-namespace:LabStation.UI.Controls;assembly=LabStation.UI"
 	Title="Siglent SDM3000 Viewer"
-	Width="1040"
-	Height="310"
+	Width="920"
+	Height="280"
 	Icon="/Siglent.SDM3000.Viewer;component/Assets/Siglent_SDM3055.ico"
 	ResizeMode="NoResize"
 	WindowStartupLocation="CenterScreen">
@@ -23,6 +23,12 @@
 					Header="Auto connect"
 					IsCheckable="True"
 					Click="AutoConnectClick" />
+			</MenuItem>
+			<MenuItem x:Name="SaveAsMenuItem" Header="Zapisz jako">
+				<MenuItem
+					x:Name="SaveCsvMenuItem"
+					Header="CSV"
+					Click="SaveCsvClick" />
 			</MenuItem>
 			<sharedControls:AboutMenuItem Presentation="{x:Static local:AppInformation.Presentation}" />
 		</Menu>

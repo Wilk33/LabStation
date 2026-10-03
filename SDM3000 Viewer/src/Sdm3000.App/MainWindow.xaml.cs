@@ -26,6 +26,8 @@ public partial class MainWindow : Window
 	{
 		ScanNetworkMenuItem.IsEnabled=InstrumentPanel.CanScanNetwork;
 		AutoConnectMenuItem.IsChecked=InstrumentPanel.AutoConnect;
+		SaveAsMenuItem.IsEnabled=InstrumentPanel.CanExport;
+		SaveCsvMenuItem.IsEnabled=InstrumentPanel.CanExport;
 	}
 
 	private async void ScanNetworkClick(object sender,RoutedEventArgs eventArgs)
@@ -36,6 +38,11 @@ public partial class MainWindow : Window
 	private void AutoConnectClick(object sender,RoutedEventArgs eventArgs)
 	{
 		InstrumentPanel.AutoConnect=AutoConnectMenuItem.IsChecked == true;
+	}
+
+	private void SaveCsvClick(object sender,RoutedEventArgs eventArgs)
+	{
+		InstrumentPanel.ExportCsv();
 	}
 
 	protected override async void OnClosing(CancelEventArgs eventArgs)

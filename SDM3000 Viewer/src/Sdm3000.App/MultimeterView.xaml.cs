@@ -1,9 +1,11 @@
 using System.IO;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using LabStation.Instruments.Discovery;
 using LabStation.Instruments.Transport;
+using Microsoft.Win32;
 using Sdm3000.Core;
 
 namespace Sdm3000.App;
@@ -14,6 +16,7 @@ public partial class MultimeterView : UserControl,IAsyncDisposable
 	private readonly Func<string,IInstrumentTransport> transportFactory;
 	private readonly IMultimeterSettingsStore settingsStore;
 	private readonly TimeSpan refreshInterval;
+	private readonly List<MeasurementSnapshot> recordedSnapshots=[];
 	private MultimeterSession? session;
 	private CancellationTokenSource? scanCancellation;
 	private CancellationTokenSource? pollCancellation;
@@ -36,7 +39,7 @@ public partial class MultimeterView : UserControl,IAsyncDisposable
 			new JsonMultimeterSettingsStore(
 				SettingsPath,
 				new("192.168.200.131",false)),
-			TimeSpan.FromMilliseconds(500))
+			TimeSpan.FromSeconds(1))
 	{
 	}
 
@@ -81,6 +84,32 @@ public partial class MultimeterView : UserControl,IAsyncDisposable
 	}
 
 	public bool CanScanNetwork=>session is null && !connecting && !closing;
+	public bool CanExport=>recordedSnapshots.Count>0;
+
+	public void ExportCsv()
+	{
+		if(!CanExport)
+		{
+			return;
+		}
+		SaveFileDialog dialog=new()
+		{
+			Filter="CSV (*.csv)|*.csv",
+			DefaultExt=".csv",
+			AddExtension=true,
+			FileName="SDM3000-odczyty-"+DateTime.Now.ToString("yyyyMMdd-HHmmss")+".csv"
+		};
+		if(dialog.ShowDialog(Window.GetWindow(this)) != true)
+		{
+			return;
+		}
+		using StreamWriter writer=new(
+			dialog.FileName,
+			false,
+			new UTF8Encoding(true));
+		MeasurementCsvWriter.Write(writer,recordedSnapshots);
+		ShowStatus("ZAPISANO CSV",false);
+	}
 
 	private async void MultimeterViewLoaded(object sender,RoutedEventArgs eventArgs)
 	{
@@ -272,6 +301,12 @@ public partial class MultimeterView : UserControl,IAsyncDisposable
 
 	private void ApplySnapshot(MeasurementSnapshot snapshot)
 	{
+		bool wasEmpty=recordedSnapshots.Count == 0;
+		recordedSnapshots.Add(snapshot);
+		if(recordedSnapshots.Count>100000)
+		{
+			recordedSnapshots.RemoveRange(0,recordedSnapshots.Count-100000);
+		}
 		MeasurementProfile profile=MeasurementProfiles.For(snapshot.Configuration.Function);
 		FunctionNameText.Text=profile.Name;
 		FunctionShortText.Text=profile.ShortName;
@@ -290,6 +325,10 @@ public partial class MultimeterView : UserControl,IAsyncDisposable
 		StatisticPeakToPeakLabel.Text=profile.PrimaryLabel+" P-P serii";
 		StatisticDeviationLabel.Text="σ "+profile.PrimaryLabel;
 		SeriesText.Text="Seria: "+statistics.Count+" odczytów | Pamięć: "+snapshot.StoredPoints;
+		if(wasEmpty)
+		{
+			CommandStateChanged?.Invoke(this,EventArgs.Empty);
+		}
 	}
 
 	private async void MultimeterViewUnloaded(object? sender,EventArgs eventArgs)
