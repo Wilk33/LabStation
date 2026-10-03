@@ -401,8 +401,11 @@ Test("Okno SDM jest poziome, stałe i nie zawiera wyboru funkcji",()=>
 		MenuItem save=LogicalChildren<MenuItem>(window)
 			.Single(item=>Equals(item.Header,"Zapisz jako"));
 		Equal("CSV",LogicalChildren<MenuItem>(save).Single().Header);
+		string iconPath=File.Exists("Siglent_SDM3055.ico")
+			? "Siglent_SDM3055.ico"
+			: Path.Combine("SDM3000 Viewer","Siglent_SDM3055.ico");
 		BitmapDecoder icon=BitmapDecoder.Create(
-			new Uri(Path.GetFullPath(Path.Combine("SDM3000 Viewer","Siglent_SDM3055.ico"))),
+			new Uri(Path.GetFullPath(iconPath)),
 			BitmapCreateOptions.PreservePixelFormat,
 			BitmapCacheOption.OnLoad);
 		Equal(icon.Frames[0].PixelWidth,icon.Frames[0].PixelHeight);
