@@ -1,4 +1,4 @@
-# Siglent SDG1000X Control v0.2.8
+# Siglent SDG1000X Control v0.2.9
 
 Wąska aplikacja Windows do podstawowego sterowania dwukanałowym generatorem SIGLENT SDG1032X przez LAN/VXI-11. Główna powierzchnia `GeneratorView` jest panelem wielokrotnego użytku, a samodzielne EXE jest jego cienką powłoką.
 
@@ -90,7 +90,7 @@ Wymagany jest .NET 10 SDK dla Windows.
 
 ## Status weryfikacji
 
-Podstawowy zestaw testów automatycznych nie łączy się z fizycznym urządzeniem. Zakres walidacji sprzętowej oraz pełna procedura testowa są opisane w [docs/hardware-testing.md](docs/hardware-testing.md). Wersja 0.2.8 przeszła 29/29 testów, włącznie z parserem rzeczywistego układu pliku EasyWave CSV, kodowaniem próbek, precyzją nowych nastaw impulsu i szumu, przełączeniem na ARB przed wgraniem pliku oraz odpornym na przejściowy błąd cyklem odczytu obu kanałów co 1 sekundę.
+Podstawowy zestaw testów automatycznych nie łączy się z fizycznym urządzeniem. Zakres walidacji sprzętowej oraz pełna procedura testowa są opisane w [docs/hardware-testing.md](docs/hardware-testing.md). Wersja 0.2.9 przeszła 29/29 testów, włącznie z parserem rzeczywistego układu pliku EasyWave CSV, kodowaniem próbek, precyzją nowych nastaw impulsu i szumu, pełnym układem panelu Impuls, poprawnym wyglądem mnożnika Offline, przełączeniem na ARB przed wgraniem pliku oraz odpornym na przejściowy błąd cyklem odczytu obu kanałów co 1 sekundę.
 
 Na fizycznym SDG1032X test wybrał CH2 z przebiegiem sinusoidalnym i wyłączonym wyjściem. Kontrolka UI rozpoczęła od 1000 Hz, przyjęła zewnętrzne zmiany do 1111 Hz i 1222 Hz po kolejnych cyklach, a następnie test przywrócił 1000 Hz i potwierdził `OUTPUT=OFF`. Wysyłanie pliku przebiegu arbitralnego nie zostało wykonane na fizycznym generatorze w ramach tego wydania.
 

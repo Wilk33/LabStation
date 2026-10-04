@@ -2,6 +2,7 @@ using System.IO;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using LabStation.Instruments.Discovery;
@@ -391,9 +392,9 @@ Test("Okno SDM jest poziome, stałe i udostępnia osiem funkcji pomiarowych",()=
 		window.Show();
 		window.Dispatcher.Invoke(()=>{});
 
-		Equal("0.2.0",AppInformation.Version);
-		Equal("Siglent SDM3000 Control v0.2.0",AppInformation.DisplayName);
-		Equal("Siglent SDM3000 Control v0.2.0",window.Title);
+		Equal("0.2.1",AppInformation.Version);
+		Equal("Siglent SDM3000 Control v0.2.1",AppInformation.DisplayName);
+		Equal("Siglent SDM3000 Control v0.2.1",window.Title);
 		Equal("Siglent.SDM3000.Control",typeof(MainWindow).Assembly.GetName().Name);
 		Equal(920d,window.Width);
 		Equal(318d,window.Height);
@@ -406,20 +407,51 @@ Test("Okno SDM jest poziome, stałe i udostępnia osiem funkcji pomiarowych",()=
 			.Single(textBox=>textBox.Name == "HostEditor");
 		Equal("192.168.200.131",address.Text);
 		Equal(150d,address.Width);
-		string[] functions=["V AC","V DC","A AC","A DC","Ω","F","Diod","Sig"];
-		string[] actualFunctions=LogicalChildren<Button>(window)
-			.Where(button=>functions.Contains(button.Content?.ToString()))
-			.Select(button=>button.Content?.ToString() ?? "")
+		UniformGrid functionGrid=LogicalChildren<UniformGrid>(window)
+			.Single(grid=>grid.Name == "FunctionButtons");
+		Equal(4,functionGrid.Columns);
+		Equal(2,functionGrid.Rows);
+		string[] functions=["VoltageAc","VoltageDc","CurrentAc","CurrentDc","Resistance2Wire","Capacitance","Diode","Continuity"];
+		Button[] functionButtons=LogicalChildren<Button>(functionGrid)
+			.Where(button=>button.Tag is not null)
+			.ToArray();
+		string[] actualFunctions=functionButtons
+			.Select(button=>button.Tag?.ToString() ?? "")
 			.ToArray();
 		if(!functions.SequenceEqual(actualFunctions))
 		{
 			throw new Exception("Interfejs nie zawiera pełnego wyboru funkcji pomiarowych");
 		}
+		foreach(string buttonName in new[]{"CapacitanceButton","DiodeButton","ContinuityButton"})
+		{
+			Button symbolButton=functionButtons.Single(button=>button.Name == buttonName);
+			if(symbolButton.Content is not Viewbox ||
+				string.IsNullOrWhiteSpace(symbolButton.ToolTip?.ToString()))
+			{
+				throw new Exception("Przycisk "+buttonName+" nie używa wektorowego symbolu z opisem po najechaniu");
+			}
+		}
+		if(LogicalChildren<TextBlock>(window).Any(text=>text.Name == "IdentityText"))
+		{
+			throw new Exception("Interfejs nadal wyświetla identyfikację urządzenia obok połączenia");
+		}
 		string[] statistics=LogicalChildren<TextBlock>(window)
 			.Where(text=>text.Name.StartsWith("Statistic",StringComparison.Ordinal))
 			.Select(text=>text.Text)
 			.ToArray();
-		EqualStrings(["Min","Max","Średnia","P-P serii","σ"],statistics);
+		EqualStrings(["Min","Max","Średnia"],statistics);
+		Border measurementPanel=LogicalChildren<Border>(window)
+			.Single(border=>border.Name == "MeasurementPanel");
+		Border statisticsPanel=LogicalChildren<Border>(window)
+			.Single(border=>border.Name == "StatisticsPanel");
+		double measurementBottom=measurementPanel.TranslatePoint(
+			new Point(0,measurementPanel.ActualHeight),window).Y;
+		double statisticsTop=statisticsPanel.TranslatePoint(new Point(0,0),window).Y;
+		if(Math.Abs(statisticsTop-measurementBottom)>1)
+		{
+			throw new Exception(
+				$"Statystyki nie stykają się z polem pomiaru: pomiar={measurementBottom:G}, statystyki={statisticsTop:G}");
+		}
 		TextBlock status=LogicalChildren<TextBlock>(window)
 			.Single(text=>text.Name == "StatusText");
 		Equal("Status: OFFLINE",status.Text);
@@ -427,7 +459,7 @@ Test("Okno SDM jest poziome, stałe i udostępnia osiem funkcji pomiarowych",()=
 		{
 			throw new Exception("Standardowy status nie jest biały");
 		}
-		foreach(string name in new[]{"FunctionNameText","PrimaryValueText","MinimumText","MaximumText","AverageText","PeakToPeakText","DeviationText"})
+		foreach(string name in new[]{"FunctionNameText","PrimaryValueText","MinimumText","MaximumText","AverageText"})
 		{
 			TextBlock text=LogicalChildren<TextBlock>(window).Single(item=>item.Name == name);
 			if(text.Foreground is not SolidColorBrush textForeground || textForeground.Color != Colors.White)

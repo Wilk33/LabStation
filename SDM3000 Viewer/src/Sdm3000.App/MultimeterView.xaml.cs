@@ -194,7 +194,6 @@ public partial class MultimeterView : UserControl,IAsyncDisposable
 				}
 				session=connected;
 				ApplySnapshot(snapshot);
-				IdentityText.Text=connected.Identity.Manufacturer+" "+connected.Identity.Model;
 				SaveSettings();
 				ShowStatus("ONLINE",false);
 				StartPolling(connected);
@@ -273,7 +272,6 @@ public partial class MultimeterView : UserControl,IAsyncDisposable
 		{
 			await current.DisposeAsync();
 		}
-		IdentityText.Text="";
 		ShowStatus("OFFLINE",false);
 		UpdateEnabled();
 	}
@@ -356,13 +354,9 @@ public partial class MultimeterView : UserControl,IAsyncDisposable
 		MinimumText.Text=MeasurementFormatter.FormatStatistic(statistics.Minimum,profile.Unit);
 		MaximumText.Text=MeasurementFormatter.FormatStatistic(statistics.Maximum,profile.Unit);
 		AverageText.Text=MeasurementFormatter.FormatStatistic(statistics.Average,profile.Unit);
-		PeakToPeakText.Text=MeasurementFormatter.FormatStatistic(statistics.PeakToPeak,profile.Unit);
-		DeviationText.Text=MeasurementFormatter.FormatStatistic(statistics.StandardDeviation,profile.Unit);
 		StatisticMinimumLabel.Text=profile.PrimaryLabel+" min";
 		StatisticMaximumLabel.Text=profile.PrimaryLabel+" max";
 		StatisticAverageLabel.Text=profile.PrimaryLabel+" avg";
-		StatisticPeakToPeakLabel.Text=profile.PrimaryLabel+" P-P serii";
-		StatisticDeviationLabel.Text="σ "+profile.PrimaryLabel;
 		SeriesText.Text="Seria: "+statistics.Count+" odczytów | Pamięć: "+snapshot.StoredPoints;
 		if(wasEmpty)
 		{

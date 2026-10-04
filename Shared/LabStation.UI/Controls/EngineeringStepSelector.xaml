@@ -4,9 +4,46 @@
 	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
 	Background="Transparent"
 	Foreground="{StaticResource LabStationTextBrush}">
+	<UserControl.Resources>
+		<Style x:Key="EngineeringStepButtonStyle" TargetType="Button" BasedOn="{StaticResource LabStationButtonStyle}">
+			<Setter Property="Template">
+				<Setter.Value>
+					<ControlTemplate TargetType="Button">
+						<Border
+							x:Name="OuterBorder"
+							Background="#303030"
+							BorderBrush="{TemplateBinding BorderBrush}"
+							BorderThickness="{TemplateBinding BorderThickness}"
+							Padding="1">
+							<Border
+								x:Name="ButtonBorder"
+								Background="{TemplateBinding Background}"
+								BorderBrush="#C4C4C4"
+								BorderThickness="1,1,0,0">
+								<ContentPresenter
+									Margin="{TemplateBinding Padding}"
+									HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+									VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+							</Border>
+						</Border>
+						<ControlTemplate.Triggers>
+							<Trigger Property="IsMouseOver" Value="True">
+								<Setter TargetName="ButtonBorder" Property="Background" Value="#949494" />
+							</Trigger>
+							<Trigger Property="IsPressed" Value="True">
+								<Setter TargetName="ButtonBorder" Property="Background" Value="#565656" />
+								<Setter TargetName="ButtonBorder" Property="BorderBrush" Value="#303030" />
+							</Trigger>
+						</ControlTemplate.Triggers>
+					</ControlTemplate>
+				</Setter.Value>
+			</Setter>
+		</Style>
+	</UserControl.Resources>
 	<UniformGrid x:Name="ButtonPanel" Columns="7">
 		<Button
 			x:Name="GigaButton"
+			Style="{StaticResource EngineeringStepButtonStyle}"
 			Margin="1"
 			Padding="0"
 			MinWidth="0"
@@ -17,6 +54,7 @@
 			ToolTip="Krok 10^9" />
 		<Button
 			x:Name="MegaButton"
+			Style="{StaticResource EngineeringStepButtonStyle}"
 			Margin="1"
 			Padding="0"
 			MinWidth="0"
@@ -27,6 +65,7 @@
 			ToolTip="Krok 10^6" />
 		<Button
 			x:Name="KiloButton"
+			Style="{StaticResource EngineeringStepButtonStyle}"
 			Margin="1"
 			Padding="0"
 			MinWidth="0"
@@ -37,6 +76,7 @@
 			ToolTip="Krok 10^3" />
 		<Button
 			x:Name="OneButton"
+			Style="{StaticResource EngineeringStepButtonStyle}"
 			Margin="1"
 			Padding="0"
 			MinWidth="0"
@@ -47,6 +87,7 @@
 			ToolTip="Krok 1" />
 		<Button
 			x:Name="MilliButton"
+			Style="{StaticResource EngineeringStepButtonStyle}"
 			Margin="1"
 			Padding="0"
 			MinWidth="0"
@@ -57,6 +98,7 @@
 			ToolTip="Krok 10^-3" />
 		<Button
 			x:Name="MicroButton"
+			Style="{StaticResource EngineeringStepButtonStyle}"
 			Margin="1"
 			Padding="0"
 			MinWidth="0"
@@ -67,6 +109,7 @@
 			ToolTip="Krok 10^-6" />
 		<Button
 			x:Name="NanoButton"
+			Style="{StaticResource EngineeringStepButtonStyle}"
 			Margin="1"
 			Padding="0"
 			MinWidth="0"

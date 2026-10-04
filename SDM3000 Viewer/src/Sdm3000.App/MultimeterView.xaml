@@ -7,7 +7,7 @@
 	<Grid>
 		<Grid.RowDefinitions>
 			<RowDefinition Height="36" />
-			<RowDefinition Height="38" />
+			<RowDefinition Height="62" />
 			<RowDefinition Height="*" />
 			<RowDefinition Height="25" />
 		</Grid.RowDefinitions>
@@ -24,31 +24,67 @@
 				Margin="0"
 				Click="ConnectionClick"
 				Content="Offline" />
-			<TextBlock
-				x:Name="IdentityText"
-				Margin="14,0,0,0"
-				VerticalAlignment="Center"
-				Foreground="{StaticResource LabStationMutedTextBrush}"
-				Text="" />
 		</StackPanel>
 
-		<UniformGrid x:Name="FunctionButtons" Grid.Row="1" Margin="6,3" Columns="8">
-			<Button x:Name="VoltageAcButton" Margin="2,0" Click="FunctionClick" Content="V AC" Tag="VoltageAc" />
-			<Button x:Name="VoltageDcButton" Margin="2,0" Click="FunctionClick" Content="V DC" Tag="VoltageDc" />
-			<Button x:Name="CurrentAcButton" Margin="2,0" Click="FunctionClick" Content="A AC" Tag="CurrentAc" />
-			<Button x:Name="CurrentDcButton" Margin="2,0" Click="FunctionClick" Content="A DC" Tag="CurrentDc" />
-			<Button x:Name="ResistanceButton" Margin="2,0" Click="FunctionClick" Content="Ω" Tag="Resistance2Wire" />
-			<Button x:Name="CapacitanceButton" Margin="2,0" Click="FunctionClick" Content="F" Tag="Capacitance" />
-			<Button x:Name="DiodeButton" Margin="2,0" Click="FunctionClick" Content="Diod" Tag="Diode" />
-			<Button x:Name="ContinuityButton" Margin="2,0" Click="FunctionClick" Content="Sig" Tag="Continuity" />
+		<UniformGrid x:Name="FunctionButtons" Grid.Row="1" Margin="6,3" Columns="4" Rows="2">
+			<Button x:Name="VoltageAcButton" Margin="2" Click="FunctionClick" Content="V AC" Tag="VoltageAc" />
+			<Button x:Name="VoltageDcButton" Margin="2" Click="FunctionClick" Content="V DC" Tag="VoltageDc" />
+			<Button x:Name="CurrentAcButton" Margin="2" Click="FunctionClick" Content="A AC" Tag="CurrentAc" />
+			<Button x:Name="CurrentDcButton" Margin="2" Click="FunctionClick" Content="A DC" Tag="CurrentDc" />
+			<Button x:Name="ResistanceButton" Margin="2" Click="FunctionClick" Content="Ω" Tag="Resistance2Wire" />
+			<Button
+				x:Name="CapacitanceButton"
+				Margin="2"
+				AutomationProperties.Name="Pojemność"
+				Click="FunctionClick"
+				Tag="Capacitance"
+				ToolTip="Pojemność">
+				<Viewbox Width="30" Height="18" Stretch="Uniform">
+					<Canvas Width="40" Height="24">
+						<Path Data="M 1,12 L 15,12 M 15,3 L 15,21 M 25,3 L 25,21 M 25,12 L 39,12" Stroke="White" StrokeThickness="2" />
+					</Canvas>
+				</Viewbox>
+			</Button>
+			<Button
+				x:Name="DiodeButton"
+				Margin="2"
+				AutomationProperties.Name="Dioda"
+				Click="FunctionClick"
+				Tag="Diode"
+				ToolTip="Dioda">
+				<Viewbox Width="30" Height="18" Stretch="Uniform">
+					<Canvas Width="40" Height="24">
+						<Path Data="M 1,12 L 10,12 M 10,3 L 27,12 L 10,21 Z M 27,3 L 27,21 M 27,12 L 39,12" Fill="White" Stroke="White" StrokeThickness="2" />
+					</Canvas>
+				</Viewbox>
+			</Button>
+			<Button
+				x:Name="ContinuityButton"
+				Margin="2"
+				AutomationProperties.Name="Ciągłość"
+				Click="FunctionClick"
+				Tag="Continuity"
+				ToolTip="Ciągłość">
+				<Viewbox Width="30" Height="18" Stretch="Uniform">
+					<Canvas Width="40" Height="24">
+						<Path Data="M 2,9 L 10,9 L 19,2 L 19,22 L 10,15 L 2,15 Z" Fill="White" />
+						<Path Data="M 24,7 C 29,10 29,14 24,17 M 29,3 C 37,8 37,16 29,21" Fill="Transparent" Stroke="White" StrokeThickness="2" />
+					</Canvas>
+				</Viewbox>
+			</Button>
 		</UniformGrid>
 
 		<Grid Grid.Row="2">
-			<Grid.ColumnDefinitions>
-				<ColumnDefinition Width="330" />
-				<ColumnDefinition Width="*" />
-			</Grid.ColumnDefinitions>
-			<Border Padding="12,8" Background="#292929" BorderBrush="#3F3F3F" BorderThickness="1">
+			<Grid.RowDefinitions>
+				<RowDefinition Height="*" />
+				<RowDefinition Height="62" />
+			</Grid.RowDefinitions>
+			<Border
+				x:Name="MeasurementPanel"
+				Padding="12,4"
+				Background="#292929"
+				BorderBrush="#3F3F3F"
+				BorderThickness="1">
 				<Grid>
 					<Grid.RowDefinitions>
 						<RowDefinition Height="Auto" />
@@ -56,12 +92,12 @@
 						<RowDefinition Height="Auto" />
 					</Grid.RowDefinitions>
 					<StackPanel Orientation="Horizontal">
-						<TextBlock x:Name="FunctionShortText" FontSize="22" Foreground="#00FFFF" Text="-" />
-						<TextBlock x:Name="FunctionNameText" Margin="12,4,0,0" FontSize="15" Text="Pomiar" />
+						<TextBlock x:Name="FunctionShortText" FontSize="18" Foreground="#00FFFF" Text="-" />
+						<TextBlock x:Name="FunctionNameText" Margin="10,2,0,0" FontSize="14" Text="Pomiar" />
 					</StackPanel>
 					<StackPanel Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center" Orientation="Horizontal">
-						<TextBlock x:Name="PrimaryLabelText" Margin="0,8,12,0" FontSize="18" Foreground="#D8D8D8" Text="Wartość" />
-						<TextBlock x:Name="PrimaryValueText" FontSize="39" Text="-" />
+						<TextBlock x:Name="PrimaryLabelText" Margin="0,5,12,0" FontSize="16" Foreground="#D8D8D8" Text="Wartość" />
+						<TextBlock x:Name="PrimaryValueText" FontSize="32" Text="-" />
 					</StackPanel>
 					<StackPanel Grid.Row="2" Orientation="Horizontal">
 						<TextBlock Text="Zakres: " />
@@ -70,34 +106,30 @@
 				</Grid>
 			</Border>
 
-			<Border Grid.Column="1" Padding="5" Background="#292929" BorderBrush="#3F3F3F" BorderThickness="0,1,1,1">
+			<Border
+				x:Name="StatisticsPanel"
+				Grid.Row="1"
+				Padding="5"
+				Background="#292929"
+				BorderBrush="#3F3F3F"
+				BorderThickness="1,0,1,1">
 				<Grid>
 					<Grid.ColumnDefinitions>
-						<ColumnDefinition Width="*" />
-						<ColumnDefinition Width="*" />
 						<ColumnDefinition Width="*" />
 						<ColumnDefinition Width="*" />
 						<ColumnDefinition Width="*" />
 					</Grid.ColumnDefinitions>
 					<StackPanel Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">
 						<TextBlock x:Name="StatisticMinimumLabel" HorizontalAlignment="Center" Foreground="#D8D8D8" Text="Min" />
-						<TextBlock x:Name="MinimumText" Margin="0,9,0,0" FontSize="18" Text="-" />
+						<TextBlock x:Name="MinimumText" Margin="0,3,0,0" FontSize="17" Text="-" />
 					</StackPanel>
 					<StackPanel Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center">
 						<TextBlock x:Name="StatisticMaximumLabel" HorizontalAlignment="Center" Foreground="#D8D8D8" Text="Max" />
-						<TextBlock x:Name="MaximumText" Margin="0,9,0,0" FontSize="18" Text="-" />
+						<TextBlock x:Name="MaximumText" Margin="0,3,0,0" FontSize="17" Text="-" />
 					</StackPanel>
 					<StackPanel Grid.Column="2" HorizontalAlignment="Center" VerticalAlignment="Center">
 						<TextBlock x:Name="StatisticAverageLabel" HorizontalAlignment="Center" Foreground="#D8D8D8" Text="Średnia" />
-						<TextBlock x:Name="AverageText" Margin="0,9,0,0" FontSize="18" Text="-" />
-					</StackPanel>
-					<StackPanel Grid.Column="3" HorizontalAlignment="Center" VerticalAlignment="Center">
-						<TextBlock x:Name="StatisticPeakToPeakLabel" HorizontalAlignment="Center" Foreground="#D8D8D8" Text="P-P serii" />
-						<TextBlock x:Name="PeakToPeakText" Margin="0,9,0,0" FontSize="18" Text="-" />
-					</StackPanel>
-					<StackPanel Grid.Column="4" HorizontalAlignment="Center" VerticalAlignment="Center">
-						<TextBlock x:Name="StatisticDeviationLabel" HorizontalAlignment="Center" Foreground="#D8D8D8" Text="σ" />
-						<TextBlock x:Name="DeviationText" Margin="0,9,0,0" FontSize="18" Text="-" />
+						<TextBlock x:Name="AverageText" Margin="0,3,0,0" FontSize="17" Text="-" />
 					</StackPanel>
 				</Grid>
 			</Border>

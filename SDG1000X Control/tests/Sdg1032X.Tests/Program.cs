@@ -607,8 +607,8 @@ Test("Metadane aplikacji zachowują autora, wersję i licencję",()=>
 	Equal("Mateusz Skipor",ProductInformation.AuthorName);
 	Equal("Inżynier technik elektroniki",ProductInformation.AuthorProfession);
 	Equal("mskiporsklep@op.pl",ProductInformation.AuthorEmail);
-	Equal("0.2.8",ProductInformation.Version);
-	Equal("Siglent SDG1000X Control v0.2.8",ProductInformation.GetWindowTitle());
+	Equal("0.2.9",ProductInformation.Version);
+	Equal("Siglent SDG1000X Control v0.2.9",ProductInformation.GetWindowTitle());
 	Equal("Siglent.SDG1000X.Control",typeof(MainWindow).Assembly.GetName().Name);
 	string license=ProductInformation.LoadLicenseText();
 	if(!license.Contains("PolyForm Noncommercial License 1.0.0",StringComparison.Ordinal))
@@ -651,13 +651,13 @@ Test("Interfejs zachowuje kompaktowy rozmiar i pełne pola klikalne",()=>
 		window.ShowActivated=false;
 		window.Show();
 		window.Dispatcher.Invoke(()=>{},DispatcherPriority.ApplicationIdle);
-		window.Measure(new Size(350,675));
-		window.Arrange(new Rect(0,0,350,675));
+		window.Measure(new Size(350,745));
+		window.Arrange(new Rect(0,0,350,745));
 		window.ApplyTemplate();
 
-		Equal(675d,window.Height);
+		Equal(745d,window.Height);
 		Directory.CreateDirectory(Path.Combine("SDG1000X Control","artifacts","qa"));
-		RenderTargetBitmap bitmap=new(350,675,96,96,PixelFormats.Pbgra32);
+		RenderTargetBitmap bitmap=new(350,745,96,96,PixelFormats.Pbgra32);
 		bitmap.Render(window);
 		PngBitmapEncoder encoder=new();
 		encoder.Frames.Add(BitmapFrame.Create(bitmap));
@@ -845,7 +845,7 @@ Test("Interfejs zachowuje kompaktowy rozmiar i pełne pola klikalne",()=>
 				throw new Exception($"Etykieta {label} nie ma standardowego białego tekstu");
 			}
 		}
-		RenderTargetBitmap customBitmap=new(350,675,96,96,PixelFormats.Pbgra32);
+		RenderTargetBitmap customBitmap=new(350,745,96,96,PixelFormats.Pbgra32);
 		customBitmap.Render(window);
 		PngBitmapEncoder customEncoder=new();
 		customEncoder.Frames.Add(BitmapFrame.Create(customBitmap));
@@ -862,7 +862,19 @@ Test("Interfejs zachowuje kompaktowy rozmiar i pełne pola klikalne",()=>
 			.Single(choice=>choice.Value == BasicWaveform.Pulse);
 		waveformSelector.SelectedItem=pulseChoice;
 		window.Dispatcher.Invoke(()=>{},DispatcherPriority.ApplicationIdle);
-		RenderTargetBitmap pulseBitmap=new(350,675,96,96,PixelFormats.Pbgra32);
+		ScrollViewer channelScroller=LogicalChildren<ScrollViewer>(channel1).Single();
+		Equal(Visibility.Collapsed,channelScroller.ComputedVerticalScrollBarVisibility);
+		FrameworkElement pulseStepSelector=LogicalChildren<FrameworkElement>(channel1)
+			.Single(element=>element.Name == "StepMultiplierSelector");
+		double pulseSelectorBottom=pulseStepSelector.TranslatePoint(
+			new Point(0,pulseStepSelector.ActualHeight),window).Y;
+		double statusTop=status.TranslatePoint(new Point(0,0),window).Y;
+		if(statusTop-pulseSelectorBottom is < 0 or > 35)
+		{
+			throw new Exception(
+				$"Status nie znajduje się bezpośrednio pod mnożnikami w trybie Impuls: status={statusTop:G}, mnożniki={pulseSelectorBottom:G}");
+		}
+		RenderTargetBitmap pulseBitmap=new(350,745,96,96,PixelFormats.Pbgra32);
 		pulseBitmap.Render(window);
 		PngBitmapEncoder pulseEncoder=new();
 		pulseEncoder.Frames.Add(BitmapFrame.Create(pulseBitmap));
@@ -880,7 +892,7 @@ Test("Interfejs zachowuje kompaktowy rozmiar i pełne pola klikalne",()=>
 			.Single(choice=>choice.Value == BasicWaveform.Square);
 		waveformSelector.SelectedItem=squareChoice;
 		window.Dispatcher.Invoke(()=>{},DispatcherPriority.ApplicationIdle);
-		RenderTargetBitmap squareBitmap=new(350,675,96,96,PixelFormats.Pbgra32);
+		RenderTargetBitmap squareBitmap=new(350,745,96,96,PixelFormats.Pbgra32);
 		squareBitmap.Render(window);
 		PngBitmapEncoder squareEncoder=new();
 		squareEncoder.Frames.Add(BitmapFrame.Create(squareBitmap));
@@ -893,18 +905,7 @@ Test("Interfejs zachowuje kompaktowy rozmiar i pełne pola klikalne",()=>
 			squareEncoder.Save(stream);
 		}
 
-		ScrollViewer channelScroller=LogicalChildren<ScrollViewer>(channel1).Single();
 		Equal(Visibility.Collapsed,channelScroller.ComputedVerticalScrollBarVisibility);
-		FrameworkElement squareStepSelector=LogicalChildren<FrameworkElement>(channel1)
-			.Single(element=>element.Name == "StepMultiplierSelector");
-		double selectorBottom=squareStepSelector.TranslatePoint(
-			new Point(0,squareStepSelector.ActualHeight),window).Y;
-		double statusTop=status.TranslatePoint(new Point(0,0),window).Y;
-		if(statusTop-selectorBottom is < 0 or > 35)
-		{
-			throw new Exception("Status nie znajduje się bezpośrednio pod mnożnikami w trybie Prostokąt");
-		}
-
 
 		if(LogicalChildren<FrameworkElement>(window).Any(element=>
 			element.GetType().FullName ==
@@ -929,6 +930,14 @@ Test("Interfejs zachowuje kompaktowy rozmiar i pełne pola klikalne",()=>
 			throw new Exception("Selektor kroku nie zawiera kompletu mnożników SI");
 		}
 		Button activeStep=stepButtons.Single(button=>Equals(button.Content,"m"));
+		activeStep.ApplyTemplate();
+		Border activeStepBorder=VisualChildren<Border>(activeStep)
+			.Single(border=>border.Name == "ButtonBorder");
+		if(activeStepBorder.Background is not SolidColorBrush offlineActiveBackground ||
+			offlineActiveBackground.Color != Color.FromRgb(0,255,0))
+		{
+			throw new Exception("Aktywny mnożnik Offline nie zachowuje zielonego tła");
+		}
 		if(activeStep.Background is not SolidColorBrush activeStepBackground ||
 			activeStepBackground.Color != Color.FromRgb(0,255,0) ||
 			activeStep.Foreground is not SolidColorBrush activeStepForeground ||

@@ -6,7 +6,7 @@
 	xmlns:sharedControls="clr-namespace:LabStation.UI.Controls;assembly=LabStation.UI"
 	Title="Siglent SDG1000X Control"
 	Width="350"
-	Height="675"
+	Height="745"
 	Icon="/Siglent.SDG1000X.Control;component/Assets/sdg1062x.ico"
 	ResizeMode="NoResize"
 	WindowStartupLocation="CenterScreen">
