@@ -1,12 +1,12 @@
-# Siglent SDM3000 Control v0.2.1
+# Siglent SDM3000 Control v0.2.2
 
-Samodzielna aplikacja Windows oraz panel wielokrotnego użytku do ciągłego wykonywania i prezentowania pomiarów multimetru SIGLENT SDM3055 przez LAN/VXI-11. Wydanie 0.2.1 utrzymuje jedną sesję zdalną, inicjuje pomiary poleceniem `READ?`, pozwala wybrać podstawową funkcję pomiarową z aplikacji i porządkuje poziomy interfejs w dwa rzędy funkcji oraz bloki pomiaru i trzech statystyk.
+Samodzielna aplikacja Windows oraz panel wielokrotnego użytku do ciągłego wykonywania i prezentowania pomiarów multimetru SIGLENT SDM3055 przez LAN/VXI-11. Wydanie 0.2.2 utrzymuje jedną sesję zdalną, inicjuje pomiary poleceniem `READ?`, pozwala wybrać podstawową funkcję pomiarową z aplikacji i mieści pełny główny odczyt w węższym, poziomym oknie.
 
 Domyślny adres urządzenia w tej instalacji: `192.168.200.131`.
 
 Szczegółowy zakres i wyniki testów sprzętowych opisuje dokument [Zakres panelu SDM3000](../docs/sdm3000-viewer-scope.md).
 
-## Funkcje 0.2.1
+## Funkcje 0.2.2
 
 - wspólny styl LabStation oraz niezależny panel `UserControl`,
 - jedna trwała sesja LAN/VXI-11 przez `Shared/LabStation.Instruments`,
@@ -17,7 +17,7 @@ Szczegółowy zakres i wyniki testów sprzętowych opisuje dokument [Zakres pane
 - odczyt liczby danych w pamięci przez `DATA:POINts?`,
 - osiem przycisków wyboru funkcji: `V AC`, `V DC`, `A AC`, `A DC`, `Ω`, `F`, `Diod` i `Sig`,
 - obsługa napięcia i prądu AC/DC, rezystancji 2W/4W, pojemności, diody, ciągłości, częstotliwości, okresu i temperatury,
-- duży bieżący wynik z nazwą właściwą dla funkcji, między innymi `Vrms`, `Irms`, `Vdc`, `Idc`, `R`, `C` i `Vf`,
+- duży bieżący wynik bez powtarzania obok niego skrótu funkcji, który pozostaje widoczny w nagłówku pomiaru,
 - lokalne minimum, maksimum, średnia, peak-to-peak serii, odchylenie standardowe i licznik próbek,
 - zapis zebranych odczytów do pliku CSV,
 - serializacja konfiguracji i odczytów w obrębie jednej sesji, bez ponownego łączenia w każdym cyklu,
@@ -27,12 +27,13 @@ Peak-to-peak w tym panelu jest różnicą maksimum i minimum kolejnych odczytów
 
 ## Interfejs
 
-- stałe, poziome okno 920 x 318 px z aktywną minimalizacją,
+- stałe, poziome okno 720 x 340 px z aktywną minimalizacją,
 - pole IP o szerokości 150 px i standardowy przycisk Offline/Online,
 - wspólne menu `Narzędzia` z `Skanuj sieć` i `Auto connect`,
 - menu `Zapisz jako` z eksportem CSV,
 - wspólne menu `O aplikacji` z oknami Autor i Licencja,
-- osiem równych przycisków funkcji pomiarowej pomiędzy paskiem połączenia a blokami wyników,
+- osiem kompaktowych przycisków funkcji pomiarowej w dwóch rzędach,
+- powiększony symbol rezystancji oraz wektorowy symbol ciągłości złożony z kropki i dwóch łuków,
 - biały zwykły status i czerwony status błędu.
 
 ## Skutki polecenia READ
@@ -59,7 +60,7 @@ Publikacja samodzielna dla Windows x64 trafia do `artifacts/final/win-x64`. W ty
 
 ## Status weryfikacji
 
-Wersja 0.2.1 przeszła 14/14 testów automatycznych, obejmujących mapowanie ośmiu poleceń `CONFigure`, zachowanie jednej sesji, kolejne `READ?`, serializację operacji oraz układ WPF z wektorowymi symbolami pojemności, diody i ciągłości.
+Wersja 0.2.2 przeszła 14/14 testów automatycznych, obejmujących mapowanie ośmiu poleceń `CONFigure`, zachowanie jednej sesji, kolejne `READ?`, serializację operacji oraz kompaktowy układ WPF z nieprzyciętym głównym odczytem i wektorowymi symbolami pojemności, diody i ciągłości.
 
 Na fizycznym SDM3055 z firmware `1.02.01.29R1` jedna sesja zwróciła trzy kolejne świeże pomiary `V DC`: 11,30298 mV, 11,30100 mV i 11,30511 mV. Test nie zmieniał funkcji pomiarowej. Przyciski funkcji zostały zweryfikowane programowo, ale ich działanie na fizycznym mierniku pozostaje do ręcznego sprawdzenia podczas użytkowania aplikacji.
 

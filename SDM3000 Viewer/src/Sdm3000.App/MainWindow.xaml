@@ -5,8 +5,8 @@
 	xmlns:local="clr-namespace:Sdm3000.App"
 	xmlns:sharedControls="clr-namespace:LabStation.UI.Controls;assembly=LabStation.UI"
 	Title="Siglent SDM3000 Control"
-	Width="920"
-	Height="318"
+	Width="720"
+	Height="340"
 	Icon="/Siglent.SDM3000.Control;component/Assets/Siglent_SDM3055.ico"
 	ResizeMode="NoResize"
 	WindowStartupLocation="CenterScreen">

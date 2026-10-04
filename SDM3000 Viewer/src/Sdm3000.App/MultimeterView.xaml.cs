@@ -347,7 +347,6 @@ public partial class MultimeterView : UserControl,IAsyncDisposable
 		MeasurementProfile profile=MeasurementProfiles.For(snapshot.Configuration.Function);
 		FunctionNameText.Text=profile.Name;
 		FunctionShortText.Text=profile.ShortName;
-		PrimaryLabelText.Text=profile.PrimaryLabel;
 		PrimaryValueText.Text=MeasurementFormatter.FormatValue(snapshot.Reading,profile.Unit);
 		RangeText.Text=MeasurementFormatter.FormatRange(snapshot.Configuration.Range,profile.Unit);
 		LocalStatisticsSnapshot statistics=snapshot.Statistics;

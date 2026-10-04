@@ -392,12 +392,18 @@ Test("Okno SDM jest poziome, stałe i udostępnia osiem funkcji pomiarowych",()=
 		window.Show();
 		window.Dispatcher.Invoke(()=>{});
 
-		Equal("0.2.1",AppInformation.Version);
-		Equal("Siglent SDM3000 Control v0.2.1",AppInformation.DisplayName);
-		Equal("Siglent SDM3000 Control v0.2.1",window.Title);
+		Equal("0.2.2",AppInformation.Version);
+		Equal("Siglent SDM3000 Control v0.2.2",AppInformation.DisplayName);
+		Equal("Siglent SDM3000 Control v0.2.2",window.Title);
 		Equal("Siglent.SDM3000.Control",typeof(MainWindow).Assembly.GetName().Name);
-		Equal(920d,window.Width);
-		Equal(318d,window.Height);
+		if(window.Width>740d)
+		{
+			throw new Exception("Okno multimetru jest nadal zbyt szerokie");
+		}
+		if(window.Height<335d || window.Height>350d)
+		{
+			throw new Exception("Wysokość okna nie zapewnia miejsca na pełny główny odczyt");
+		}
 		Equal(ResizeMode.NoResize,window.ResizeMode);
 		if(window.Width <= window.Height*2)
 		{
@@ -411,6 +417,10 @@ Test("Okno SDM jest poziome, stałe i udostępnia osiem funkcji pomiarowych",()=
 			.Single(grid=>grid.Name == "FunctionButtons");
 		Equal(4,functionGrid.Columns);
 		Equal(2,functionGrid.Rows);
+		if(double.IsNaN(functionGrid.Width) || functionGrid.Width>500d)
+		{
+			throw new Exception("Przyciski funkcji nie mają kompaktowej, standardowej szerokości");
+		}
 		string[] functions=["VoltageAc","VoltageDc","CurrentAc","CurrentDc","Resistance2Wire","Capacitance","Diode","Continuity"];
 		Button[] functionButtons=LogicalChildren<Button>(functionGrid)
 			.Where(button=>button.Tag is not null)
@@ -431,6 +441,22 @@ Test("Okno SDM jest poziome, stałe i udostępnia osiem funkcji pomiarowych",()=
 				throw new Exception("Przycisk "+buttonName+" nie używa wektorowego symbolu z opisem po najechaniu");
 			}
 		}
+		Button resistance=functionButtons.Single(button=>button.Name == "ResistanceButton");
+		if(resistance.Content is not TextBlock resistanceSymbol || resistanceSymbol.FontSize<18d)
+		{
+			throw new Exception("Symbol omomierza jest mniejszy od tekstu pozostałych funkcji");
+		}
+		Button continuity=functionButtons.Single(button=>button.Name == "ContinuityButton");
+		int continuityDots=LogicalChildren<System.Windows.Shapes.Ellipse>(continuity).Count();
+		int continuityArcs=LogicalChildren<System.Windows.Shapes.Path>(continuity).Count();
+		if(continuityDots != 1 || continuityArcs != 2)
+		{
+			throw new Exception("Symbol ciągłości nie składa się z kropki i dwóch osobnych łuków");
+		}
+		if(LogicalChildren<TextBlock>(window).Any(text=>text.Name == "PrimaryLabelText"))
+		{
+			throw new Exception("Główny odczyt nadal ma zbędny dopisek typu Vdc, Vrms lub Irms");
+		}
 		if(LogicalChildren<TextBlock>(window).Any(text=>text.Name == "IdentityText"))
 		{
 			throw new Exception("Interfejs nadal wyświetla identyfikację urządzenia obok połączenia");
@@ -444,6 +470,14 @@ Test("Okno SDM jest poziome, stałe i udostępnia osiem funkcji pomiarowych",()=
 			.Single(border=>border.Name == "MeasurementPanel");
 		Border statisticsPanel=LogicalChildren<Border>(window)
 			.Single(border=>border.Name == "StatisticsPanel");
+		TextBlock primaryValue=LogicalChildren<TextBlock>(window)
+			.Single(text=>text.Name == "PrimaryValueText");
+		double primaryTop=primaryValue.TranslatePoint(new Point(0,0),measurementPanel).Y;
+		double primaryBottom=primaryTop+primaryValue.ActualHeight;
+		if(primaryTop<0d || primaryBottom>measurementPanel.ActualHeight)
+		{
+			throw new Exception("Główny odczyt wychodzi poza blok pomiaru");
+		}
 		double measurementBottom=measurementPanel.TranslatePoint(
 			new Point(0,measurementPanel.ActualHeight),window).Y;
 		double statisticsTop=statisticsPanel.TranslatePoint(new Point(0,0),window).Y;

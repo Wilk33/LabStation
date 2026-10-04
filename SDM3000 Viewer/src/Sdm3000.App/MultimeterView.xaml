@@ -26,12 +26,21 @@
 				Content="Offline" />
 		</StackPanel>
 
-		<UniformGrid x:Name="FunctionButtons" Grid.Row="1" Margin="6,3" Columns="4" Rows="2">
+		<UniformGrid
+			x:Name="FunctionButtons"
+			Grid.Row="1"
+			Width="480"
+			Margin="6,3"
+			HorizontalAlignment="Center"
+			Columns="4"
+			Rows="2">
 			<Button x:Name="VoltageAcButton" Margin="2" Click="FunctionClick" Content="V AC" Tag="VoltageAc" />
 			<Button x:Name="VoltageDcButton" Margin="2" Click="FunctionClick" Content="V DC" Tag="VoltageDc" />
 			<Button x:Name="CurrentAcButton" Margin="2" Click="FunctionClick" Content="A AC" Tag="CurrentAc" />
 			<Button x:Name="CurrentDcButton" Margin="2" Click="FunctionClick" Content="A DC" Tag="CurrentDc" />
-			<Button x:Name="ResistanceButton" Margin="2" Click="FunctionClick" Content="Ω" Tag="Resistance2Wire" />
+			<Button x:Name="ResistanceButton" Margin="2" Click="FunctionClick" Tag="Resistance2Wire">
+				<TextBlock FontSize="18" Text="Ω" />
+			</Button>
 			<Button
 				x:Name="CapacitanceButton"
 				Margin="2"
@@ -67,8 +76,9 @@
 				ToolTip="Ciągłość">
 				<Viewbox Width="30" Height="18" Stretch="Uniform">
 					<Canvas Width="40" Height="24">
-						<Path Data="M 2,9 L 10,9 L 19,2 L 19,22 L 10,15 L 2,15 Z" Fill="White" />
-						<Path Data="M 24,7 C 29,10 29,14 24,17 M 29,3 C 37,8 37,16 29,21" Fill="Transparent" Stroke="White" StrokeThickness="2" />
+						<Ellipse Canvas.Left="3" Canvas.Top="10" Width="4" Height="4" Fill="White" />
+						<Path Data="M 12,7 C 17,10 17,14 12,17" Fill="Transparent" Stroke="White" StrokeThickness="2" />
+						<Path Data="M 19,3 C 27,8 27,16 19,21" Fill="Transparent" Stroke="White" StrokeThickness="2" />
 					</Canvas>
 				</Viewbox>
 			</Button>
@@ -96,7 +106,6 @@
 						<TextBlock x:Name="FunctionNameText" Margin="10,2,0,0" FontSize="14" Text="Pomiar" />
 					</StackPanel>
 					<StackPanel Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center" Orientation="Horizontal">
-						<TextBlock x:Name="PrimaryLabelText" Margin="0,5,12,0" FontSize="16" Foreground="#D8D8D8" Text="Wartość" />
 						<TextBlock x:Name="PrimaryValueText" FontSize="32" Text="-" />
 					</StackPanel>
 					<StackPanel Grid.Row="2" Orientation="Horizontal">
