@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<OutputType>WinExe</OutputType>
+		<OutputType Condition="'$(LabStationEmbed)' != 'true'">WinExe</OutputType>
+		<OutputType Condition="'$(LabStationEmbed)' == 'true'">Library</OutputType>
 		<UseWPF>true</UseWPF>
 		<AssemblyName>Siglent.SDG1000X.Control</AssemblyName>
 		<Product>SIGLENT SDG1000X Control</Product>
@@ -8,7 +9,7 @@
 		<PackageLicenseExpression>PolyForm-Noncommercial-1.0.0</PackageLicenseExpression>
 		<ApplicationIcon>../../sdg1062x.ico</ApplicationIcon>
 	</PropertyGroup>
-	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
+	<PropertyGroup Condition="'$(Configuration)' == 'Release' and '$(LabStationEmbed)' != 'true'">
 		<RuntimeIdentifier>win-x64</RuntimeIdentifier>
 		<SelfContained>true</SelfContained>
 		<PublishSingleFile>true</PublishSingleFile>
@@ -27,5 +28,10 @@
 		<EmbeddedResource Include="../../LICENSE" LogicalName="Sdg1032X.LICENSE" />
 		<Content Include="../../LICENSE" Link="LICENSE" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
 		<Content Include="../../THIRD-PARTY-NOTICES.md" Link="THIRD-PARTY-NOTICES.md" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+	</ItemGroup>
+	<ItemGroup Condition="'$(LabStationEmbed)' == 'true'">
+		<ApplicationDefinition Remove="App.xaml" />
+		<Compile Remove="App.xaml.cs" />
+		<Content Update="@(Content)" CopyToOutputDirectory="Never" CopyToPublishDirectory="Never" />
 	</ItemGroup>
 </Project>

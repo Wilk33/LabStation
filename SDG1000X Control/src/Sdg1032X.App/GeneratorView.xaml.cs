@@ -6,6 +6,7 @@ using System.Windows.Media;
 using LabStation.Instruments.Discovery;
 using LabStation.Instruments.Transport;
 using Sdg1032X.Core;
+using LabStation.UI;
 
 namespace Sdg1032X.App;
 
@@ -104,7 +105,9 @@ public partial class GeneratorView : UserControl,IAsyncDisposable
 			return;
 		}
 		loadedHandled=true;
-		if(AutoConnect && HostEditor.Text.Trim().Length>0)
+		if(StartupPolicy.AutoConnectAllowed &&
+			AutoConnect &&
+			HostEditor.Text.Trim().Length>0)
 		{
 			await ConnectAsync();
 		}

@@ -11,4 +11,9 @@
 	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
 		<DebugType>embedded</DebugType>
 	</PropertyGroup>
+	<PropertyGroup Condition="'$(LabStationEmbed)' == 'true'">
+		<BaseIntermediateOutputPath>obj/Embed/</BaseIntermediateOutputPath>
+		<BaseOutputPath>bin/Embed/</BaseOutputPath>
+		<DefaultItemExcludes>$(DefaultItemExcludes);obj/**;bin/**</DefaultItemExcludes>
+	</PropertyGroup>
 </Project>

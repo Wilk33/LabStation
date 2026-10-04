@@ -7,6 +7,7 @@ using LabStation.Instruments.Discovery;
 using LabStation.Instruments.Transport;
 using Microsoft.Win32;
 using Sdm3000.Core;
+using LabStation.UI;
 
 namespace Sdm3000.App;
 
@@ -118,7 +119,9 @@ public partial class MultimeterView : UserControl,IAsyncDisposable
 			return;
 		}
 		loadedHandled=true;
-		if(AutoConnect && HostEditor.Text.Trim().Length > 0)
+		if(StartupPolicy.AutoConnectAllowed &&
+			AutoConnect &&
+			HostEditor.Text.Trim().Length > 0)
 		{
 			await ConnectAsync();
 		}

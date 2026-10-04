@@ -1,6 +1,6 @@
 # LabStation
 
-LabStation to zestaw pięciu niezależnych aplikacji do obsługi przyrządów laboratoryjnych oraz docelowy, osobny panel pełnoekranowy łączący ich funkcje bez uruchamiania aplikacji podrzędnych.
+LabStation to zestaw pięciu niezależnych aplikacji do obsługi przyrządów laboratoryjnych oraz osobny panel pełnoekranowy łączący ich funkcje bez uruchamiania aplikacji podrzędnych.
 
 ## Aplikacje
 
@@ -10,11 +10,15 @@ LabStation to zestaw pięciu niezależnych aplikacji do obsługi przyrządów la
 - `SDM3000 Viewer` - Siglent SDM3000 Control v0.1.2
 - `SDL1000X Control` - Siglent SDL1000X Control v0.1.1
 
-Każda aplikacja jest osobnym plikiem EXE. W przyszłym programie LabStation odpowiadające im panele będą niezależne komunikacyjnie, lecz na stałe rozmieszczone w jednym oknie.
+Każda aplikacja pozostaje osobnym plikiem EXE. `LabStation.exe` korzysta z tych samych paneli i logiki, ale osadza je bezpośrednio w jednym oknie. Moduły zachowują niezależne połączenia, stany i sesje.
 
 ## Stan
 
-Gotowe aplikacje znajdują się w katalogach `KA3005P`, `SDS1000CML Viewer`, `SDG1000X Control`, `SDM3000 Viewer` i `SDL1000X Control`. Wszystkie korzystają z WPF, wspólnego języka wizualnego i paneli `UserControl` przeznaczonych do bezpośredniego użycia w przyszłym oknie LabStation. Samodzielne pliki EXE są cienkimi powłokami tych paneli.
+Gotowe aplikacje znajdują się w katalogach `KA3005P`, `SDS1000CML Viewer`, `SDG1000X Control`, `SDM3000 Viewer` i `SDL1000X Control`. Wszystkie korzystają z WPF, wspólnego języka wizualnego i paneli `UserControl`. Samodzielne pliki EXE są cienkimi powłokami tych paneli.
+
+Pełnoekranowy panel znajduje się w `src/LabStation.App`. Wariant 1 rozmieszcza Korada na całej szerokości górnej części okna. Dolna część zawiera oscyloskop, generator oraz prawą kolumnę z multimetrem i obciążeniem. Menu modułów udostępnia konfiguracje Korada, eksporty CSV, skanowanie sieci i Auto connect zgodnie z możliwościami poszczególnych urządzeń.
+
+Korad w panelu wspólnym ma trzy konfiguracje: `1 Single`, `2 Single` oraz `Dual`. Dwa panele Single mają niezależne sesje i nie mogą jednocześnie dzierżawić tego samego portu COM. Zmiana konfiguracji jest blokowana, gdy którekolwiek wyjście jest włączone.
 
 Pierwsza wersja `SDL1000X Control` obsługuje statyczne tryby CC, CV, CP, CR i LED, pomiary napięcia, prądu, mocy i rezystancji, zabezpieczenia OCP/OPP oraz bezpieczne sterowanie wejściem. Została zweryfikowana na symulatorze protokołu, ponieważ fizyczne obciążenie nie było dostępne.
 
@@ -31,9 +35,13 @@ Tryby demonstracyjne nie są częścią projektu. Programy łączą się wyłąc
 ## Weryfikacja
 
 ```powershell
+& '.\build.ps1'
+& '.\build.ps1' -Publish
 dotnet test .\KA3005P\Korad.KA3005P.sln -c Release
 & '.\SDS1000CML Viewer\build.ps1'
 & '.\SDG1000X Control\build.ps1'
 & '.\SDM3000 Viewer\build.ps1'
 & '.\SDL1000X Control\build.ps1'
 ```
+
+Najnowsza publikacja LabStation trafia do `artifacts/final/win-x64`.

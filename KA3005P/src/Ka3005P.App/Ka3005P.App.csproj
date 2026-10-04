@@ -4,6 +4,11 @@
 	<ProjectReference Include="../Ka3005P.Core/Ka3005P.Core.csproj" />
 	<ProjectReference Include="../../../Shared/LabStation.UI/LabStation.UI.csproj" />
   </ItemGroup>
+	<ItemGroup Condition="'$(LabStationEmbed)' == 'true'">
+		<ApplicationDefinition Remove="App.xaml" />
+		<Compile Remove="App.xaml.cs" />
+		<Compile Remove="App.Bootstrap.cs" />
+	</ItemGroup>
   <ItemGroup>
 	<Content Include="../../LICENSE" Link="LICENSE" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
 	<Content Include="../../THIRD-PARTY-NOTICES.md" Link="THIRD-PARTY-NOTICES.md" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
@@ -14,8 +19,12 @@
 	<Content Include="../../assets/reference/KoradD150.png" Link="ReferenceAssets/KoradD150.png" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
 	<Content Include="../../assets/reference/KoradM150.png" Link="ReferenceAssets/KoradM150.png" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
   </ItemGroup>
+  <ItemGroup Condition="'$(LabStationEmbed)' == 'true'">
+	<Content Update="@(Content)" CopyToOutputDirectory="Never" CopyToPublishDirectory="Never" />
+  </ItemGroup>
   <PropertyGroup>
-    <OutputType>WinExe</OutputType>
+    <OutputType Condition="'$(LabStationEmbed)' != 'true'">WinExe</OutputType>
+    <OutputType Condition="'$(LabStationEmbed)' == 'true'">Library</OutputType>
     <TargetFramework>net10.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -27,7 +36,7 @@
     <ApplicationIcon>Assets/KoradS.ico</ApplicationIcon>
 	<Version>0.2.8</Version>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+  <PropertyGroup Condition="'$(Configuration)' == 'Release' and '$(LabStationEmbed)' != 'true'">
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <SelfContained>true</SelfContained>
     <PublishSingleFile>true</PublishSingleFile>

@@ -1,0 +1,125 @@
+<UserControl
+	x:Class="Ka3005P.App.Views.CompactDualSupplyView"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:controls="clr-namespace:LabStation.UI.Controls;assembly=LabStation.UI"
+	xmlns:dual="clr-namespace:Ka3005P.Core.Dual;assembly=Ka3005P.Core"
+	Background="{StaticResource KoradBackgroundBrush}"
+	Foreground="{StaticResource KoradTextBrush}">
+	<Grid Margin="8,5">
+		<Grid.RowDefinitions>
+			<RowDefinition Height="58" />
+			<RowDefinition Height="Auto" />
+			<RowDefinition Height="Auto" />
+			<RowDefinition Height="34" />
+			<RowDefinition Height="50" />
+			<RowDefinition Height="*" />
+			<RowDefinition Height="Auto" />
+		</Grid.RowDefinitions>
+		<Grid>
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="52" />
+				<ColumnDefinition Width="82" />
+				<ColumnDefinition Width="*" />
+				<ColumnDefinition Width="80" />
+			</Grid.ColumnDefinitions>
+			<Grid.RowDefinitions>
+				<RowDefinition Height="29" />
+				<RowDefinition Height="29" />
+			</Grid.RowDefinitions>
+			<TextBlock VerticalAlignment="Center" FontSize="14" Text="Port 1:" />
+			<ComboBox
+				Grid.Column="1"
+				Margin="0,1,4,1"
+				IsEnabled="{Binding CanSelectPort}"
+				ItemsSource="{Binding AvailableFirstPorts}"
+				SelectedItem="{Binding SelectedFirstPort,Mode=TwoWay}" />
+			<Button
+				Grid.Column="3"
+				Margin="3,1,0,1"
+				Command="{Binding ConnectCommand}"
+				Content="{Binding ConnectionStatus}" />
+			<TextBlock Grid.Row="1" VerticalAlignment="Center" FontSize="14" Text="Port 2:" />
+			<ComboBox
+				Grid.Row="1"
+				Grid.Column="1"
+				Margin="0,1,4,1"
+				IsEnabled="{Binding CanSelectPort}"
+				ItemsSource="{Binding AvailableSecondPorts}"
+				SelectedItem="{Binding SelectedSecondPort,Mode=TwoWay}" />
+			<ComboBox
+				Grid.Row="1"
+				Grid.Column="2"
+				Grid.ColumnSpan="2"
+				Margin="3,1,0,1"
+				SelectedValue="{Binding Mode,Mode=OneWay}"
+				SelectedValuePath="Tag"
+				SelectionChanged="ModeSelectionChanged">
+				<ComboBoxItem Content="Szeregowy" Tag="{x:Static dual:DualMode.Series}" />
+				<ComboBoxItem Content="Równoległy" Tag="{x:Static dual:DualMode.Parallel}" />
+				<ComboBoxItem Content="Symetryczny" Tag="{x:Static dual:DualMode.Symmetric}" />
+			</ComboBox>
+		</Grid>
+		<controls:NumericEditor
+			Grid.Row="1"
+			Margin="0,3,0,0"
+			Label="{Binding MaximumVoltageDescription}"
+			Unit="V"
+			Text="{Binding VoltageText,Mode=TwoWay}"
+			IncrementCommand="{Binding IncrementVoltageCommand}"
+			DecrementCommand="{Binding DecrementVoltageCommand}"
+			CommitCommand="{Binding CommitVoltageCommand}" />
+		<controls:NumericEditor
+			Grid.Row="2"
+			Margin="0,3,0,0"
+			Label="{Binding MaximumCurrentDescription}"
+			Unit="A"
+			Text="{Binding CurrentText,Mode=TwoWay}"
+			IncrementCommand="{Binding IncrementCurrentCommand}"
+			DecrementCommand="{Binding DecrementCurrentCommand}"
+			CommitCommand="{Binding CommitCurrentCommand}" />
+		<Grid Grid.Row="3" Margin="0,2,0,0">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="*" />
+				<ColumnDefinition Width="Auto" />
+				<ColumnDefinition Width="Auto" />
+			</Grid.ColumnDefinitions>
+			<controls:EngineeringStepSelector
+				x:Name="StepMultiplierSelector"
+				Grid.Column="1"
+				Width="64"
+				Margin="0,2,2,2"
+				VisibleMultipliers="1,m"
+				MultiplierChanged="StepMultiplierChanged" />
+			<Button
+				Grid.Column="2"
+				Width="80"
+				Command="{Binding ToggleOutputCommand}"
+				Content="{Binding OutputButtonText}" />
+		</Grid>
+		<Grid Grid.Row="4" Margin="0,3,0,0">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="*" />
+				<ColumnDefinition Width="*" />
+			</Grid.ColumnDefinitions>
+			<Border Margin="0,0,3,0" Padding="5,3" BorderBrush="#A0A0A0" BorderThickness="1">
+				<StackPanel>
+					<TextBlock FontFamily="Consolas" FontSize="11" Text="{Binding FirstSupplyLabel}" />
+					<TextBlock FontFamily="Consolas" FontSize="10" Text="{Binding FirstMeasurementText,StringFormat=Pomiar: {0}}" />
+				</StackPanel>
+			</Border>
+			<Border Grid.Column="1" Margin="3,0,0,0" Padding="5,3" BorderBrush="#A0A0A0" BorderThickness="1">
+				<StackPanel>
+					<TextBlock FontFamily="Consolas" FontSize="11" Text="{Binding SecondSupplyLabel}" />
+					<TextBlock FontFamily="Consolas" FontSize="10" Text="{Binding SecondMeasurementText,StringFormat=Pomiar: {0}}" />
+				</StackPanel>
+			</Border>
+		</Grid>
+		<Border Grid.Row="6" Style="{StaticResource LabStationStatusPanelStyle}">
+			<TextBlock
+				Style="{StaticResource LabStationStatusTextStyle}"
+				Text="{Binding StatusText}"
+				ToolTip="{Binding ErrorMessage}" />
+		</Border>
+	</Grid>
+</UserControl>

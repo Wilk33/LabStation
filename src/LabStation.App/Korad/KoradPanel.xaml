@@ -1,0 +1,17 @@
+<UserControl
+	x:Class="LabStation.App.Korad.KoradPanel"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	Background="{StaticResource KoradBackgroundBrush}"
+	Foreground="{StaticResource KoradTextBrush}">
+	<Grid>
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition x:Name="ControlColumn" Width="300" />
+			<ColumnDefinition Width="*" />
+		</Grid.ColumnDefinitions>
+		<Border BorderBrush="#3F3F3F" BorderThickness="0,0,1,0">
+			<Grid x:Name="ControlHost" />
+		</Border>
+		<Grid x:Name="ChartHost" Grid.Column="1" />
+	</Grid>
+</UserControl>

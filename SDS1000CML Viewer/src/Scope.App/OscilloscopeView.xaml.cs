@@ -10,6 +10,7 @@ using LabStation.Instruments.Discovery;
 using LabStation.Instruments.Scheduling;
 using LabStation.Instruments.Transport;
 using LabStation.UI.Controls;
+using LabStation.UI;
 
 namespace Scope.App;
 
@@ -141,7 +142,9 @@ public partial class OscilloscopeView : UserControl,IAsyncDisposable
 			return;
 		}
 		loadedHandled=true;
-		if(AutoConnect && AddressTextBox.Text.Trim().Length > 0)
+		if(StartupPolicy.AutoConnectAllowed &&
+			AutoConnect &&
+			AddressTextBox.Text.Trim().Length > 0)
 		{
 			await ConnectAutomatically();
 		}

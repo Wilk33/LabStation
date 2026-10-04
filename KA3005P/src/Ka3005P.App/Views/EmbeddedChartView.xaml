@@ -1,0 +1,99 @@
+<UserControl
+	x:Class="Ka3005P.App.Views.EmbeddedChartView"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:appControls="clr-namespace:Ka3005P.App.Controls"
+	Background="{StaticResource KoradBackgroundBrush}"
+	Foreground="{StaticResource KoradTextBrush}">
+	<Grid Margin="7,4">
+		<Grid.RowDefinitions>
+			<RowDefinition Height="Auto" />
+			<RowDefinition Height="*" />
+			<RowDefinition Height="Auto" />
+		</Grid.RowDefinitions>
+		<Grid>
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="*" />
+				<ColumnDefinition Width="Auto" />
+				<ColumnDefinition Width="Auto" />
+				<ColumnDefinition Width="Auto" />
+			</Grid.ColumnDefinitions>
+			<StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+				<StackPanel.Style>
+					<Style TargetType="StackPanel">
+						<Setter Property="Visibility" Value="Visible" />
+						<Style.Triggers>
+							<DataTrigger Binding="{Binding IsSymmetric}" Value="True">
+								<Setter Property="Visibility" Value="Collapsed" />
+							</DataTrigger>
+						</Style.Triggers>
+					</Style>
+				</StackPanel.Style>
+				<TextBlock Margin="0,0,12,0" FontFamily="Consolas" FontSize="19" Foreground="{StaticResource KoradTextBrush}">
+					<Run Text="{Binding CurrentText,Mode=OneWay}" /><Run Foreground="#FFFF2020" Text=" A" />
+				</TextBlock>
+				<TextBlock FontFamily="Consolas" FontSize="19" Foreground="{StaticResource KoradTextBrush}">
+					<Run Text="{Binding VoltageText,Mode=OneWay}" /><Run Foreground="#FF00FF00" Text=" V" />
+				</TextBlock>
+			</StackPanel>
+			<StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+				<StackPanel.Style>
+					<Style TargetType="StackPanel">
+						<Setter Property="Visibility" Value="Collapsed" />
+						<Style.Triggers>
+							<DataTrigger Binding="{Binding IsSymmetric}" Value="True">
+								<Setter Property="Visibility" Value="Visible" />
+							</DataTrigger>
+						</Style.Triggers>
+					</Style>
+				</StackPanel.Style>
+				<TextBlock Margin="0,0,8,0" FontFamily="Consolas" FontSize="15" Foreground="{StaticResource KoradTextBrush}">
+					<Run Text="P1 " /><Run Text="{Binding FirstCurrentText,Mode=OneWay}" /><Run Foreground="#FFFF0000" Text=" A " />
+					<Run Text="{Binding FirstVoltageText,Mode=OneWay}" /><Run Foreground="#FF00FF00" Text=" V" />
+				</TextBlock>
+				<TextBlock FontFamily="Consolas" FontSize="15" Foreground="{StaticResource KoradTextBrush}">
+					<Run Text="P2 " /><Run Text="{Binding SecondCurrentText,Mode=OneWay}" /><Run Foreground="#FFFFA500" Text=" A " />
+					<Run Text="{Binding SecondVoltageText,Mode=OneWay}" /><Run Foreground="#FF00FFFF" Text=" V" />
+				</TextBlock>
+			</StackPanel>
+			<Button
+				x:Name="Cursor1Button"
+				Grid.Column="1"
+				Click="Cursor1Click"
+				Content="Kursor 1"
+				Style="{StaticResource LabStationCursorButtonStyle}"
+				Visibility="{Binding CanUseCursors,Converter={StaticResource LabStationBooleanToVisibilityConverter}}" />
+			<Button
+				x:Name="Cursor2Button"
+				Grid.Column="2"
+				Click="Cursor2Click"
+				Content="Kursor 2"
+				Style="{StaticResource LabStationCursorButtonStyle}"
+				Visibility="{Binding CanUseCursors,Converter={StaticResource LabStationBooleanToVisibilityConverter}}" />
+			<Button
+				Grid.Column="3"
+				Width="72"
+				Margin="4,0,0,0"
+				Command="{Binding ToggleOutputCommand}"
+				Content="{Binding OutputButtonText}" />
+		</Grid>
+		<appControls:CurrentChart
+			x:Name="Chart"
+			Grid.Row="1"
+			Margin="0,3,0,1"
+			MinimumY="{Binding MinimumY}"
+			MaximumY="{Binding MaximumY}"
+			MinimumVoltageY="{Binding MinimumVoltageY}"
+			MaximumVoltageY="{Binding MaximumVoltageY}"
+			ShowCurrent="{Binding ShowCurrent}"
+			ShowVoltage="{Binding ShowVoltage}"
+			CursorsEnabled="{Binding CanUseCursors}"
+			Points="{Binding Points}" />
+		<Border Grid.Row="2" Style="{StaticResource LabStationStatusPanelStyle}">
+			<TextBlock
+				Style="{StaticResource LabStationStatusTextStyle}"
+				Text="{Binding StatusText}"
+				ToolTip="{Binding ErrorMessage}" />
+		</Border>
+	</Grid>
+</UserControl>

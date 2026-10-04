@@ -6,6 +6,7 @@ using System.Windows.Media;
 using LabStation.Instruments.Discovery;
 using LabStation.Instruments.Transport;
 using LabStation.UI.Controls;
+using LabStation.UI;
 using Sdl1000X.Core;
 
 namespace Sdl1000X.App;
@@ -95,7 +96,9 @@ public partial class ElectronicLoadView : UserControl,IAsyncDisposable
 			return;
 		}
 		loadedHandled=true;
-		if(AutoConnect && HostAddress.Length>0)
+		if(StartupPolicy.AutoConnectAllowed &&
+			AutoConnect &&
+			HostAddress.Length>0)
 		{
 			await ConnectAsync();
 		}

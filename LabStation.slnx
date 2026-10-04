@@ -1,0 +1,5 @@
+<Solution>
+	<Project Path="src/LabStation.App/LabStation.App.csproj" />
+	<Project Path="tests/LabStation.App.Tests/LabStation.App.Tests.csproj" />
+	<Project Path="Shared/LabStation.Instruments.Tests/LabStation.Instruments.Tests.csproj" />
+</Solution>

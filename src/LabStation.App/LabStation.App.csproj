@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<OutputType Condition="'$(LabStationEmbed)' != 'true'">WinExe</OutputType>
+		<OutputType Condition="'$(LabStationEmbed)' == 'true'">Library</OutputType>
+		<TargetFramework>net10.0-windows</TargetFramework>
+		<UseWPF>true</UseWPF>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<AssemblyName>LabStation</AssemblyName>
+		<Product>LabStation</Product>
+		<Description>Pełnoekranowy panel sterowania przyrządami laboratoryjnymi</Description>
+		<PackageLicenseExpression>PolyForm-Noncommercial-1.0.0</PackageLicenseExpression>
+		<Version>0.1.0</Version>
+	</PropertyGroup>
+	<ItemGroup>
+		<ProjectReference Include="../../Shared/LabStation.UI/LabStation.UI.csproj" />
+		<ProjectReference Include="../../KA3005P/src/Ka3005P.App/Ka3005P.App.csproj" AdditionalProperties="LabStationEmbed=true" />
+		<ProjectReference Include="../../SDS1000CML Viewer/src/Scope.App/Scope.App.csproj" AdditionalProperties="LabStationEmbed=true" />
+		<ProjectReference Include="../../SDG1000X Control/src/Sdg1032X.App/Sdg1032X.App.csproj" AdditionalProperties="LabStationEmbed=true" />
+		<ProjectReference Include="../../SDM3000 Viewer/src/Sdm3000.App/Sdm3000.App.csproj" AdditionalProperties="LabStationEmbed=true" />
+		<ProjectReference Include="../../SDL1000X Control/src/Sdl1000X.App/Sdl1000X.App.csproj" AdditionalProperties="LabStationEmbed=true" />
+		<EmbeddedResource Include="../../KA3005P/LICENSE" LogicalName="LabStation.LICENSE" />
+		<Content Include="../../KA3005P/LICENSE" Link="LICENSE" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+		<Content Include="../../README.md" Link="README.md" CopyToPublishDirectory="PreserveNewest" />
+		<Content Include="../../KA3005P/THIRD-PARTY-NOTICES.md" Link="licenses/KA3005P-THIRD-PARTY-NOTICES.md" CopyToPublishDirectory="PreserveNewest" />
+		<Content Include="../../SDS1000CML Viewer/LICENSE" Link="licenses/SDS1000CML-LICENSE" CopyToPublishDirectory="PreserveNewest" />
+		<Content Include="../../SDG1000X Control/THIRD-PARTY-NOTICES.md" Link="licenses/SDG1000X-THIRD-PARTY-NOTICES.md" CopyToPublishDirectory="PreserveNewest" />
+		<Content Include="../../SDM3000 Viewer/THIRD-PARTY-NOTICES.md" Link="licenses/SDM3000-THIRD-PARTY-NOTICES.md" CopyToPublishDirectory="PreserveNewest" />
+		<Content Include="../../SDL1000X Control/THIRD-PARTY-NOTICES.md" Link="licenses/SDL1000X-THIRD-PARTY-NOTICES.md" CopyToPublishDirectory="PreserveNewest" />
+	</ItemGroup>
+	<ItemGroup Condition="'$(LabStationEmbed)' == 'true'">
+		<ApplicationDefinition Remove="App.xaml" />
+		<Compile Remove="App.xaml.cs" />
+	</ItemGroup>
+</Project>
