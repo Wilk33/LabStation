@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.IO;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -361,6 +362,34 @@ Test("Ustawienia SDL zachowują adres i Auto connect",()=>
 
 using StaTestHost sta=new();
 
+Test("Start aplikacji inicjalizuje wspólny motyw systemowej ramki i menu",()=>
+{
+	sta.Invoke(()=>
+	{
+		MethodInfo startup=typeof(Sdl1000X.App.App).GetMethod(
+			"OnStartup",
+			BindingFlags.Instance|BindingFlags.NonPublic|BindingFlags.DeclaredOnly) ??
+			throw new Exception("Aplikacja SDL nie inicjalizuje wspólnego motywu podczas startu.");
+		StartupEventArgs eventArgs=(StartupEventArgs)RuntimeHelpers.GetUninitializedObject(
+			typeof(StartupEventArgs));
+		startup.Invoke(Application.Current,[eventArgs]);
+		if(Application.Current.Resources["SystemChromeBackgroundBrush"] is not SolidColorBrush background ||
+			Application.Current.Resources["SystemChromeForegroundBrush"] is not SolidColorBrush foreground)
+		{
+			throw new Exception("Brak zasobów wspólnego motywu ramki systemowej.");
+		}
+		if(!ReferenceEquals(
+			Application.Current.Resources[SystemColors.MenuBrushKey],
+			background) ||
+			!ReferenceEquals(
+				Application.Current.Resources[SystemColors.MenuTextBrushKey],
+				foreground))
+		{
+			throw new Exception("Menu nie korzysta z kolorów wspólnego motywu systemowego.");
+		}
+	});
+});
+
 Test("Skan wpisuje adres SDL i Auto connect nawiązuje bezpieczne połączenie",()=>
 {
 	sta.InvokeAsync(async()=>
@@ -418,7 +447,7 @@ Test("Panel cyklicznie odświeża pomiary i tryb zmienione po stronie urządzeni
 
 Test("Metadane i osadzona licencja są zgodne z aplikacjami LabStation",()=>
 {
-	Equal("Siglent SDL1000X Control v0.1.0",AppInformation.DisplayName);
+	Equal("Siglent SDL1000X Control v0.1.1",AppInformation.DisplayName);
 	Equal("Mateusz Skipor",AppInformation.AuthorName);
 	string license=AppInformation.LoadLicenseText();
 	if(!license.Contains("PolyForm Noncommercial License 1.0.0",StringComparison.Ordinal) ||
@@ -435,14 +464,12 @@ Test("Panel SDL wdraża kompaktowy wariant nastawczy bez wykresu",()=>
 		MainWindow window=new();
 		window.Show();
 		window.UpdateLayout();
-		Equal("0.1.0",AppInformation.Version);
-		Equal("Siglent SDL1000X Control v0.1.0",window.Title);
-		Equal(520d,window.Width);
-		if(window.Height<390d || window.Height>420d)
-		{
-			throw new Exception("Okno SDL nie mieści się w przestrzeni pod Multimetrem.");
-		}
+		Equal("0.1.1",AppInformation.Version);
+		Equal("Siglent SDL1000X Control v0.1.1",window.Title);
+		Equal(620d,window.Width);
+		Equal(440d,window.Height);
 		Equal(ResizeMode.CanMinimize,window.ResizeMode);
+		Equal(WindowStyle.SingleBorderWindow,window.WindowStyle);
 		TextBox host=LogicalChildren<TextBox>(window).Single(item=>item.Name == "HostEditor");
 		Equal("",host.Text);
 		Equal(150d,host.Width);
@@ -467,6 +494,11 @@ Test("Panel SDL wdraża kompaktowy wariant nastawczy bez wykresu",()=>
 		foreach(string name in new[]{"SetpointEditor","LedVoltageEditor","LedCurrentEditor","LedResistanceEditor","OverCurrentEditor","OverPowerEditor"})
 		{
 			_ = editors.Single(editor=>editor.Name == name);
+		}
+		if(editors.Single(editor=>editor.Name == "OverCurrentEditor").ActualWidth<170d ||
+			editors.Single(editor=>editor.Name == "OverPowerEditor").ActualWidth<170d)
+		{
+			throw new Exception("Pola OCP i OPP są nadal zbyt wąskie.");
 		}
 		TextBlock ovp=LogicalChildren<TextBlock>(window).Single(text=>text.Name == "OverVoltageText");
 		TextBlock otp=LogicalChildren<TextBlock>(window).Single(text=>text.Name == "OverTemperatureText");

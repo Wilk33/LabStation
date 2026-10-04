@@ -8,7 +8,7 @@ LabStation to zestaw pięciu niezależnych aplikacji do obsługi przyrządów la
 - `SDS1000CML Viewer` - Siglent SDS1000CML Viewer v0.7.3
 - `SDG1000X Control` - Siglent SDG1000X Control v0.2.7
 - `SDM3000 Viewer` - Siglent SDM3000 Control v0.1.2
-- `SDL1000X Control` - Siglent SDL1000X Control v0.1.0
+- `SDL1000X Control` - Siglent SDL1000X Control v0.1.1
 
 Każda aplikacja jest osobnym plikiem EXE. W przyszłym programie LabStation odpowiadające im panele będą niezależne komunikacyjnie, lecz na stałe rozmieszczone w jednym oknie.
 
