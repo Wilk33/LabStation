@@ -102,7 +102,41 @@
 						<RowDefinition Height="Auto" />
 					</Grid.RowDefinitions>
 					<StackPanel Orientation="Horizontal">
-						<TextBlock x:Name="FunctionShortText" FontSize="18" Foreground="#00FFFF" Text="-" />
+						<Grid VerticalAlignment="Center">
+							<TextBlock x:Name="FunctionShortText" FontSize="18" Foreground="#00FFFF" Text="-" />
+							<Viewbox
+								x:Name="CapacitanceFunctionSymbol"
+								Width="30"
+								Height="18"
+								Stretch="Uniform"
+								Visibility="Collapsed">
+								<Canvas Width="40" Height="24">
+									<Path Data="M 1,12 L 15,12 M 15,3 L 15,21 M 25,3 L 25,21 M 25,12 L 39,12" Stroke="#00FFFF" StrokeThickness="2" />
+								</Canvas>
+							</Viewbox>
+							<Viewbox
+								x:Name="DiodeFunctionSymbol"
+								Width="30"
+								Height="18"
+								Stretch="Uniform"
+								Visibility="Collapsed">
+								<Canvas Width="40" Height="24">
+									<Path Data="M 1,12 L 10,12 M 10,3 L 27,12 L 10,21 Z M 27,3 L 27,21 M 27,12 L 39,12" Fill="#00FFFF" Stroke="#00FFFF" StrokeThickness="2" />
+								</Canvas>
+							</Viewbox>
+							<Viewbox
+								x:Name="ContinuityFunctionSymbol"
+								Width="30"
+								Height="18"
+								Stretch="Uniform"
+								Visibility="Collapsed">
+								<Canvas Width="40" Height="24">
+									<Ellipse Canvas.Left="3" Canvas.Top="10" Width="4" Height="4" Fill="#00FFFF" />
+									<Path Data="M 12,7 C 17,10 17,14 12,17" Fill="Transparent" Stroke="#00FFFF" StrokeThickness="2" />
+									<Path Data="M 19,3 C 27,8 27,16 19,21" Fill="Transparent" Stroke="#00FFFF" StrokeThickness="2" />
+								</Canvas>
+							</Viewbox>
+						</Grid>
 						<TextBlock x:Name="FunctionNameText" Margin="10,2,0,0" FontSize="14" Text="Pomiar" />
 					</StackPanel>
 					<StackPanel Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center" Orientation="Horizontal">

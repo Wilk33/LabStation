@@ -1,5 +1,6 @@
 using System.IO;
 using System.Text;
+using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -392,11 +393,11 @@ Test("Okno SDM jest poziome, stałe i udostępnia osiem funkcji pomiarowych",()=
 		window.Show();
 		window.Dispatcher.Invoke(()=>{});
 
-		Equal("0.2.2",AppInformation.Version);
-		Equal("Siglent SDM3000 Control v0.2.2",AppInformation.DisplayName);
-		Equal("Siglent SDM3000 Control v0.2.2",window.Title);
+		Equal("0.2.3",AppInformation.Version);
+		Equal("Siglent SDM3000 Control v0.2.3",AppInformation.DisplayName);
+		Equal("Siglent SDM3000 Control v0.2.3",window.Title);
 		Equal("Siglent.SDM3000.Control",typeof(MainWindow).Assembly.GetName().Name);
-		if(window.Width>740d)
+		if(window.Width>540d)
 		{
 			throw new Exception("Okno multimetru jest nadal zbyt szerokie");
 		}
@@ -404,8 +405,8 @@ Test("Okno SDM jest poziome, stałe i udostępnia osiem funkcji pomiarowych",()=
 		{
 			throw new Exception("Wysokość okna nie zapewnia miejsca na pełny główny odczyt");
 		}
-		Equal(ResizeMode.NoResize,window.ResizeMode);
-		if(window.Width <= window.Height*2)
+		Equal(ResizeMode.CanMinimize,window.ResizeMode);
+		if(window.Width <= window.Height*1.4)
 		{
 			throw new Exception("Okno nie ma poziomej orientacji");
 		}
@@ -457,15 +458,64 @@ Test("Okno SDM jest poziome, stałe i udostępnia osiem funkcji pomiarowych",()=
 		{
 			throw new Exception("Główny odczyt nadal ma zbędny dopisek typu Vdc, Vrms lub Irms");
 		}
-		if(LogicalChildren<TextBlock>(window).Any(text=>text.Name == "IdentityText"))
-		{
-			throw new Exception("Interfejs nadal wyświetla identyfikację urządzenia obok połączenia");
-		}
 		string[] statistics=LogicalChildren<TextBlock>(window)
 			.Where(text=>text.Name.StartsWith("Statistic",StringComparison.Ordinal))
 			.Select(text=>text.Text)
 			.ToArray();
 		EqualStrings(["Min","Max","Średnia"],statistics);
+		MultimeterView multimeter=LogicalChildren<MultimeterView>(window).Single();
+		MethodInfo applySnapshot=typeof(MultimeterView).GetMethod(
+			"ApplySnapshot",
+			BindingFlags.Instance|BindingFlags.NonPublic)
+			?? throw new Exception("Brak obsługi prezentacji wyniku Multimetru");
+		(TextBlock ShortText,Viewbox Symbol,MeasurementFunction Function)[] functionSymbols=
+		[
+			(LogicalChildren<TextBlock>(window).Single(text=>text.Name == "FunctionShortText"),
+				LogicalChildren<Viewbox>(window).SingleOrDefault(view=>view.Name == "CapacitanceFunctionSymbol")
+					?? throw new Exception("Pole pomiaru nie ma symbolu pojemności"),
+				MeasurementFunction.Capacitance),
+			(LogicalChildren<TextBlock>(window).Single(text=>text.Name == "FunctionShortText"),
+				LogicalChildren<Viewbox>(window).SingleOrDefault(view=>view.Name == "DiodeFunctionSymbol")
+					?? throw new Exception("Pole pomiaru nie ma symbolu diody"),
+				MeasurementFunction.Diode),
+			(LogicalChildren<TextBlock>(window).Single(text=>text.Name == "FunctionShortText"),
+				LogicalChildren<Viewbox>(window).SingleOrDefault(view=>view.Name == "ContinuityFunctionSymbol")
+					?? throw new Exception("Pole pomiaru nie ma symbolu ciągłości"),
+				MeasurementFunction.Continuity)
+		];
+		foreach((TextBlock shortText,Viewbox symbol,MeasurementFunction function) in functionSymbols)
+		{
+			MeasurementSnapshot snapshot=new(
+				new(function,null),
+				new(ReadingState.Value,1d),
+				1,
+				new(1,1d,1d,1d,0d,0d),
+				DateTimeOffset.UtcNow);
+			applySnapshot.Invoke(multimeter,[snapshot]);
+			if(shortText.Visibility != Visibility.Collapsed || symbol.Visibility != Visibility.Visible)
+			{
+				throw new Exception("Pole pomiaru pokazuje tekst zamiast symbolu funkcji "+function);
+			}
+		}
+		applySnapshot.Invoke(multimeter,
+		[
+			new MeasurementSnapshot(
+				new(MeasurementFunction.VoltageDc,null),
+				new(ReadingState.Value,1d),
+				1,
+				new(1,1d,1d,1d,0d,0d),
+				DateTimeOffset.UtcNow)
+		]);
+		TextBlock functionShortText=functionSymbols[0].ShortText;
+		if(functionShortText.Visibility != Visibility.Visible || functionShortText.Text != "V DC" ||
+			functionSymbols.Any(item=>item.Symbol.Visibility != Visibility.Collapsed))
+		{
+			throw new Exception("Tekstowe oznaczenie zwykłej funkcji pomiarowej nie zostało zachowane");
+		}
+		if(LogicalChildren<TextBlock>(window).Any(text=>text.Name == "IdentityText"))
+		{
+			throw new Exception("Interfejs nadal wyświetla identyfikację urządzenia obok połączenia");
+		}
 		Border measurementPanel=LogicalChildren<Border>(window)
 			.Single(border=>border.Name == "MeasurementPanel");
 		Border statisticsPanel=LogicalChildren<Border>(window)

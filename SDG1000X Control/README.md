@@ -1,10 +1,10 @@
-# Siglent SDG1000X Control v0.2.9
+# Siglent SDG1000X Control v0.2.10
 
 Wąska aplikacja Windows do podstawowego sterowania dwukanałowym generatorem SIGLENT SDG1032X przez LAN/VXI-11. Główna powierzchnia `GeneratorView` jest panelem wielokrotnego użytku, a samodzielne EXE jest jego cienką powłoką.
 
 ## Najważniejsze założenia
 
-- Okno ma stały rozmiar 350 x 675 px. W trybach prostokąta i rampy status znajduje się bezpośrednio pod selektorem mnożnika, bez pionowego paska przewijania.
+- Okno ma stały rozmiar 350 x 745 px, pozwala się minimalizować i nie pozwala zmieniać rozmiaru ani maksymalizować. W trybach prostokąta i rampy status znajduje się bezpośrednio pod selektorem mnożnika, bez pionowego paska przewijania.
 - CH1 i CH2 są dostępne na dwóch zakładkach zajmujących po połowie szerokości, więc widoczny jest jeden kanał jednocześnie.
 - Aktywna zakładka ma kolor kanału i czarny tekst, a nieaktywna biały tekst.
 - Przyciski połączenia i wyjścia nie zmieniają koloru wraz ze stanem. Stan jest podawany wyłącznie tekstem `Online`/`Offline` oraz `ON`/`OFF`.
@@ -90,7 +90,7 @@ Wymagany jest .NET 10 SDK dla Windows.
 
 ## Status weryfikacji
 
-Podstawowy zestaw testów automatycznych nie łączy się z fizycznym urządzeniem. Zakres walidacji sprzętowej oraz pełna procedura testowa są opisane w [docs/hardware-testing.md](docs/hardware-testing.md). Wersja 0.2.9 przeszła 29/29 testów, włącznie z parserem rzeczywistego układu pliku EasyWave CSV, kodowaniem próbek, precyzją nowych nastaw impulsu i szumu, pełnym układem panelu Impuls, poprawnym wyglądem mnożnika Offline, przełączeniem na ARB przed wgraniem pliku oraz odpornym na przejściowy błąd cyklem odczytu obu kanałów co 1 sekundę.
+Podstawowy zestaw testów automatycznych nie łączy się z fizycznym urządzeniem. Zakres walidacji sprzętowej oraz pełna procedura testowa są opisane w [docs/hardware-testing.md](docs/hardware-testing.md). Wersja 0.2.10 przeszła 29/29 testów, włącznie z parserem rzeczywistego układu pliku EasyWave CSV, kodowaniem próbek, precyzją nowych nastaw impulsu i szumu, pełnym układem panelu Impuls, poprawnym wyglądem mnożnika Offline, minimalizacją bez zmiany rozmiaru, przełączeniem na ARB przed wgraniem pliku oraz odpornym na przejściowy błąd cyklem odczytu obu kanałów co 1 sekundę.
 
 Na fizycznym SDG1032X test wybrał CH2 z przebiegiem sinusoidalnym i wyłączonym wyjściem. Kontrolka UI rozpoczęła od 1000 Hz, przyjęła zewnętrzne zmiany do 1111 Hz i 1222 Hz po kolejnych cyklach, a następnie test przywrócił 1000 Hz i potwierdził `OUTPUT=OFF`. Wysyłanie pliku przebiegu arbitralnego nie zostało wykonane na fizycznym generatorze w ramach tego wydania.
 

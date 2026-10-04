@@ -8,7 +8,7 @@
 	Width="350"
 	Height="745"
 	Icon="/Siglent.SDG1000X.Control;component/Assets/sdg1062x.ico"
-	ResizeMode="NoResize"
+	ResizeMode="CanMinimize"
 	WindowStartupLocation="CenterScreen">
 	<DockPanel>
 		<Menu DockPanel.Dock="Top">

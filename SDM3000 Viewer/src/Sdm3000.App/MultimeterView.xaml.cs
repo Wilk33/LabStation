@@ -346,7 +346,7 @@ public partial class MultimeterView : UserControl,IAsyncDisposable
 		}
 		MeasurementProfile profile=MeasurementProfiles.For(snapshot.Configuration.Function);
 		FunctionNameText.Text=profile.Name;
-		FunctionShortText.Text=profile.ShortName;
+		UpdateFunctionIndicator(snapshot.Configuration.Function,profile.ShortName);
 		PrimaryValueText.Text=MeasurementFormatter.FormatValue(snapshot.Reading,profile.Unit);
 		RangeText.Text=MeasurementFormatter.FormatRange(snapshot.Configuration.Range,profile.Unit);
 		LocalStatisticsSnapshot statistics=snapshot.Statistics;
@@ -361,6 +361,20 @@ public partial class MultimeterView : UserControl,IAsyncDisposable
 		{
 			CommandStateChanged?.Invoke(this,EventArgs.Empty);
 		}
+	}
+
+	private void UpdateFunctionIndicator(MeasurementFunction function,string shortName)
+	{
+		bool capacitance=function == MeasurementFunction.Capacitance;
+		bool diode=function == MeasurementFunction.Diode;
+		bool continuity=function == MeasurementFunction.Continuity;
+		FunctionShortText.Text=shortName;
+		FunctionShortText.Visibility=capacitance || diode || continuity
+			? Visibility.Collapsed
+			: Visibility.Visible;
+		CapacitanceFunctionSymbol.Visibility=capacitance ? Visibility.Visible : Visibility.Collapsed;
+		DiodeFunctionSymbol.Visibility=diode ? Visibility.Visible : Visibility.Collapsed;
+		ContinuityFunctionSymbol.Visibility=continuity ? Visibility.Visible : Visibility.Collapsed;
 	}
 
 	private async void MultimeterViewUnloaded(object? sender,EventArgs eventArgs)

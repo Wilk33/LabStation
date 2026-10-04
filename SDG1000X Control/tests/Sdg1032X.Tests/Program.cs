@@ -607,8 +607,8 @@ Test("Metadane aplikacji zachowują autora, wersję i licencję",()=>
 	Equal("Mateusz Skipor",ProductInformation.AuthorName);
 	Equal("Inżynier technik elektroniki",ProductInformation.AuthorProfession);
 	Equal("mskiporsklep@op.pl",ProductInformation.AuthorEmail);
-	Equal("0.2.9",ProductInformation.Version);
-	Equal("Siglent SDG1000X Control v0.2.9",ProductInformation.GetWindowTitle());
+	Equal("0.2.10",ProductInformation.Version);
+	Equal("Siglent SDG1000X Control v0.2.10",ProductInformation.GetWindowTitle());
 	Equal("Siglent.SDG1000X.Control",typeof(MainWindow).Assembly.GetName().Name);
 	string license=ProductInformation.LoadLicenseText();
 	if(!license.Contains("PolyForm Noncommercial License 1.0.0",StringComparison.Ordinal))
@@ -656,6 +656,7 @@ Test("Interfejs zachowuje kompaktowy rozmiar i pełne pola klikalne",()=>
 		window.ApplyTemplate();
 
 		Equal(745d,window.Height);
+		Equal(ResizeMode.CanMinimize,window.ResizeMode);
 		Directory.CreateDirectory(Path.Combine("SDG1000X Control","artifacts","qa"));
 		RenderTargetBitmap bitmap=new(350,745,96,96,PixelFormats.Pbgra32);
 		bitmap.Render(window);
