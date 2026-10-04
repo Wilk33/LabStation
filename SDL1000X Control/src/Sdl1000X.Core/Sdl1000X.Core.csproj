@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<ItemGroup>
+		<ProjectReference Include="../../../Shared/LabStation.Instruments/LabStation.Instruments.csproj" />
+	</ItemGroup>
+</Project>

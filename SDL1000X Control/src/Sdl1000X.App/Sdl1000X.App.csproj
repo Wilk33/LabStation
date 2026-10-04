@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<UseWPF>true</UseWPF>
+		<AssemblyName>Siglent.SDL1000X.Control</AssemblyName>
+		<RootNamespace>Sdl1000X.App</RootNamespace>
+		<Product>SIGLENT SDL1000X Control</Product>
+		<Description>Sterowanie obciążeniem elektronicznym SIGLENT SDL1020X-E przez LAN/VXI-11</Description>
+		<PackageLicenseExpression>PolyForm-Noncommercial-1.0.0</PackageLicenseExpression>
+		<ApplicationIcon>../../SDL1020X.ico</ApplicationIcon>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
+		<RuntimeIdentifier>win-x64</RuntimeIdentifier>
+		<SelfContained>true</SelfContained>
+		<PublishSingleFile>true</PublishSingleFile>
+		<IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+		<EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+		<DebugType>embedded</DebugType>
+	</PropertyGroup>
+	<ItemGroup>
+		<ProjectReference Include="../Sdl1000X.Core/Sdl1000X.Core.csproj" />
+		<ProjectReference Include="../../../Shared/LabStation.Instruments/LabStation.Instruments.csproj" />
+		<ProjectReference Include="../../../Shared/LabStation.UI/LabStation.UI.csproj" />
+		<Resource Include="../../SDL1020X.ico" Link="Assets/SDL1020X.ico" />
+		<Content Include="../../README.md" Link="README.md" CopyToPublishDirectory="PreserveNewest" />
+		<EmbeddedResource Include="../../LICENSE" LogicalName="Sdl1000X.LICENSE" />
+		<Content Include="../../LICENSE" Link="LICENSE" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+		<Content Include="../../THIRD-PARTY-NOTICES.md" Link="THIRD-PARTY-NOTICES.md" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+	</ItemGroup>
+</Project>

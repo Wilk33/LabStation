@@ -1,0 +1,31 @@
+<Window
+	x:Class="Sdl1000X.App.MainWindow"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:local="clr-namespace:Sdl1000X.App"
+	xmlns:sharedControls="clr-namespace:LabStation.UI.Controls;assembly=LabStation.UI"
+	Title="Siglent SDL1000X Control"
+	Width="520"
+	Height="400"
+	Icon="/Siglent.SDL1000X.Control;component/Assets/SDL1020X.ico"
+	ResizeMode="CanMinimize"
+	WindowStartupLocation="CenterScreen">
+	<DockPanel>
+		<Menu DockPanel.Dock="Top">
+			<MenuItem Header="Narzędzia">
+				<MenuItem
+					x:Name="ScanNetworkMenuItem"
+					Header="Skanuj sieć"
+					Click="ScanNetworkClick" />
+				<Separator />
+				<MenuItem
+					x:Name="AutoConnectMenuItem"
+					Header="Auto connect"
+					IsCheckable="True"
+					Click="AutoConnectClick" />
+			</MenuItem>
+			<sharedControls:AboutMenuItem Presentation="{x:Static local:AppInformation.Presentation}" />
+		</Menu>
+		<local:ElectronicLoadView x:Name="InstrumentPanel" />
+	</DockPanel>
+</Window>
