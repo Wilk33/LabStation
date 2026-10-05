@@ -481,13 +481,15 @@
 		<Setter Property="Foreground" Value="{StaticResource LabStationTextBrush}" />
 	</Style>
 	<Style x:Key="LabStationStatusPanelStyle" TargetType="Border">
-		<Setter Property="Padding" Value="7,5" />
+		<Setter Property="Padding" Value="7,4" />
 		<Setter Property="Background" Value="{StaticResource LabStationBackgroundBrush}" />
 	</Style>
 	<Style x:Key="LabStationStatusTextStyle" TargetType="TextBlock">
 		<Setter Property="Foreground" Value="{StaticResource LabStationTextBrush}" />
 		<Setter Property="FontFamily" Value="Consolas" />
-		<Setter Property="FontSize" Value="11" />
+		<Setter Property="FontSize" Value="12" />
+		<Setter Property="FontWeight" Value="Normal" />
+		<Setter Property="VerticalAlignment" Value="Center" />
 		<Setter Property="TextTrimming" Value="CharacterEllipsis" />
 		<Style.Triggers>
 			<DataTrigger Binding="{Binding HasStatusError}" Value="True">

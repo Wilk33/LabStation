@@ -1,4 +1,4 @@
-# Siglent SDL1000X Control v0.1.1
+# Siglent SDL1000X Control v0.1.2
 
 Samodzielna aplikacja Windows oraz panel wielokrotnego użytku do sterowania obciążeniem elektronicznym SIGLENT SDL1020X-E przez LAN/VXI-11.
 

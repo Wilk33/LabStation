@@ -17,6 +17,7 @@ try
 		$finalDirectory=Join-Path $PSScriptRoot 'artifacts/final'
 		$publishDirectory=Join-Path $PSScriptRoot "artifacts/final/win-x64"
 		$archivePath=Join-Path $PSScriptRoot "artifacts/final/$releaseName.zip"
+		$versionedExecutable=Join-Path $PSScriptRoot "artifacts/final/$releaseName.exe"
 		$finalPath=[System.IO.Path]::GetFullPath($finalDirectory)
 		Get-ChildItem -LiteralPath $finalDirectory -Directory -Filter 'Siglent-SDS1000CML-Viewer-v*-win-x64' |
 			ForEach-Object {
@@ -35,12 +36,17 @@ try
 		{
 			Remove-Item -LiteralPath $archivePath -Force
 		}
+		if (Test-Path -LiteralPath $versionedExecutable)
+		{
+			Remove-Item -LiteralPath $versionedExecutable -Force
+		}
 		dotnet publish src/Scope.App -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=None -o $publishDirectory
 		if ($LASTEXITCODE -ne 0) { throw 'Publikowanie nie powiodło się.' }
 		Copy-Item -LiteralPath LICENSE,README.md -Destination $publishDirectory
 		$dotnetRoot=Split-Path (Get-Command dotnet).Source
 		Copy-Item -LiteralPath (Join-Path $dotnetRoot 'LICENSE.txt') -Destination "$publishDirectory/DOTNET-LICENSE.txt"
 		Copy-Item -LiteralPath (Join-Path $dotnetRoot 'ThirdPartyNotices.txt') -Destination "$publishDirectory/DOTNET-ThirdPartyNotices.txt"
+		Copy-Item -LiteralPath (Join-Path $publishDirectory 'Siglent.SDS1000CML.Viewer.exe') -Destination $versionedExecutable
 		Compress-Archive -Path "$publishDirectory/*" -DestinationPath $archivePath -Force
 	}
 }

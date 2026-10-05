@@ -12,7 +12,7 @@
 			</ResourceDictionary.MergedDictionaries>
 		</ResourceDictionary>
 	</UserControl.Resources>
-	<Grid>
+	<Grid VerticalAlignment="Center">
 		<Grid.RowDefinitions>
 			<RowDefinition Height="40" />
 			<RowDefinition Height="75" />

@@ -20,6 +20,7 @@ if($Publish)
 	$final=Join-Path $root 'artifacts/final'
 	$output=Join-Path $final 'win-x64'
 	$archive=Join-Path $final "$releaseName.zip"
+	$versionedExecutable=Join-Path $final "$releaseName.exe"
 	$finalPath=[System.IO.Path]::GetFullPath($final)
 	Get-ChildItem -LiteralPath $final -Directory -Filter 'Korad-KA3005P-v*-win-x64' |
 		ForEach-Object {
@@ -38,10 +39,15 @@ if($Publish)
 	{
 		Remove-Item -LiteralPath $archive -Force
 	}
+	if(Test-Path -LiteralPath $versionedExecutable)
+	{
+		Remove-Item -LiteralPath $versionedExecutable -Force
+	}
 	dotnet publish $project -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=None -o $output
 	if($LASTEXITCODE -ne 0)
 	{
 		exit $LASTEXITCODE
 	}
+	Copy-Item -LiteralPath (Join-Path $output 'Korad.KA3005P.exe') -Destination $versionedExecutable
 	Compress-Archive -Path "$output/*" -DestinationPath $archive -Force
 }

@@ -607,8 +607,8 @@ Test("Metadane aplikacji zachowują autora, wersję i licencję",()=>
 	Equal("Mateusz Skipor",ProductInformation.AuthorName);
 	Equal("Inżynier technik elektroniki",ProductInformation.AuthorProfession);
 	Equal("mskiporsklep@op.pl",ProductInformation.AuthorEmail);
-	Equal("0.2.10",ProductInformation.Version);
-	Equal("Siglent SDG1000X Control v0.2.10",ProductInformation.GetWindowTitle());
+	Equal("0.2.11",ProductInformation.Version);
+	Equal("Siglent SDG1000X Control v0.2.11",ProductInformation.GetWindowTitle());
 	Equal("Siglent.SDG1000X.Control",typeof(MainWindow).Assembly.GetName().Name);
 	string license=ProductInformation.LoadLicenseText();
 	if(!license.Contains("PolyForm Noncommercial License 1.0.0",StringComparison.Ordinal))
@@ -739,6 +739,10 @@ Test("Interfejs zachowuje kompaktowy rozmiar i pełne pola klikalne",()=>
 		{
 			throw new Exception("Zwykły status Generatora nie ma białego tekstu");
 		}
+		Equal(12d,status.FontSize);
+		Equal("Consolas",status.FontFamily.Source);
+		Equal(FontWeights.Normal,status.FontWeight);
+		Equal(VerticalAlignment.Center,status.VerticalAlignment);
 		MethodInfo showStatus=typeof(GeneratorView).GetMethod(
 			"ShowStatus",
 			BindingFlags.Instance|BindingFlags.NonPublic)

@@ -23,6 +23,7 @@ if($Publish)
 	[xml]$buildProperties=Get-Content -Raw (Join-Path $root 'Directory.Build.props')
 	$version=([string]$buildProperties.Project.PropertyGroup.Version).Trim()
 	$archive=Join-Path $root "artifacts/final/Siglent-SDM3000-Control-v$version-win-x64.zip"
+	$versionedExecutable=Join-Path $root "artifacts/final/Siglent-SDM3000-Control-v$version-win-x64.exe"
 	if(Test-Path -LiteralPath $output)
 	{
 		Remove-Item -LiteralPath $output -Recurse -Force
@@ -31,10 +32,15 @@ if($Publish)
 	{
 		Remove-Item -LiteralPath $archive -Force
 	}
+	if(Test-Path -LiteralPath $versionedExecutable)
+	{
+		Remove-Item -LiteralPath $versionedExecutable -Force
+	}
 	dotnet publish (Join-Path $root 'src/Sdm3000.App/Sdm3000.App.csproj') -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=None -o $output
 	if($LASTEXITCODE -ne 0)
 	{
 		exit $LASTEXITCODE
 	}
+	Copy-Item -LiteralPath (Join-Path $output 'Siglent.SDM3000.Control.exe') -Destination $versionedExecutable
 	Compress-Archive -Path "$output/*" -DestinationPath $archive -Force
 }

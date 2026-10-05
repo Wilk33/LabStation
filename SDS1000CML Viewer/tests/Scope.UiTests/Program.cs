@@ -74,7 +74,7 @@ internal static class Program
 
 	private static void AssertApplicationIdentity(MainWindow window)
 	{
-		if(window.Title != "Siglent SDS1000CML Viewer v0.7.3")
+		if(window.Title != "Siglent SDS1000CML Viewer v0.7.4")
 		{
 			throw new Exception("Unexpected main-window title: "+window.Title);
 		}
@@ -317,6 +317,13 @@ internal static class Program
 		if((acquisition.Foreground as SolidColorBrush)?.Color != Colors.White)
 		{
 			throw new Exception("Zwykły status oscyloskopu nie ma białego tekstu");
+		}
+		if(acquisition.FontSize != 12d ||
+			acquisition.FontFamily.Source != "Consolas" ||
+			acquisition.FontWeight != FontWeights.Normal ||
+			acquisition.VerticalAlignment != VerticalAlignment.Center)
+		{
+			throw new Exception("Status oscyloskopu nie używa wspólnego kompaktowego stylu");
 		}
 		MethodInfo showError=typeof(OscilloscopeView).GetMethod(
 			"ShowError",
@@ -621,7 +628,7 @@ internal static class Program
 			"\n",
 			Descendants<TextBlock>(author).Select(text=>text.Text));
 		if(author.Title !=
-			"Autor - Siglent SDS1000CML Viewer v0.7.3" ||
+			"Autor - Siglent SDS1000CML Viewer v0.7.4" ||
 			!authorText.Contains("Mateusz Skipor",StringComparison.Ordinal) ||
 			!authorText.Contains(
 				"Inżynier technik elektroniki",
@@ -646,7 +653,7 @@ internal static class Program
 		Pump();
 		TextBox licenseText=Descendants<TextBox>(license).Single();
 		if(license.Title !=
-			"Licencja - Siglent SDS1000CML Viewer v0.7.3" ||
+			"Licencja - Siglent SDS1000CML Viewer v0.7.4" ||
 			!licenseText.IsReadOnly ||
 			!licenseText.Text.Contains(
 				"PolyForm Noncommercial License 1.0.0",

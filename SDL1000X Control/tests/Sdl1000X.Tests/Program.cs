@@ -447,7 +447,7 @@ Test("Panel cyklicznie odświeża pomiary i tryb zmienione po stronie urządzeni
 
 Test("Metadane i osadzona licencja są zgodne z aplikacjami LabStation",()=>
 {
-	Equal("Siglent SDL1000X Control v0.1.1",AppInformation.DisplayName);
+	Equal("Siglent SDL1000X Control v0.1.2",AppInformation.DisplayName);
 	Equal("Mateusz Skipor",AppInformation.AuthorName);
 	string license=AppInformation.LoadLicenseText();
 	if(!license.Contains("PolyForm Noncommercial License 1.0.0",StringComparison.Ordinal) ||
@@ -464,8 +464,8 @@ Test("Panel SDL wdraża kompaktowy wariant nastawczy bez wykresu",()=>
 		MainWindow window=new();
 		window.Show();
 		window.UpdateLayout();
-		Equal("0.1.1",AppInformation.Version);
-		Equal("Siglent SDL1000X Control v0.1.1",window.Title);
+		Equal("0.1.2",AppInformation.Version);
+		Equal("Siglent SDL1000X Control v0.1.2",window.Title);
 		Equal(620d,window.Width);
 		Equal(440d,window.Height);
 		Equal(ResizeMode.CanMinimize,window.ResizeMode);
@@ -477,6 +477,9 @@ Test("Panel SDL wdraża kompaktowy wariant nastawczy bez wykresu",()=>
 		Equal("Offline",connection.Content);
 		Button input=LogicalChildren<Button>(window).Single(item=>item.Name == "InputButton");
 		Equal("OFF",input.Content);
+		ElectronicLoadView panel=LogicalChildren<ElectronicLoadView>(window).Single();
+		Grid panelLayout=(Grid)panel.Content;
+		Equal(VerticalAlignment.Center,panelLayout.VerticalAlignment);
 		UniformGrid modes=LogicalChildren<UniformGrid>(window).Single(item=>item.Name == "ModeButtons");
 		Equal(5,modes.Columns);
 		string[] tags=LogicalChildren<Button>(modes)
@@ -514,6 +517,10 @@ Test("Panel SDL wdraża kompaktowy wariant nastawczy bez wykresu",()=>
 		{
 			throw new Exception("Zwykły status nie jest biały.");
 		}
+		Equal(12d,status.FontSize);
+		Equal("Consolas",status.FontFamily.Source);
+		Equal(FontWeights.Normal,status.FontWeight);
+		Equal(VerticalAlignment.Center,status.VerticalAlignment);
 		MenuItem tools=LogicalChildren<MenuItem>(window).Single(item=>Equals(item.Header,"Narzędzia"));
 		string[] toolItems=LogicalChildren<MenuItem>(tools).Select(item=>item.Header?.ToString() ?? "").ToArray();
 		if(!toolItems.Contains("Skanuj sieć") || !toolItems.Contains("Auto connect"))

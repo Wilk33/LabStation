@@ -1,5 +1,9 @@
 # Zmiany
 
+## 0.7.4 - 2026-10-05
+
+- Ujednolicono rozmiar, krój, wagę i wyrównanie stopki statusu ze wspólnym stylem LabStation.
+
 ## 0.7.3 - 2026-10-03
 
 - Zastąpiono jednoklatkową ikonę wielorozmiarowym ICO z osobnymi klatkami 16, 32 i 256 px.

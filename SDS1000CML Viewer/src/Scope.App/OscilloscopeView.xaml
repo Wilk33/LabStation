@@ -127,11 +127,7 @@
 		<TextBlock
 			x:Name="AcquisitionText"
 			Grid.Row="5"
-			VerticalAlignment="Center"
-			FontSize="14"
-			FontWeight="Bold"
-			Foreground="{StaticResource LabStationTextBrush}"
-			Text="Status: OFFLINE"
-			TextTrimming="CharacterEllipsis" />
+			Style="{StaticResource LabStationStatusTextStyle}"
+			Text="Status: OFFLINE" />
 	</Grid>
 </UserControl>

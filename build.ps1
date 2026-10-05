@@ -58,6 +58,7 @@ if($Publish)
 		throw 'Nieprawidłowy katalog publikacji.'
 	}
 	$archive=Join-Path $finalRoot "LabStation-v$version-win-x64.zip"
+	$versionedExecutable=Join-Path $finalRoot "LabStation-v$version-win-x64.exe"
 	if(Test-Path -LiteralPath $output)
 	{
 		Remove-Item -LiteralPath $output -Recurse -Force
@@ -65,6 +66,10 @@ if($Publish)
 	if(Test-Path -LiteralPath $archive)
 	{
 		Remove-Item -LiteralPath $archive -Force
+	}
+	if(Test-Path -LiteralPath $versionedExecutable)
+	{
+		Remove-Item -LiteralPath $versionedExecutable -Force
 	}
 	dotnet restore $project -r win-x64 --nologo
 	if($LASTEXITCODE -ne 0)
@@ -89,7 +94,9 @@ if($Publish)
 			throw "Brak wymaganego elementu publikacji: $name"
 		}
 	}
+	Copy-Item -LiteralPath (Join-Path $output 'LabStation.exe') -Destination $versionedExecutable
 	Compress-Archive -Path "$output/*" -DestinationPath $archive -Force
 	Write-Host "Opublikowano: $output"
+	Write-Host "Wersjonowany EXE: $versionedExecutable"
 	Write-Host "Archiwum: $archive"
 }

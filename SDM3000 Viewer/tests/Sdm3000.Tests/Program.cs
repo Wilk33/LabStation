@@ -393,9 +393,9 @@ Test("Okno SDM jest poziome, stałe i udostępnia osiem funkcji pomiarowych",()=
 		window.Show();
 		window.Dispatcher.Invoke(()=>{});
 
-		Equal("0.2.3",AppInformation.Version);
-		Equal("Siglent SDM3000 Control v0.2.3",AppInformation.DisplayName);
-		Equal("Siglent SDM3000 Control v0.2.3",window.Title);
+		Equal("0.2.4",AppInformation.Version);
+		Equal("Siglent SDM3000 Control v0.2.4",AppInformation.DisplayName);
+		Equal("Siglent SDM3000 Control v0.2.4",window.Title);
 		Equal("Siglent.SDM3000.Control",typeof(MainWindow).Assembly.GetName().Name);
 		if(window.Width>540d)
 		{
@@ -543,6 +543,10 @@ Test("Okno SDM jest poziome, stałe i udostępnia osiem funkcji pomiarowych",()=
 		{
 			throw new Exception("Standardowy status nie jest biały");
 		}
+		Equal(12d,status.FontSize);
+		Equal("Consolas",status.FontFamily.Source);
+		Equal(FontWeights.Normal,status.FontWeight);
+		Equal(VerticalAlignment.Center,status.VerticalAlignment);
 		foreach(string name in new[]{"FunctionNameText","PrimaryValueText","MinimumText","MaximumText","AverageText"})
 		{
 			TextBlock text=LogicalChildren<TextBlock>(window).Single(item=>item.Name == name);

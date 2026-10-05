@@ -183,8 +183,8 @@
 				<ColumnDefinition Width="*" />
 				<ColumnDefinition Width="Auto" />
 			</Grid.ColumnDefinitions>
-			<TextBlock x:Name="SeriesText" VerticalAlignment="Bottom" Text="Seria: 0 odczytów | Pamięć: -" />
-			<TextBlock x:Name="StatusText" Grid.Column="1" VerticalAlignment="Bottom" Foreground="White" Text="Status: OFFLINE" />
+			<TextBlock x:Name="SeriesText" Style="{StaticResource LabStationStatusTextStyle}" Text="Seria: 0 odczytów | Pamięć: -" />
+			<TextBlock x:Name="StatusText" Grid.Column="1" Style="{StaticResource LabStationStatusTextStyle}" Text="Status: OFFLINE" />
 		</Grid>
 	</Grid>
 </UserControl>

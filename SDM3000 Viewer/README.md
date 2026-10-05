@@ -1,12 +1,12 @@
-# Siglent SDM3000 Control v0.2.3
+# Siglent SDM3000 Control v0.2.4
 
-Samodzielna aplikacja Windows oraz panel wielokrotnego użytku do ciągłego wykonywania i prezentowania pomiarów multimetru SIGLENT SDM3055 przez LAN/VXI-11. Wydanie 0.2.3 utrzymuje jedną sesję zdalną, inicjuje pomiary poleceniem `READ?`, pozwala wybrać podstawową funkcję pomiarową z aplikacji i mieści pełny główny odczyt w minimalnym poziomym oknie.
+Samodzielna aplikacja Windows oraz panel wielokrotnego użytku do ciągłego wykonywania i prezentowania pomiarów multimetru SIGLENT SDM3055 przez LAN/VXI-11. Wydanie 0.2.4 utrzymuje jedną sesję zdalną, inicjuje pomiary poleceniem `READ?`, pozwala wybrać podstawową funkcję pomiarową z aplikacji i mieści pełny główny odczyt w minimalnym poziomym oknie.
 
 Domyślny adres urządzenia w tej instalacji: `192.168.200.131`.
 
 Szczegółowy zakres i wyniki testów sprzętowych opisuje dokument [Zakres panelu SDM3000](../docs/sdm3000-viewer-scope.md).
 
-## Funkcje 0.2.3
+## Funkcje 0.2.4
 
 - wspólny styl LabStation oraz niezależny panel `UserControl`,
 - jedna trwała sesja LAN/VXI-11 przez `Shared/LabStation.Instruments`,
@@ -61,7 +61,7 @@ Publikacja samodzielna dla Windows x64 trafia do `artifacts/final/win-x64`. W ty
 
 ## Status weryfikacji
 
-Wersja 0.2.3 przeszła 14/14 testów automatycznych, obejmujących mapowanie ośmiu poleceń `CONFigure`, zachowanie jednej sesji, kolejne `READ?`, serializację operacji oraz kompaktowy układ WPF z nieprzyciętym głównym odczytem, minimalizacją i wektorowymi symbolami pojemności, diody i ciągłości w przyciskach oraz nagłówku pomiaru.
+Wersja 0.2.4 zachowuje mapowanie ośmiu poleceń `CONFigure`, jedną sesję, kolejne `READ?`, serializację operacji oraz kompaktowy układ WPF z nieprzyciętym głównym odczytem, minimalizacją i wektorowymi symbolami pojemności, diody i ciągłości w przyciskach oraz nagłówku pomiaru. Stopka serii i statusu korzysta ze wspólnego kompaktowego stylu LabStation.
 
 Na fizycznym SDM3055 z firmware `1.02.01.29R1` jedna sesja zwróciła trzy kolejne świeże pomiary `V DC`: 11,30298 mV, 11,30100 mV i 11,30511 mV. Test nie zmieniał funkcji pomiarowej. Przyciski funkcji zostały zweryfikowane programowo, ale ich działanie na fizycznym mierniku pozostaje do ręcznego sprawdzenia podczas użytkowania aplikacji.
 
