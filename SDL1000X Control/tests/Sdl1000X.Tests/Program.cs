@@ -79,6 +79,20 @@ IEnumerable<T> LogicalChildren<T>(DependencyObject root) where T:DependencyObjec
 	}
 }
 
+double NumericContentCenter(
+	NumericValueEditor editor,
+	UIElement relativeTo)
+{
+	TextBox input=LogicalChildren<TextBox>(editor)
+		.Single(textBox=>textBox.Name == "Editor");
+	TextBlock label=LogicalChildren<TextBlock>(editor)
+		.Single(textBlock=>textBlock.Text == editor.Label);
+	double top=input.TranslatePoint(new Point(0,0),relativeTo).Y;
+	double bottom=label.TranslatePoint(new Point(0,0),relativeTo).Y+
+		label.ActualHeight;
+	return (top+bottom)/2d;
+}
+
 Test("Profile statyczne zachowują limity modelu SDL1020X-E",()=>
 {
 	Equal(new LoadModeProfile("CC","A",0,30,0.001,3),LoadModeProfiles.For(LoadMode.ConstantCurrent));
@@ -447,7 +461,7 @@ Test("Panel cyklicznie odświeża pomiary i tryb zmienione po stronie urządzeni
 
 Test("Metadane i osadzona licencja są zgodne z aplikacjami LabStation",()=>
 {
-	Equal("Siglent SDL1000X Control v0.1.2",AppInformation.DisplayName);
+	Equal("Siglent SDL1000X Control v0.1.3",AppInformation.DisplayName);
 	Equal("Mateusz Skipor",AppInformation.AuthorName);
 	string license=AppInformation.LoadLicenseText();
 	if(!license.Contains("PolyForm Noncommercial License 1.0.0",StringComparison.Ordinal) ||
@@ -464,8 +478,8 @@ Test("Panel SDL wdraża kompaktowy wariant nastawczy bez wykresu",()=>
 		MainWindow window=new();
 		window.Show();
 		window.UpdateLayout();
-		Equal("0.1.2",AppInformation.Version);
-		Equal("Siglent SDL1000X Control v0.1.2",window.Title);
+		Equal("0.1.3",AppInformation.Version);
+		Equal("Siglent SDL1000X Control v0.1.3",window.Title);
 		Equal(620d,window.Width);
 		Equal(440d,window.Height);
 		Equal(ResizeMode.CanMinimize,window.ResizeMode);
@@ -502,6 +516,31 @@ Test("Panel SDL wdraża kompaktowy wariant nastawczy bez wykresu",()=>
 			editors.Single(editor=>editor.Name == "OverPowerEditor").ActualWidth<170d)
 		{
 			throw new Exception("Pola OCP i OPP są nadal zbyt wąskie.");
+		}
+		NumericValueEditor setpoint=editors.Single(editor=>editor.Name == "SetpointEditor");
+		Grid setpointHost=(Grid)VisualTreeHelper.GetParent(setpoint);
+		double setpointCenter=NumericContentCenter(setpoint,setpointHost);
+		if(Math.Abs(setpointCenter-setpointHost.ActualHeight/2d)>4d)
+		{
+			throw new Exception(
+				$"Nastawa główna nie jest wyśrodkowana w ramce: {setpointCenter:G} z {setpointHost.ActualHeight:G}");
+		}
+		foreach((string editorName,string checkBoxName) in new[]{
+			("OverCurrentEditor","OverCurrentEnabled"),
+			("OverPowerEditor","OverPowerEnabled")})
+		{
+			NumericValueEditor protection=editors.Single(editor=>editor.Name == editorName);
+			Grid protectionHost=(Grid)VisualTreeHelper.GetParent(protection);
+			CheckBox enabled=LogicalChildren<CheckBox>(protectionHost)
+				.Single(checkBox=>checkBox.Name == checkBoxName);
+			double checkBoxTop=enabled.TranslatePoint(new Point(0,0),protectionHost).Y;
+			double expectedCenter=checkBoxTop/2d;
+			double actualCenter=NumericContentCenter(protection,protectionHost);
+			if(Math.Abs(actualCenter-expectedCenter)>2d)
+			{
+				throw new Exception(
+					$"{editorName} nie jest wyśrodkowany nad checkboxem: {actualCenter:G} zamiast {expectedCenter:G}");
+			}
 		}
 		TextBlock ovp=LogicalChildren<TextBlock>(window).Single(text=>text.Name == "OverVoltageText");
 		TextBlock otp=LogicalChildren<TextBlock>(window).Single(text=>text.Name == "OverTemperatureText");

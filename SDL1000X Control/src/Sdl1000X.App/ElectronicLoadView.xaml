@@ -92,6 +92,7 @@
 			<Grid>
 				<sharedControls:NumericValueEditor
 					x:Name="SetpointEditor"
+					VerticalAlignment="Center"
 					Label="Nastawa CC"
 					Unit="A"
 					Minimum="0"
@@ -99,7 +100,7 @@
 					Step="0.001"
 					DecimalPlaces="3"
 					ValueCommitted="SetpointCommitted" />
-				<UniformGrid x:Name="LedSettingsPanel" Columns="3" Visibility="Collapsed">
+				<UniformGrid x:Name="LedSettingsPanel" VerticalAlignment="Center" Columns="3" Visibility="Collapsed">
 					<sharedControls:NumericValueEditor
 						x:Name="LedVoltageEditor"
 						Margin="0,0,4,0"
@@ -140,8 +141,13 @@
 				<ColumnDefinition Width="2*" />
 			</Grid.ColumnDefinitions>
 			<Grid Grid.Column="0" Margin="0,0,3,0">
+				<Grid.RowDefinitions>
+					<RowDefinition Height="*" />
+					<RowDefinition Height="20" />
+				</Grid.RowDefinitions>
 				<sharedControls:NumericValueEditor
 					x:Name="OverCurrentEditor"
+					VerticalAlignment="Center"
 					Label="OCP"
 					Unit="A"
 					Maximum="31"
@@ -150,14 +156,20 @@
 					ValueCommitted="ProtectionCommitted" />
 				<CheckBox
 					x:Name="OverCurrentEnabled"
+					Grid.Row="1"
 					HorizontalAlignment="Right"
-					VerticalAlignment="Bottom"
+					VerticalAlignment="Center"
 					Click="ProtectionStateClick"
 					ToolTip="Włącz zabezpieczenie nadprądowe" />
 			</Grid>
 			<Grid Grid.Column="1" Margin="3,0">
+				<Grid.RowDefinitions>
+					<RowDefinition Height="*" />
+					<RowDefinition Height="20" />
+				</Grid.RowDefinitions>
 				<sharedControls:NumericValueEditor
 					x:Name="OverPowerEditor"
+					VerticalAlignment="Center"
 					Label="OPP"
 					Unit="W"
 					Maximum="210"
@@ -166,8 +178,9 @@
 					ValueCommitted="ProtectionCommitted" />
 				<CheckBox
 					x:Name="OverPowerEnabled"
+					Grid.Row="1"
 					HorizontalAlignment="Right"
-					VerticalAlignment="Bottom"
+					VerticalAlignment="Center"
 					Click="ProtectionStateClick"
 					ToolTip="Włącz zabezpieczenie nadmocowe" />
 			</Grid>

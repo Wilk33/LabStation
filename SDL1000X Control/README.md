@@ -1,4 +1,6 @@
-# Siglent SDL1000X Control v0.1.2
+# Siglent SDL1000X Control v0.1.3
+
+Wersja 0.1.3 wyśrodkowuje pionowo główną nastawę oraz pola OCP i OPP w ich sekcjach, zachowując checkboxy zabezpieczeń w osobnym dolnym wierszu.
 
 Samodzielna aplikacja Windows oraz panel wielokrotnego użytku do sterowania obciążeniem elektronicznym SIGLENT SDL1020X-E przez LAN/VXI-11.
 
