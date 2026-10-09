@@ -222,7 +222,7 @@ public sealed class SingleSupplyViewModel : ObservableObject,ISupplyModeViewMode
 	public bool IsOff => IsConnected && !IsOutputOn;
 	public bool IsOn => IsConnected && IsOutputOn;
 	public string StatusText=>HasStatusError
-		? "Status: BŁĄD - "+ErrorMessage
+		? "Status: "+StatusErrorCode.FromMessage(ErrorMessage)
 		: !IsConnected
 			? "Status: OFFLINE"
 			: IsOutputOn ? "Status: ON" : "Status: OFF";
@@ -317,7 +317,8 @@ public sealed class SingleSupplyViewModel : ObservableObject,ISupplyModeViewMode
 
 	private async ValueTask DisconnectAsync(
 		bool finalClose,
-		CancellationToken cancellationToken)
+		CancellationToken cancellationToken,
+		bool attemptOutputOff=true)
 	{
 		if(closing)
 		{
@@ -330,13 +331,16 @@ public sealed class SingleSupplyViewModel : ObservableObject,ISupplyModeViewMode
 		{
 			if(current is not null)
 			{
-				try
+				if(attemptOutputOff)
 				{
-					await current.SetOutputAsync(false,cancellationToken);
-				}
-				catch(Exception exception)
-				{
-					ErrorMessage=exception.Message;
+					try
+					{
+						await current.SetOutputAsync(false,cancellationToken);
+					}
+					catch(Exception exception)
+					{
+						ErrorMessage=exception.Message;
+					}
 				}
 
 				try
@@ -555,7 +559,10 @@ public sealed class SingleSupplyViewModel : ObservableObject,ISupplyModeViewMode
 		Dispatch(()=>ErrorMessage=message);
 		_=Task.Run(async ()=>
 		{
-			await DisconnectAsync(false,CancellationToken.None);
+			await DisconnectAsync(
+				false,
+				CancellationToken.None,
+				attemptOutputOff:false);
 		});
 	}
 

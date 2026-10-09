@@ -4,7 +4,7 @@ LabStation to zestaw pięciu niezależnych aplikacji do obsługi przyrządów la
 
 ## Aplikacje
 
-- `KA3005P` - Korad KA3005P v0.2.9
+- `KA3005P` - Korad KA3005P v0.2.10
 - `SDS1000CML Viewer` - Siglent SDS1000CML Viewer v0.7.4
 - `SDG1000X Control` - Siglent SDG1000X Control v0.2.11
 - `SDM3000 Viewer` - Siglent SDM3000 Control v0.2.4
@@ -44,4 +44,4 @@ dotnet test .\KA3005P\Korad.KA3005P.sln -c Release
 & '.\SDL1000X Control\build.ps1'
 ```
 
-Najnowsza publikacja LabStation trafia do `artifacts/final/win-x64`. Gotowy plik z numerem wersji znajduje się równolegle jako `artifacts/final/LabStation-v0.1.2-win-x64.exe`.
+Najnowsza publikacja LabStation trafia do `artifacts/final/win-x64`. Gotowy plik z numerem wersji znajduje się równolegle jako `artifacts/final/LabStation-v0.1.3-win-x64.exe`.

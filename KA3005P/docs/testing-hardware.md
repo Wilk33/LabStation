@@ -58,3 +58,16 @@ Procedura dotyczy wyłącznie rzeczywistych zasilaczy dostępnych przez porty CO
 - Po teście oba wyjścia ustawiono na OFF, a następnie na oba porty niezależnie wysłano `OUT0`.
 
 Wyniki dotyczą konkretnej konfiguracji i stanu urządzeń w dniu testu. Nie są ogólną specyfikacją wszystkich egzemplarzy KA3005P.
+
+## Udokumentowany test fizyczny 2026-10-09
+
+- Jeden zasilacz był dostępny jako COM3 przez wirtualny port serwera USB.
+- Obciążeniem był układ PWM z rezystorem 150 ohm.
+- Granice testu wynosiły 12,50 V i 1,500 A. Żadna nastawa nie przekroczyła tych wartości.
+- Wykonano 2 minuty z wyjściem OFF, 2 minuty ze stałą nastawą 5,00 V i 0,500 A, 2 minuty zmian napięcia, 2 minuty zmian ograniczenia prądu oraz 5 minut równoczesnych zmian obu nastaw.
+- Po poprawkach wykonano dodatkowe 5 minut równoczesnych zmian w zakresie 5,00-12,50 V oraz 0,300-1,500 A. Narzędzie zarejestrowało 2998 cykli bez błędu komunikacji.
+- Każda próba zakończyła się poleceniem `OUT0`. Po ostatniej próbie 10 niezależnych odczytów zwróciło `00.00 V` i `0.000 A`.
+- W tej konfiguracji nie odtworzono losowego rozłączenia. Odtworzono natomiast programowo zawieszenie ścieżki sprzątania, gdy po błędzie aplikacja próbowała wysłać kolejne `OUT0` przez uszkodzoną sesję.
+- Test Dual nie został wykonany, ponieważ system udostępniał tylko jeden port COM.
+
+Wyniki dotyczą konkretnej konfiguracji i stanu urządzenia w dniu testu. Nie są ogólną specyfikacją wszystkich egzemplarzy KA3005P.

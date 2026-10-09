@@ -11,6 +11,25 @@ internal static class Program
 {
 	private static async Task<int> Main(string[] args)
 	{
+		if(args.Length == 2 &&
+			string.Equals(args[0],"--single-inspect",StringComparison.OrdinalIgnoreCase))
+		{
+			return await SingleHardwareProbe.InspectAsync(args[1]);
+		}
+		if(args.Length == 4 &&
+			string.Equals(args[0],"--single-stress",StringComparison.OrdinalIgnoreCase))
+		{
+			if(!int.TryParse(args[3],out int durationSeconds) || durationSeconds<1)
+			{
+				Console.Error.WriteLine("Czas testu musi być dodatnią liczbą sekund.");
+				return 2;
+			}
+
+			return await SingleHardwareProbe.StressAsync(
+				args[1],
+				args[2],
+				TimeSpan.FromSeconds(durationSeconds));
+		}
 		if(args.Length == 3 &&
 			string.Equals(args[0],"--probe",StringComparison.OrdinalIgnoreCase))
 		{
@@ -19,7 +38,8 @@ internal static class Program
 		if(args.Length != 2)
 		{
 			Console.Error.WriteLine(
-				"Użycie: Ka3005P.HardwareSmoke COMx COMy lub --probe COMx COMy");
+				"Użycie: Ka3005P.HardwareSmoke COMx COMy, --probe COMx COMy, "+
+				"--single-inspect COMx lub --single-stress COMx SCENARIUSZ SEKUNDY");
 			return 2;
 		}
 

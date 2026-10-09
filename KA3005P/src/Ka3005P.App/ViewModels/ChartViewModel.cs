@@ -229,7 +229,7 @@ public sealed class ChartViewModel : ObservableObject,IDisposable
 	public bool IsOn => IsConnected && IsOutputOn;
 	public bool CanUseCursors=>!IsOutputOn && Points.Count>0;
 	public string StatusText=>HasStatusError
-		? "Status: BŁĄD - "+ErrorMessage
+		? "Status: "+StatusErrorCode.FromMessage(ErrorMessage)
 		: !IsConnected
 			? "Status: OFFLINE"
 			: IsOutputOn ? "Status: ON" : "Status: OFF";

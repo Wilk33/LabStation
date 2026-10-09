@@ -121,6 +121,7 @@ public sealed class SingleSupplyViewModelTests
 
 		Assert.Null(session.RequestedVoltage);
 		Assert.True(viewModel.HasValidationError);
+		Assert.Equal("Status: VAL",viewModel.StatusText);
 	}
 
 	[Theory]
@@ -354,6 +355,21 @@ public sealed class SingleSupplyViewModelTests
 		Assert.True(viewModel.IsConnected);
 		Assert.NotSame(first,factory.LastSession);
 		await viewModel.CloseAsync(CancellationToken.None);
+	}
+
+	[Fact]
+	public async Task CommunicationFailure_DoesNotSendOutputThroughFailedSession()
+	{
+		FakePowerSupplySession session=new();
+		SingleSupplyViewModel viewModel=new(session);
+		session.BlockNextOutput();
+
+		session.PublishError(new DeviceCommunicationException("utrata COM5"));
+		await WaitUntilAsync(()=>!viewModel.IsConnected);
+
+		Assert.False(session.OutputRequested);
+		Assert.True(session.StopRequested);
+		Assert.True(session.DisposeRequested);
 	}
 
 	private static async Task WaitUntilAsync(Func<bool> condition)

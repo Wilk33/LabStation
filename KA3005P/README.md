@@ -2,7 +2,7 @@
 
 Samodzielna aplikacja Windows do sterowania jednym lub dwoma zasilaczami laboratoryjnymi Korad KA3005P przez porty COM.
 
-Bieżąca wersja: `0.2.9`. Powierzchnie pojedynczego i podwójnego zasilacza pozostają niezależnymi panelami WPF. Wspólny motyw, kontrolki nastaw, listy, tekstowe paski stanu, menu, wykres oraz okna Autor/Licencja pochodzą z `Shared/LabStation.UI`. Komunikacja COM, kolejki sesji i logika trybu Dual pozostają częścią Korada.
+Bieżąca wersja: `0.2.10`. Powierzchnie pojedynczego i podwójnego zasilacza pozostają niezależnymi panelami WPF. Wspólny motyw, kontrolki nastaw, listy, tekstowe paski stanu, menu, wykres oraz okna Autor/Licencja pochodzą z `Shared/LabStation.UI`. Komunikacja COM, kolejki sesji i logika trybu Dual pozostają częścią Korada.
 
 ## Zakres
 
@@ -26,6 +26,9 @@ Bieżąca wersja: `0.2.9`. Powierzchnie pojedynczego i podwójnego zasilacza poz
 - Eksport napięcia, prądu albo obu wielkości do CSV.
 - Obliczanie rezystancji podczas ograniczenia prądowego.
 - Zapamiętywanie ostatnio wybranych portów.
+- Ograniczone ponawianie chwilowych błędów komunikacji bez zrywania sesji po pojedynczym zakłóceniu.
+- Awaria komunikacji zwalnia sesję bez wysyłania kolejnych poleceń przez uszkodzony port, dzięki czemu okno pozostaje responsywne i pozwala ponownie nawiązać połączenie.
+- Pasek stanu pokazuje krótkie kody `TOUT`, `PORT`, `DATA`, `VAL`, `CONF`, `COM` lub `ERR`. Pełny opis błędu pozostaje dostępny po najechaniu na status.
 
 Aplikacja nie zawiera trybu demonstracyjnego ani symulowanych urządzeń. Korzysta wyłącznie z rzeczywistych portów COM widocznych w systemie Windows.
 
@@ -48,6 +51,8 @@ Port jest konfigurowany jako 9600 bit/s, 8 bitów danych, brak parzystości, 1 b
 Każdy port ma osobną, serializowaną sesję komunikacyjną działającą poza wątkiem interfejsu. Szybkie zmiany tej samej nastawy są łączone do najnowszej wartości. Polecenia wyjścia mają pierwszeństwo przed pomiarami.
 
 Aplikacja odpytuje `VOUT1?` i `IOUT1?`. Nie wykonuje dodatkowych zapytań `VSET1?`, `ISET1?` ani `STATUS?` po każdej zmianie nastawy.
+
+Każda operacja ma skończony limit czasu. Chwilowy błąd może zostać ponowiony maksymalnie dwa razy. Przed nowym poleceniem usuwane są spóźnione bajty poprzedniej odpowiedzi, aby częściowa ramka nie uszkodziła następnego odczytu.
 
 ## Budowanie i testy
 

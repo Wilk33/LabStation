@@ -18,6 +18,7 @@ internal sealed class FakePowerSupplyDevice : IPowerSupplyDevice
 	private int measurementReads;
 	private int activeOperations;
 	private int maximumConcurrentOperations;
+	private int communicationFailuresRemaining;
 
 	public IReadOnlyList<int> VoltageWrites
 	{
@@ -65,7 +66,18 @@ internal sealed class FakePowerSupplyDevice : IPowerSupplyDevice
 
 	public int MaximumConcurrentOperations => Volatile.Read(ref maximumConcurrentOperations);
 	public int MeasurementReads => Volatile.Read(ref measurementReads);
+	public int OperationAttempts { get; private set; }
 	public DeviceMeasurement Measurement { get; set; }=new(1200,100);
+
+	public void FailNextOperations(int count)
+	{
+		if(count<0)
+		{
+			throw new ArgumentOutOfRangeException(nameof(count));
+		}
+
+		communicationFailuresRemaining=count;
+	}
 
 	public void BlockNextOperation()
 	{
@@ -186,6 +198,7 @@ internal sealed class FakePowerSupplyDevice : IPowerSupplyDevice
 		Action record,
 		CancellationToken cancellationToken)
 	{
+		OperationAttempts++;
 		int active=Interlocked.Increment(ref activeOperations);
 		UpdateMaximum(active);
 		Task? release=null;
@@ -204,6 +217,11 @@ internal sealed class FakePowerSupplyDevice : IPowerSupplyDevice
 			if(release is not null)
 			{
 				await release.WaitAsync(cancellationToken);
+			}
+			if(communicationFailuresRemaining>0)
+			{
+				communicationFailuresRemaining--;
+				throw new DeviceCommunicationException("chwilowy błąd COM");
 			}
 
 			lock(gate)

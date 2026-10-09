@@ -13,7 +13,7 @@ public sealed class SerialPortTransport : ISerialTransport
 	private long? lastWriteCompletedAt;
 
 	public SerialPortTransport()
-		: this(TimeSpan.FromMilliseconds(250),TimeSpan.FromMilliseconds(250))
+		: this(TimeSpan.FromMilliseconds(500),TimeSpan.FromMilliseconds(500))
 	{
 	}
 
@@ -79,6 +79,7 @@ public sealed class SerialPortTransport : ISerialTransport
 					await Task.Delay(remaining,cancellationToken).ConfigureAwait(false);
 				}
 			}
+			opened.DiscardInBuffer();
 			await Task.Run(
 				()=>opened.Write(bytes,0,bytes.Length),
 				cancellationToken).ConfigureAwait(false);

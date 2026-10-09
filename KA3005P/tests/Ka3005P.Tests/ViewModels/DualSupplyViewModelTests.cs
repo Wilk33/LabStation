@@ -330,6 +330,22 @@ public sealed class DualSupplyViewModelTests
 		Assert.Contains("utrata COM5",viewModel.ErrorMessage);
 	}
 
+	[Fact]
+	public async Task CommunicationFailure_DoesNotSendOutputThroughFailedSessions()
+	{
+		(DualSupplyViewModel viewModel,FakePowerSupplySession first,FakePowerSupplySession second)=
+			CreateViewModel();
+		first.BlockNextOutput();
+
+		first.PublishError(new DeviceCommunicationException("utrata COM5"));
+		await WaitUntilAsync(()=>!viewModel.IsConnected);
+
+		Assert.False(first.OutputRequested);
+		Assert.False(second.OutputRequested);
+		Assert.True(first.DisposeRequested);
+		Assert.True(second.DisposeRequested);
+	}
+
 	private static async Task WaitUntilAsync(Func<bool> condition)
 	{
 		using CancellationTokenSource timeout=new(TimeSpan.FromSeconds(2));

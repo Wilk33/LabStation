@@ -6,6 +6,8 @@ namespace Ka3005P.Core.Sessions;
 
 public sealed class PowerSupplySession : IPowerSupplySession
 {
+	private const int MaximumOperationAttempts=3;
+	private static readonly TimeSpan RetryDelay=TimeSpan.FromMilliseconds(100);
 	private readonly IPowerSupplyDevice device;
 	private readonly TimeProvider timeProvider;
 	private readonly TimeSpan pollingInterval;
@@ -199,88 +201,109 @@ public sealed class PowerSupplySession : IPowerSupplySession
 
 	private async ValueTask ExecuteAsync(SessionRequest request)
 	{
-		try
+		Exception? finalException=null;
+		for(int attempt=1;attempt<=MaximumOperationAttempts;attempt++)
 		{
-			switch(request)
+			try
 			{
-				case SetVoltageRequest voltage:
-					await device.SetVoltageAsync(
-						voltage.Value,
-						CancellationToken.None).ConfigureAwait(false);
-					Publish(current=>current with
-					{
-						SentVoltage=voltage.Value,
-						Error=null
-					});
-					break;
-				case SetCurrentRequest current:
-					await device.SetCurrentAsync(
-						current.Value,
-						CancellationToken.None).ConfigureAwait(false);
-					Publish(value=>value with
-					{
-						SentCurrent=current.Value,
-						Error=null
-					});
-					break;
-				case SetOutputRequest output:
-					await device.SetOutputAsync(
-						output.Enabled,
-						CancellationToken.None).ConfigureAwait(false);
-					Publish(current=>current with
-					{
-						OutputState=output.Enabled ? OutputState.On : OutputState.Off,
-						Error=null
-					});
-					output.Completion.TrySetResult();
-					break;
-				case MeasurementRequest measurementRequest:
-					DeviceMeasurement measurement=
-						await device.ReadMeasurementAsync(CancellationToken.None).ConfigureAwait(false);
-					long timestamp=timeProvider.GetTimestamp();
-					DateTimeOffset recordedAt=timeProvider.GetUtcNow();
-					Publish(current=>current with
-					{
-						LastMeasurement=measurement,
-						LastMeasurementAt=recordedAt,
-						LastMeasurementTimestamp=timestamp,
-						MeasurementAge=TimeSpan.Zero,
-						Error=null
-					});
-					MeasurementReceived?.Invoke(
-						this,
-						new MeasurementSample(
-							recordedAt,
-							timestamp,
-							measurement.VoltageHundredths,
-							measurement.CurrentThousandths,
-							timeProvider.GetElapsedTime(
-								sessionStartedTimestamp,
-								timestamp)));
-					measurementRequest.Completion.TrySetResult();
-					break;
-				default:
-					throw new InvalidOperationException(
-						$"Nieznane żądanie sesji: {request.GetType().Name}.");
+				await ExecuteOnceAsync(request).ConfigureAwait(false);
+				return;
+			}
+			catch(DeviceCommunicationException exception)
+				when(attempt<MaximumOperationAttempts)
+			{
+				finalException=exception;
+				await Task.Delay(RetryDelay).ConfigureAwait(false);
+			}
+			catch(Exception exception)
+			{
+				finalException=exception;
+				break;
 			}
 		}
-		catch(Exception exception)
+
+		Exception failure=finalException ??
+			new DeviceCommunicationException("Nieznany błąd komunikacji z urządzeniem.");
+		Publish(current=>current with
 		{
-			Publish(current=>current with
-			{
-				Error=new SessionError(
-					timeProvider.GetUtcNow(),
-					exception.Message,
-					exception)
-			});
-			if(request is SetOutputRequest output)
-			{
-				output.Completion.TrySetException(exception);
-			}
-			if(request is MeasurementRequest measurement)
-			{
-				measurement.Completion.TrySetResult();
-			}
+			Error=new SessionError(
+				timeProvider.GetUtcNow(),
+				failure.Message,
+				failure)
+		});
+		if(request is SetOutputRequest output)
+		{
+			output.Completion.TrySetException(failure);
+		}
+		if(request is MeasurementRequest measurement)
+		{
+			measurement.Completion.TrySetResult();
+		}
+	}
+
+	private async ValueTask ExecuteOnceAsync(SessionRequest request)
+	{
+		switch(request)
+		{
+			case SetVoltageRequest voltage:
+				await device.SetVoltageAsync(
+					voltage.Value,
+					CancellationToken.None).ConfigureAwait(false);
+				Publish(current=>current with
+				{
+					SentVoltage=voltage.Value,
+					Error=null
+				});
+				break;
+			case SetCurrentRequest current:
+				await device.SetCurrentAsync(
+					current.Value,
+					CancellationToken.None).ConfigureAwait(false);
+				Publish(value=>value with
+				{
+					SentCurrent=current.Value,
+					Error=null
+				});
+				break;
+			case SetOutputRequest output:
+				await device.SetOutputAsync(
+					output.Enabled,
+					CancellationToken.None).ConfigureAwait(false);
+				Publish(current=>current with
+				{
+					OutputState=output.Enabled ? OutputState.On : OutputState.Off,
+					Error=null
+				});
+				output.Completion.TrySetResult();
+				break;
+			case MeasurementRequest measurementRequest:
+				DeviceMeasurement measurement=
+					await device.ReadMeasurementAsync(CancellationToken.None).ConfigureAwait(false);
+				long timestamp=timeProvider.GetTimestamp();
+				DateTimeOffset recordedAt=timeProvider.GetUtcNow();
+				Publish(current=>current with
+				{
+					LastMeasurement=measurement,
+					LastMeasurementAt=recordedAt,
+					LastMeasurementTimestamp=timestamp,
+					MeasurementAge=TimeSpan.Zero,
+					Error=null
+				});
+				MeasurementReceived?.Invoke(
+					this,
+					new MeasurementSample(
+						recordedAt,
+						timestamp,
+						measurement.VoltageHundredths,
+						measurement.CurrentThousandths,
+						timeProvider.GetElapsedTime(
+							sessionStartedTimestamp,
+							timestamp)));
+				measurementRequest.Completion.TrySetResult();
+				break;
+			default:
+				throw new InvalidOperationException(
+					$"Nieznane żądanie sesji: {request.GetType().Name}.");
 		}
 	}
 

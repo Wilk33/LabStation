@@ -7,7 +7,7 @@ public sealed class AppInformationTests
 	[Fact]
 	public void WindowTitle_UsesProjectNameAndVersion()
 	{
-		Assert.Equal("Korad KA3005P v0.2.9",AppInformation.GetWindowTitle());
+		Assert.Equal("Korad KA3005P v0.2.10",AppInformation.GetWindowTitle());
 		Assert.Equal("Korad KA3005P",AppInformation.DataDirectoryName);
 	}
 

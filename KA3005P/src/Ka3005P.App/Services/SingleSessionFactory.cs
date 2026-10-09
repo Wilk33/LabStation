@@ -26,12 +26,12 @@ public sealed class SerialSingleSessionFactory : ISingleSessionFactory
 		CancellationToken cancellationToken)
 	{
 		SerialPortTransport transport=new(
-			TimeSpan.FromMilliseconds(250),
-			TimeSpan.FromMilliseconds(250));
+			TimeSpan.FromMilliseconds(500),
+			TimeSpan.FromMilliseconds(500));
 		try
 		{
 			await transport.OpenAsync(portName,cancellationToken).ConfigureAwait(false);
-			Ka3005PDevice device=new(transport,TimeSpan.FromMilliseconds(350));
+			Ka3005PDevice device=new(transport,TimeSpan.FromMilliseconds(1500));
 			PowerSupplySession session=new(
 				device,
 				timeProvider,

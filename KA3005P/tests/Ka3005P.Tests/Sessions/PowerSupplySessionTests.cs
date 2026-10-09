@@ -61,4 +61,39 @@ public sealed class PowerSupplySessionTests
 		Assert.Equal(1234,session.Snapshot.SentVoltage?.Hundredths);
 		Assert.Null(session.Snapshot.Error);
 	}
+
+	[Fact]
+	public async Task TransientCommunicationFailures_AreRetriedBeforePublishingError()
+	{
+		FakePowerSupplyDevice device=new();
+		device.FailNextOperations(2);
+		await using PowerSupplySession session=new(device,TimeProvider.System);
+		await session.StartAsync(CancellationToken.None);
+
+		session.RequestVoltage(VoltageSetpoint.FromHundredths(1234));
+		await device.WaitForVoltageAsync(1234);
+
+		Assert.Equal(3,device.OperationAttempts);
+		Assert.Null(session.Snapshot.Error);
+	}
+
+	[Fact]
+	public async Task PersistentCommunicationFailure_IsPublishedAfterThreeAttempts()
+	{
+		FakePowerSupplyDevice device=new();
+		device.FailNextOperations(3);
+		await using PowerSupplySession session=new(device,TimeProvider.System);
+		await session.StartAsync(CancellationToken.None);
+
+		session.RequestVoltage(VoltageSetpoint.FromHundredths(1234));
+		using CancellationTokenSource timeout=new(TimeSpan.FromSeconds(2));
+		while(session.Snapshot.Error is null)
+		{
+			await Task.Delay(10,timeout.Token);
+		}
+
+		Assert.Equal(3,device.OperationAttempts);
+		Assert.IsType<Ka3005P.Core.Device.DeviceCommunicationException>(
+			session.Snapshot.Error.Exception);
+	}
 }
