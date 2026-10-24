@@ -2,6 +2,7 @@
 **/obj/
 **/artifacts/
 **/.work/
+KA3005P/rust/target/
 **/TestResults/
 .vs/
 *.user

@@ -4,6 +4,8 @@ Samodzielna aplikacja Windows do sterowania jednym lub dwoma zasilaczami laborat
 
 Bieżąca wersja: `0.2.10`. Powierzchnie pojedynczego i podwójnego zasilacza pozostają niezależnymi panelami WPF. Wspólny motyw, kontrolki nastaw, listy, tekstowe paski stanu, menu, wykres oraz okna Autor/Licencja pochodzą z `Shared/LabStation.UI`. Komunikacja COM, kolejki sesji i logika trybu Dual pozostają częścią Korada.
 
+Trwa migracja do Rust. Pierwszy etap - rzeczywisty transport COM, protokół, sterowanie Dual oraz lokalne API dla agentów - znajduje się w [rust/README.md](rust/README.md). Dotychczasowe okno WPF i panel LabStation pozostają wersją użytkową do czasu migracji interfejsu; nowy silnik nie został jeszcze do nich podłączony.
+
 ## Zakres
 
 - Tryb pojedynczego zasilacza.
