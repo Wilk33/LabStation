@@ -1,6 +1,8 @@
-# Korad - migracja logiki sterowania do Rust
+# Korad KA3005P - aplikacja Rust
 
-Ten katalog zawiera działającą bibliotekę komunikacji COM oraz lokalny serwer sterowania dla zasilaczy Korad. Binarny `korad-rs.exe` obsługuje rzeczywiste porty COM i nie ma trybu demonstracyjnego. Interfejs okienkowy oraz panel Korada w LabStation nadal używają dotychczasowego kodu WPF. Ten etap nie jest jeszcze zamiennikiem tych dwóch interfejsów.
+Ten katalog zawiera samodzielną aplikację okienkową, bibliotekę komunikacji COM i lokalny serwer sterowania dla zasilaczy Korad. `korad-rs.exe` jest właściwą aplikacją GUI i nie otwiera okna konsoli. `korad-rs-cli.exe` udostępnia diagnostykę oraz sam serwer API. Oba programy korzystają z tego samego silnika sterowania i nie mają trybu demonstracyjnego.
+
+Aplikacja GUI obsługuje tryby Single i Dual, wykres pomiaru, zapis CSV oraz lokalne sterowanie dla agentów AI. Serwer API jest uruchamiany razem z oknem. Adres i trzy tymczasowe tokeny ról można odczytać z menu `AI`. Tokeny nie są zapisywane na dysku i obowiązują wyłącznie do zamknięcia aplikacji.
 
 ## Uruchomienie
 
@@ -9,12 +11,13 @@ Wymagany jest Rust dla Windows x64 z narzędziami MSVC. Z katalogu `KA3005P/rust
 ```powershell
 cargo test
 cargo build --release
-./target/release/korad-rs.exe ports
-./target/release/korad-rs.exe probe COM3
-./target/release/korad-rs.exe serve
+./target/release/korad-rs.exe
+./target/release/korad-rs-cli.exe ports
+./target/release/korad-rs-cli.exe probe COM3
+./target/release/korad-rs-cli.exe serve
 ```
 
-`probe` wykonuje wyłącznie odczyt identyfikacji, nastaw, pomiaru i stanu. `serve` podaje lokalny adres API oraz trzy losowe tokeny. Tokeny nie są zapisywane na dysku. Polecenie `quit` zamyka serwer i próbuje wysłać `OUT0` do każdego połączonego zasilacza. Nie należy przekazywać tokenów do logów lub repozytorium.
+Pierwsze polecenie otwiera okno aplikacji. `probe` w programie CLI wykonuje wyłącznie odczyt identyfikacji, nastaw, pomiaru i stanu. `serve` podaje lokalny adres API oraz trzy losowe tokeny. Polecenie `quit` zamyka serwer i próbuje wysłać `OUT0` do każdego połączonego zasilacza. Nie należy przekazywać tokenów do logów lub repozytorium.
 
 API nasłuchuje tylko na `127.0.0.1` na losowym porcie. Nagłówek każdego żądania: `Authorization: Bearer <token>`. Żądania i odpowiedzi są w JSON. Maksymalny rozmiar żądania wynosi 16 KiB.
 

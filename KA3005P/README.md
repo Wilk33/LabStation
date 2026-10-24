@@ -2,9 +2,9 @@
 
 Samodzielna aplikacja Windows do sterowania jednym lub dwoma zasilaczami laboratoryjnymi Korad KA3005P przez porty COM.
 
-Bieżąca wersja: `0.2.10`. Powierzchnie pojedynczego i podwójnego zasilacza pozostają niezależnymi panelami WPF. Wspólny motyw, kontrolki nastaw, listy, tekstowe paski stanu, menu, wykres oraz okna Autor/Licencja pochodzą z `Shared/LabStation.UI`. Komunikacja COM, kolejki sesji i logika trybu Dual pozostają częścią Korada.
+Bieżąca wersja samodzielnej aplikacji Rust: `0.3.0`. `rust/target/release/korad-rs.exe` jest właściwą aplikacją okienkową Windows, a `korad-rs-cli.exe` służy do diagnostyki i uruchamiania samego API. Poprzednia wersja WPF pozostaje w repozytorium jako punkt odniesienia podczas dalszej migracji całego LabStation.
 
-Trwa migracja do Rust. Pierwszy etap - rzeczywisty transport COM, protokół, sterowanie Dual oraz lokalne API dla agentów - znajduje się w [rust/README.md](rust/README.md). Dotychczasowe okno WPF i panel LabStation pozostają wersją użytkową do czasu migracji interfejsu; nowy silnik nie został jeszcze do nich podłączony.
+Zakres aplikacji Rust - rzeczywisty transport COM, interfejs Single i Dual, wykres, zapis CSV oraz lokalne API dla agentów - opisuje [rust/README.md](rust/README.md). Aplikacja oraz API korzystają z tego samego silnika sesji, uprawnień i zabezpieczeń wyjścia.
 
 ## Zakres
 
@@ -34,7 +34,19 @@ Trwa migracja do Rust. Pierwszy etap - rzeczywisty transport COM, protokół, st
 
 Aplikacja nie zawiera trybu demonstracyjnego ani symulowanych urządzeń. Korzysta wyłącznie z rzeczywistych portów COM widocznych w systemie Windows.
 
-## Uruchomienie
+## Uruchomienie wersji Rust
+
+Najnowszy pakiet znajduje się w `rust/releases/win-x64`, a wersjonowane wydanie w archiwum `rust/releases/Korad-KA3005P-v0.3.0-win-x64.zip`.
+
+Uruchom:
+
+```powershell
+./rust/releases/win-x64/korad-rs.exe
+```
+
+Program jest aplikacją okienkową i nie otwiera konsoli. Menu `AI` pokazuje adres lokalnego API oraz tymczasowe tokeny ról Observer, Operator i Expert.
+
+## Uruchomienie wersji WPF
 
 Najnowszy rozpakowany pakiet znajduje się w stałym katalogu `artifacts/final/win-x64`. Wersjonowane wydania są zachowywane jako archiwa `artifacts/final/Korad-KA3005P-v<wersja>-win-x64.zip`; rozpakowane katalogi poprzednich wersji są usuwane podczas publikacji.
 
@@ -57,6 +69,17 @@ Aplikacja odpytuje `VOUT1?` i `IOUT1?`. Nie wykonuje dodatkowych zapytań `VSET1
 Każda operacja ma skończony limit czasu. Chwilowy błąd może zostać ponowiony maksymalnie dwa razy. Przed nowym poleceniem usuwane są spóźnione bajty poprzedniej odpowiedzi, aby częściowa ramka nie uszkodziła następnego odczytu.
 
 ## Budowanie i testy
+
+Aplikacja Rust wymaga toolchainu `stable-x86_64-pc-windows-msvc`:
+
+```powershell
+cd rust
+cargo test --offline
+cargo clippy --all-targets --offline -- -D warnings
+cargo build --release --offline
+```
+
+Polecenia poniżej dotyczą poprzedniej wersji WPF.
 
 Wymagany jest Windows oraz SDK .NET wskazany w `global.json`.
 

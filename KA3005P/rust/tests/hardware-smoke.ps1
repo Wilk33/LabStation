@@ -3,7 +3,7 @@ param(
 )
 
 $ErrorActionPreference='Stop'
-$exe=Join-Path $PSScriptRoot '..\target\release\korad-rs.exe'
+$exe=Join-Path $PSScriptRoot '..\target\release\korad-rs-cli.exe'
 $ports=@('COM3','COM4')
 $processInfo=[System.Diagnostics.ProcessStartInfo]::new()
 $processInfo.FileName=[System.IO.Path]::GetFullPath($exe)

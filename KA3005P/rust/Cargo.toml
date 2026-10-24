@@ -1,11 +1,33 @@
 [package]
 name="korad-rs"
-version="0.1.0"
+version="0.3.0"
 edition="2024"
 license="PolyForm-Noncommercial-1.0.0"
+build="build.rs"
+
+[[bin]]
+name="korad-rs"
+path="src/main.rs"
+
+[[bin]]
+name="korad-rs-cli"
+path="src/bin/korad-cli.rs"
 
 [dependencies]
 serialport="4.10"
 serde={version="1",features=["derive"]}
 serde_json="1"
 rand="0.9"
+eframe={version="0.37",default-features=false,features=["glow","system_fonts"]}
+egui_plot="0.38"
+image={version="0.25",default-features=false,features=["png"]}
+rfd="0.17"
+
+[build-dependencies]
+winresource="0.1"
+
+[package.metadata.winresource]
+FileDescription="Korad KA3005P"
+ProductName="Korad KA3005P"
+ProductVersion="0.3.0"
+OriginalFilename="korad-rs.exe"

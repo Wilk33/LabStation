@@ -6,3 +6,5 @@ pub mod dual;
 pub mod api;
 pub mod hub;
 pub mod server;
+pub mod gui_model;
+pub mod gui;
